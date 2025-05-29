@@ -1,0 +1,109 @@
+/* AdminSidebar.css */
+.admin-sidebar {
+  width: 250px;
+  background-color: #2e3b4e;
+  color: white;
+  transition: width 0.3s;
+  overflow: hidden;
+  height: calc(100vh);
+  left: 0;
+}
+
+.admin-sidebar.closed {
+  width: 0px;
+}
+
+.toggle-btn {
+  position: absolute;
+  background: none;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  margin: 10px;
+  right:-10px;
+}
+
+.toggle-btn.closed {
+  position: fixed;
+  background-color: green;
+  margin: 0px;
+  padding: 10px;
+  width: 10px;
+  left:10px;
+}
+
+.toggle-btn.closed.rtl {
+  position: fixed;
+  background-color: green;
+  margin: 0px;
+  padding: 10px;
+  width: 10px;
+  right:10px !important;
+}
+.sidebar-section {
+  margin: 20px 0;
+}
+
+.sidebar-header {
+  font-weight: bold;
+  padding: 10px 20px;
+}
+
+.sidebar-item {
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  display: block;
+}
+
+.sidebar-item:hover {
+  background-color: #445566;
+}
+
+/* RTL overrides */
+body.rtl .admin-sidebar {
+  direction: rtl;
+  right: 0;
+  left: auto;
+}
+
+body.rtl .toggle-btn {
+  left: 10px;
+  right: auto;
+}
+ .dropdown {
+
+  background-color: #2e3b4e;
+  padding: 10px 20px;
+}
+
+.expand {
+  width: 100%; /* ✅ When sidebar is closed */
+}
+
+.shrink {
+  margin-left: 250px; /* ✅ When sidebar is open */
+  transition: width 0.3s ease-in-out;
+}
+
+.shrink .rtl {
+  margin-right: 250px; /* ✅ When sidebar is open */
+  transition: width 0.3s ease-in-out;
+}
+.accordion {
+  padding-top: 80px;
+}
+
+.accordion-item {
+  background-color: #2e3b4e !important;
+  color: white;
+  transition: width 0.3s;
+  border: none;
+}
+
+.accordion-button {
+  background-color: #2e3b4e !important;
+  border: none !important;
+  color:white !important;
+}
+

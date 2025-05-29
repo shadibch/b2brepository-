@@ -1,0 +1,287 @@
+/* Admin Panel Shared Styles */
+.admin-container {
+    padding: 2rem;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.admin-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+}
+
+.admin-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.admin-table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 1rem;
+    text-align: start;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.admin-table tbody td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    color: #212529;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Alternating row colors for main table */
+.admin-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.admin-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.admin-table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Nested Table Styles */
+.nested-table-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    margin: 0.5rem 2rem;
+    border-radius: 6px;
+}
+
+.nested-table {
+    width: 100%;
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.nested-table th {
+    background-color: #f1f3f5;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    color: #495057;
+}
+
+.nested-table td {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Alternating row colors for nested table */
+.nested-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.nested-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.nested-table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* RTL Support */
+[dir="rtl"] .admin-table thead th,
+[dir="rtl"] .admin-table tbody td {
+    text-align: right;
+}
+
+[dir="rtl"] .nested-table-container {
+    margin: 0.5rem 2rem;
+}
+
+/* Form Styles */
+.admin-form {
+    padding: 1.5rem;
+}
+
+.admin-form-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Pagination Styles */
+.admin-pagination {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.admin-pagination .page-link {
+    border-radius: 4px;
+    margin: 0 0.25rem;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+}
+
+.admin-pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Expand/Collapse Button */
+.expand-button {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    background-color: white;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.expand-button:hover {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+}
+
+/* Tabs Styling */
+.admin-tabs .nav-tabs {
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 1.5rem;
+}
+
+.admin-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    padding: 0.75rem 1rem;
+    margin-right: 1rem;
+    font-weight: 500;
+    position: relative;
+}
+
+.admin-tabs .nav-link.active {
+    color: #0d6efd;
+    background: none;
+    border: none;
+}
+
+.admin-tabs .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #0d6efd;
+}
+
+[dir="rtl"] .admin-tabs .nav-link {
+    margin-right: 0;
+    margin-left: 1rem;
+}
+
+/* Alert Styling */
+.admin-alert {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+}
+
+.admin-alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.admin-alert-error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+/* File Upload Styles */
+.file-upload-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.preview-container {
+    position: relative;
+    display: inline-block;
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    padding: 0.25rem 0.5rem;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    color: #dc3545;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-image-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+[dir="rtl"] .remove-image-btn {
+    right: auto;
+    left: -10px;
+}
+
+.file-upload-container input[type="file"] {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-upload-container input[type="file"]:hover {
+    border-color: #adb5bd;
+    background-color: #e9ecef;
+} 

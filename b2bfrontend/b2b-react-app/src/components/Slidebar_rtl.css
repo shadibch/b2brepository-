@@ -1,0 +1,118 @@
+/* Sidebar Wrapper - Positioned Below the Header */
+.sidebar {
+  position: fixed;
+  right: 0px;
+  top: 56px; /* ✅ Starts below the header */
+  height: calc(100vh - 56px); /* ✅ Adjusts height dynamically */
+  width: 250px;
+  background-color: #b4c8dc;
+  color: white;
+  padding-top: 20px;
+  transition: transform 0.3s ease-in-out;
+  direction:rtl;
+  
+}
+
+/* Closed sidebar (hidden) */
+.sidebar.closed {
+  transform: translateX(100%);
+  
+}
+
+.toggle-btn.closed {
+  position: fixed;
+  background-color: green;
+  margin: 0px;
+  padding: 10px;
+  width: 10px;
+  left:10px !important;
+}
+.shrink {
+  margin-right: 250px; /* ✅ When sidebar is open */
+  transition: width 0.3s ease-in-out;
+}
+
+.expand {
+  width: 100%; /* ✅ When sidebar is closed */
+}
+
+
+/* Navigation Links */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 10px;
+}
+
+.sidebar-item {
+  color: white;
+  text-decoration: none;
+  padding: 10px;
+  display: block;
+}
+
+.sidebar-item:hover {
+  background-color: #1dbf73;
+}
+
+/* Sidebar Toggle Button */
+.toggle-btn {
+  position: absolute;
+  left: -40px;
+  top: 20px;
+  background: #1dbf73;
+  color: white;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+  right: auto !important;
+}
+
+.toggle-btn:hover {
+  background: #17a864;
+}
+.clear-filter-container {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.clear-filter-btn {
+  background-color: #dc3545; /* ✅ Red button */
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.clear-filter-btn:hover {
+  background-color: #c82333;
+}
+/* Accordion Header (RTL Fix) */
+.accordion-header {
+  display: flex; /* Ensures elements are properly aligned */
+  flex-direction: row-reverse; /* ✅ Reverses the order for RTL */
+  justify-content: space-between; /* ✅ Space between text and arrow */
+  align-items: center; /* Center vertically */
+}
+
+/* Arrow Position Adjustment in RTL */
+.accordion-header::after {
+  content: ""; /* Keeps the arrow intact */
+  transform: rotate(90deg); /* Adjusts arrow rotation if needed */
+  margin-left: auto; /* Pushes arrow to the far left */
+  margin-right: 0;
+}
+
+/* Optional: Add direction for Accordion in RTL mode */
+.accordion {
+  direction: rtl;
+}
+.accordion-button::after {
+margin-right: auto;
+margin-left: 0 !important;
+color: white;
+}

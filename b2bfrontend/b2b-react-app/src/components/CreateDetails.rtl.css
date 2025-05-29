@@ -1,0 +1,14 @@
+/* CreateDetails.rtl.css */
+
+body.rtl .cart-container {
+    direction: rtl;
+  }
+  
+  body.rtl .cart-item {
+    flex-direction: row-reverse;
+  }
+  
+  body.rtl .cart-subtotal {
+    text-align: left;
+  }
+  

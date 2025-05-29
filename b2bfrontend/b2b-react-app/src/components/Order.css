@@ -1,0 +1,35 @@
+.order-page {
+    padding: 2rem;
+    position: relative;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.home-button {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+}
+
+.order-message {
+    margin-top: 5rem;
+    text-align: center;
+}
+
+.order-message h2 {
+    font-size: 1.5rem;
+    color: #333;
+}
+
+@media (max-width: 576px) {
+    .order-message h2 {
+        font-size: 1.2rem;
+    }
+
+    .home-button {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+}

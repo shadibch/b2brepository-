@@ -1,0 +1,94 @@
+/* Center the login form on the page */
+.login-container {
+    max-width: 450px;
+    margin: auto;
+    padding-top: 60px;
+}
+
+/* Style the form box */
+.login-form {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Title Styling */
+h2.text-center {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Form labels */
+.form-label {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Error Messages */
+.text-danger {
+    font-size: 0.9rem;
+    margin-top: 4px;
+    text-align: center;
+}
+
+/* Success and Error Alerts */
+.alert {
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Input Fields */
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease-in-out;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: #1dbf73;
+    box-shadow: 0px 0px 6px rgba(29, 191, 115, 0.3);
+}
+
+/* Submit Button */
+.login-button {
+    background-color: #1dbf73;
+    border: none;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    width: 100%;
+    border-radius: 5px;
+    color: white;
+}
+
+.login-button:hover {
+    background-color: #17a864;
+}
+
+/* Forgot Password & Sign Up Links */
+.extra-links {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.extra-links a {
+    color: #1dbf73;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+.extra-links a:hover {
+    color: #17a864;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-container {
+        max-width: 90%;
+    }
+}

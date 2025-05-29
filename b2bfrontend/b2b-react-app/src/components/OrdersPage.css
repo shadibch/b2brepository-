@@ -1,0 +1,55 @@
+.orders-page {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .orders-table th,
+  .orders-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .orders-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  .row-pending {
+    background-color: #fff3cd; /* Yellow */
+  }
+  
+  .row-rejected {
+    background-color: #f8d7da; /* Red */
+  }
+  
+  .row-accepted {
+    background-color: #d4edda; /* Green */
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    direction: ltr;
+  }
+  
+  .pagination li {
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  
+  .pagination li.active a {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+  

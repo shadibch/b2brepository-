@@ -1,0 +1,25 @@
+.branches-container {
+  width: 50%;
+  margin: auto;
+  padding: 20px;
+}
+
+.branch-form {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.branch-table {
+  width: 100%;
+}
+
+.branch-table th, .branch-table td {
+  text-align: center;
+}
+
+.branch-table button {
+  font-size: 14px;
+  padding: 6px 10px;
+}

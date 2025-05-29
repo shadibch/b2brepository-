@@ -1,0 +1,68 @@
+/* Container */
+.user-management-container {
+  width: 50%;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Form Styling */
+.user-form {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Table Styling */
+.user-table {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.user-table th, .user-table td {
+  text-align: center;
+}
+
+/* Clickable Row Effect */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.clickable-row:hover {
+  background-color: #f1f1f1;
+}
+
+/* Delete Icon */
+.delete-icon {
+  cursor: pointer;
+  font-size: 18px;
+  color: #ff4d4d;
+}
+
+.delete-icon:hover {
+  color: #cc0000;
+}
+
+/* Error Text */
+.error-text {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+.branch-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+.branch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Space between checkboxes */
+}

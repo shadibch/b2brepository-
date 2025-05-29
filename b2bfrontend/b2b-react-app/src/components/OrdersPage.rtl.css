@@ -1,0 +1,76 @@
+/* Apply RTL direction globally */
+body.rtl {
+    direction: rtl;
+    text-align: right;
+  }
+  
+  /* Adjust container for RTL */
+  .orders-page {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Orders Table */
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  /* Table Headers & Cells */
+  .orders-table th,
+  .orders-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: right; /* Align content to the right */
+  }
+  
+  /* Header Styling */
+  .orders-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  /* Row Colors */
+  .row-pending {
+    background-color: #fff3cd; /* Yellow */
+  }
+  
+  .row-rejected {
+    background-color: #f8d7da; /* Red */
+  }
+  
+  .row-accepted {
+    background-color: #d4edda; /* Green */
+  }
+  
+  /* Pagination Adjustments */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    direction: rtl; /* Ensure pagination follows RTL */
+  }
+  
+  .pagination li {
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  
+  .pagination li.active a {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+  
+  /* Ensure proper spacing for pagination arrows */
+  .pagination li:first-child {
+    margin-right: auto;
+  }
+  
+  .pagination li:last-child {
+    margin-left: auto;
+  }
+  

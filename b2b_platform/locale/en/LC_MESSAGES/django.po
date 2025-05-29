@@ -1,0 +1,71 @@
+#: .\b2busers\adminvieworders.py:184
+msgid "Missing start_date"
+msgstr "Missing start_date"
+
+#: .\b2busers\adminvieworders.py:189
+msgid "Invalid date format"
+msgstr "Invalid date format"
+
+#: .\b2busers\adminvieworders.py:198
+msgid "Orders Report"
+msgstr "Orders Report"
+
+#: .\b2busers\adminvieworders.py:208
+msgid "ID"
+msgstr "ID"
+
+#: .\b2busers\adminvieworders.py:209
+msgid "Status"
+msgstr "Status"
+
+#: .\b2busers\adminvieworders.py:210
+msgid "Order Status"
+msgstr "Order Status"
+
+#: .\b2busers\adminvieworders.py:211
+msgid "Purchase Date"
+msgstr "Purchase Date"
+
+#: .\b2busers\adminvieworders.py:212
+msgid "Paid Date"
+msgstr "Paid Date"
+
+#: .\b2busers\adminvieworders.py:213
+msgid "Company Name"
+msgstr "Company Name"
+
+#: .\b2busers\adminvieworders.py:214
+msgid "Company Register Number"
+msgstr "Company Register Number"
+
+#: .\b2busers\adminvieworders.py:215
+msgid "Company Credit"
+msgstr "Company Credit"
+
+#: .\b2busers\adminvieworders.py:216
+msgid "Total Price"
+msgstr "Total Price"
+
+msgid "ACC"
+msgstr "Accepted"
+
+
+msgid "UDL"
+msgstr "Ready for Delivery"
+
+msgid "RJC"
+msgstr  "Order has rejected"
+
+msgid "UNP"
+msgstr "Unpaid Order"
+
+msgid "PRC"
+msgstr "Under Processing"
+
+msgid "DLV"
+msgstr "Delivered"
+
+msgid "PND"
+msgstr "Pending"
+
+
