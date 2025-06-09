@@ -97,7 +97,10 @@ urlpatterns = [
     path('api/admin/undelivered-orders/', UndeliveredOrdersView.as_view(), name='undelivered-orders'),
     path('api/admin/execute-delivery/<int:order_id>/', ExecuteDeliveryView.as_view(), name='execute-delivery'),
     path('api/admin/orders/report/', AdminOrderReportView.as_view(), name='order_report'),
+    path('api/admin/orders/items/<int:order_id>/', AdminOrderDetailsReportView.as_view(), name='order_details_report'),
     path('api/admin/companies/', CompanyViewSet.as_view(), name='company-admin'),
+    path('api/admin/requests/',AdminDetailsReportPeriodView.as_view()),
+    path('api/order/details/<int:order_id>/' , OrderItemDetails.as_view()),
     path('api/companies/<int:company_id>/branches/', get_company_branches, name='company-branches'),
     # Catch-all route for SPA
 

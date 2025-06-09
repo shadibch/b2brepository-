@@ -18,10 +18,10 @@ export const switchLanguage = (lang) => {
 };
 
 export const isRTL = () => {
-  return i18n.language.startsWith("ar"); // ✅ Returns true if the language starts with 'ar'
+  return !i18n.language || i18n.language.startsWith("ar"); // ✅ Returns true if the language starts with 'ar'
 };
 
-export const getCurrentLanguage = () => i18n.language || 'en'; // ✅ Add a helper method to retrieve the current language
+export const getCurrentLanguage = () => i18n.language || 'ar'; // ✅ Add a helper method to retrieve the current language
 export const formatNumber = (value, currency) => {
 
   const options = currency

@@ -12,6 +12,7 @@ import UndeliveredOrders from "./admin/UndeliveredOrders";
 import OrderReport from "./admin/OrderReport";
 import CompanyAdminPage from "./admin/CompanyAdminPage";
 import BranchManagement from "./admin/BranchManagement";
+import ReportManagement from "./admin/ReportManagement";
 
 const AdministratorPage = () => {
   return (
@@ -31,6 +32,7 @@ const AdministratorPage = () => {
           <Route path="order_report" element={<OrderReport/>} />
           <Route path="company-admin" element={<CompanyAdminPage/>} />
           <Route path="branch-admin" element={<BranchManagement/>} />
+          <Route path="report-management" element={<ReportManagement/>} />
           <Route path="*" element={<div>Select an admin function</div>} />
         </Routes>
       </div>

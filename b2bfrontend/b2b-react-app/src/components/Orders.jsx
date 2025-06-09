@@ -3,13 +3,15 @@ import axiosInstance from "./axiosInstance"; // Ensure this is correctly configu
 import ReactPaginate from "react-paginate"; // For pagination
 import "./OrdersPage.css"; // Add your custom styles
 import "./OrdersPage.rtl.css";
-import { API_BASE_URL } from "../utils/settings";
+import { Table, Button, Form, Alert, Modal, Pagination } from 'react-bootstrap';
+import { API_BASE_URL, DEFAULT_IMAGE } from "../utils/settings";
 import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber,formatDate,formatLocal} from '../utils/translator';
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-
+  const [showItems, setShowItems] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const itemsPerPage = 10; // Number of rows per page
 
   useEffect(() => {
@@ -33,7 +35,13 @@ const OrdersPage = () => {
     setCurrentPage(selectedPage.selected); // Update current page on pagination
   };
 
-
+  const handleSelectedOrder = async (order) => {
+    
+   const order_id = order.id;
+    const response = await axiosInstance.get(`api/order/details/${order_id}/`);
+    setSelectedOrder(response.data);
+    setShowItems(true);
+  };
   const getRowClass = (status) => {
     switch (status) {
       case "PND":
@@ -51,6 +59,45 @@ const OrdersPage = () => {
 
     <div   className={`orders-page ${ 
       isRTL() ? "shrink-rtl" : "shrink"} }`}>
+         {showItems && selectedOrder && (
+        <div className="order-details mb-4">
+          {selectedOrder.items.map((item) => (
+            <div key={item.id} className="cart-item flex items-center border-b py-2">
+              <img
+                src={item.image_path ? `${API_BASE_URL}${item.image_path}` : DEFAULT_IMAGE}
+                alt={item.project_name}
+                className="cart-item-image"
+              />
+              <div className="cart-item-info">
+                <h2 className="cart-item-title">{item.branch_name}</h2>
+                <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.project_name}</h2>
+                <div className="cart-item-controls">
+                  <input
+                    type="number"
+                    value={item.quantity}
+                    min={1}
+                    disabled
+                  />
+                </div>
+              </div>
+              <div className="cart-item-price">
+                {formatNumber(item.price, item.currency)}
+              </div>
+            </div>
+          ))}
+          <div className="cart-subtotal">
+            <span className="label">{t("subtotal")}</span>
+            <span className="value">
+              {formatNumber(selectedOrder?.total_price, selectedOrder?.currency)}
+            </span>
+          </div>
+
+          
+
+          
+        </div>
+      )}
+
       <h1>{t('orders')}</h1>
       <table className="orders-table">
         <thead>
@@ -66,7 +113,10 @@ const OrdersPage = () => {
         </thead>
         <tbody>
           {orders.map((order) => (
-            <tr key={order.id} className={getRowClass(order.status)}>
+            <tr key={order.id} 
+            className={getRowClass(order.status)}
+            
+            >
               <td>{formatLocal(order.id)}</td>
               <td>{t(order.status)}</td>
               <td>{formatDate( new Date(order.purchaseDate))}</td>
@@ -78,6 +128,14 @@ const OrdersPage = () => {
               </td>
               <td>{t(order.order_status)}</td>
               <td>
+              <Button
+                 
+                  size="sm"
+                  onClick={() => handleSelectedOrder(order)}
+                >
+                  {t('View')}
+                </Button>
+
                 {order.order_status != "UNP" ? (
                
                   <a

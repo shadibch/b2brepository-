@@ -14,6 +14,7 @@ import datetime
 import openpyxl
 from rest_framework.permissions import IsAdminUser
 from django.http import HttpResponse
+from hijri_converter import Hijri, Gregorian
 class OrdersAdminUserPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -42,7 +43,15 @@ class AdminOrder(APIView):
         serializer = OrderExtendedSerializer(order,context={'request': request})
         return Response(serializer.data)
 
+hijri_months = [
+    "محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة",
+    "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+]
 
+def format_date_arabic(d):
+    h = Gregorian(d.year, d.month, d.day).to_hijri()
+    monthasstr = hijri_months[h.month - 1]
+    return f"{h.year}/{monthasstr}/{h.day}"
 class AdminUpdateOrder(APIView):
     permission_classes = [IsAuthenticated, IsSuperUser]  # Ensure user is logged in and is superuser
     serializer_class = OrderExtendedSerializer           # Should b
@@ -171,22 +180,203 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
 from decimal import Decimal
 from babel.numbers import format_currency
+
+class AdminDetailsReportPeriodView(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        language = request.LANGUAGE_CODE
+        print(language)
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date', datetime.date.today())
+        instances = ProductInstance.objects.filter(order__purchaseDate__range=
+                                                   (start_date, end_date),order__order_status='PRC' ).select_related('order__purchaser__company').prefetch_related('order__purchaser__company__users__orders').prefetch_related('product')
+        
+        headers = [
+            _("Name"),
+            _("Part Id"),
+            _("Price"),
+            _("Quantity"),
+            _("Branch"),
+            _("Total Price"),
+            _("Quantities In Stock"),
+            _("Company"),
+            _("Purchase Date"),
+            _("Credit"),
+           
+        ]
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"{_('Purchased Items')} - {start_date} - {end_date}"
+
+        # Define styles
+        header_fill = PatternFill(start_color="404040", end_color="404040", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        alt_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+        light_row_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+        info_font = Font(bold=True)
+        for col, header in enumerate(headers,1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+        for row, instance in enumerate(instances, 2):
+            row_data = [
+                instance.product.name,
+                instance.product.part_id,
+                self.format_currency_localized(instance.price,instance.currency, language),
+                instance.quantity,
+                getattr(instance.branch, 'name', ''),
+                self.format_currency_localized(instance.price*instance.quantity,
+                                               instance.currency, language),
+                instance.product.stock_quantity,
+                instance.order.purchaser.company.name,
+                format_date_arabic( instance.order.purchaseDate) if language == 'ar' else instance.order.purchaseDate,
+                self.format_currency_localized(
+                    self.calculatesRmainsCredit(instance.order.purchaser.company), 
+                    instance.currency, language)
+            ]
+            row_fill = alt_row_fill if row % 2 == 0 else light_row_fill
+            
+            for col, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.fill = row_fill
+                cell.alignment = Alignment(horizontal='center')
+
+        # Auto-adjust column widths
+        for col in range(1, len(headers) + 1):
+            ws.column_dimensions[get_column_letter(col)].auto_size = True
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=instances_report.xlsx'
+        wb.save(response)
+        return response
+    def format_currency_localized(self, amount, currency_code='SAR', locale='ar_SA'):
+        """
+        Format currency using Babel based on locale and currency code.
+
+        :param amount: The numeric value to format.
+        :param currency_code: The ISO 4217 currency code (e.g., 'USD', 'SAR').
+        :param locale: The locale code (e.g., 'en_US', 'ar_SA').
+        :return: A localized currency string.
+        """
+        try:
+            return format_currency(amount, currency_code, locale=locale)
+        except Exception as e:
+        # Fallback in case of formatting failure
+            return f"{amount:,.2f} {currency_code}"
+    def calculatesRmainsCredit(self,company):
+       credit = company.credit
+       ordersSum = sum(self.userOrdersSum(user) for user in company.users.all())
+       return credit - ordersSum
+
+    def userOrdersSum(self,user):
+        return sum(self.get_total_price(order) for order in user.orders.filter(order_status='UNP').all() )   
+    def get_total_price(self, obj):
+        return sum(item.price * item.quantity for item in obj.items.all())
 class AdminOrderDetailsReportView(APIView):
     permission_classes = [IsAdminUser]
     def get(self, request,order_id):
-        order = Order.objects.get(order_id)
+        language = request.LANGUAGE_CODE
+        order = Order.objects.get(id=order_id)
         instances =  order.items.all()
         headers = [
-            _("Order ID"),
-            _("Status"),
-            _("Order Status"),
-            _("Purchase Date"),
-            _("Paid Date"),
-            _("Company Name"),
-            _("Company Register Number"),
-            _("Company Credit"),
+            _("Name"),
+            _("Part Id"),
+            _("Price"),
+            _("Quantity"),
+            _("Branch"),
             _("Total Price")
+           
         ]
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"{_('Products Order')} - {order.id}"
+
+        # Define styles
+        header_fill = PatternFill(start_color="404040", end_color="404040", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        alt_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+        light_row_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+        info_font = Font(bold=True)
+
+        # Row 1: Headers
+        header_labels = [_("Company Name"), _("Company Credit"), _("Order ID"), _("Total Price")]
+        for col, header in enumerate(header_labels, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center')
+
+        # Row 2: Values
+        company = getattr(order.purchaser, 'company', None)
+        row2_data = [
+            getattr(company, 'name', ''),
+            self.format_currency_localized(getattr(company, 'credit', 0), 'SAR', language),
+            order.id,
+            self.format_currency_localized(self.get_total_price(order), 'SAR', language)
+        ]
+
+        for col, value in enumerate(row2_data, 1):
+            cell = ws.cell(row=2, column=col, value=value)
+            cell.alignment = Alignment(horizontal='center')
+
+        # Set header row (now at row 3)
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=3, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+
+        # Add data rows with alternating colors (starting from row 4)
+        for row, instance in enumerate(instances, 4):
+            row_data = [
+                instance.product.name,
+                instance.product.part_id,
+                self.format_currency_localized(instance.price,instance.currency, language),
+                instance.quantity,
+                getattr(instance.branch, 'name', ''),
+                self.format_currency_localized(instance.price*instance.quantity,
+                                               instance.currency, language)
+            ]
+
+            # Apply alternating row colors
+            row_fill = alt_row_fill if row % 2 == 0 else light_row_fill
+            
+            for col, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row, column=col, value=value)
+                cell.fill = row_fill
+                cell.alignment = Alignment(horizontal='center')
+
+        # Auto-adjust column widths
+        for col in range(1, len(headers) + 1):
+            ws.column_dimensions[get_column_letter(col)].auto_size = True
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=instances_report.xlsx'
+        wb.save(response)
+        return response
+    def get_total_price(self, obj):
+        return sum(item.price * item.quantity for item in obj.items.all())
+    def format_currency_localized(self, amount, currency_code='SAR', locale='ar_SA'):
+        """
+        Format currency using Babel based on locale and currency code.
+
+        :param amount: The numeric value to format.
+        :param currency_code: The ISO 4217 currency code (e.g., 'USD', 'SAR').
+        :param locale: The locale code (e.g., 'en_US', 'ar_SA').
+        :return: A localized currency string.
+        """
+        try:
+            return format_currency(amount, currency_code, locale=locale)
+        except Exception as e:
+        # Fallback in case of formatting failure
+            return f"{amount:,.2f} {currency_code}"
+
 
 class AdminOrderReportView(APIView):
     permission_classes = [IsAdminUser]
@@ -194,18 +384,15 @@ class AdminOrderReportView(APIView):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else 'SAR'      
     def get(self, request):
+        
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date', datetime.date.today())
         order_status = request.GET.get('order_status')
         language = request.LANGUAGE_CODE
-
+        print(start_date)
         if not start_date:
             return HttpResponse(_("Missing start_date"), status=400)
-        try:
-            start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_date = datetime.datetime.strptime(str(end_date), "%Y-%m-%d").date()
-        except Exception:
-            return HttpResponse(_("Invalid date format"), status=400)
+        
 
         orders = Order.objects.filter(
             purchaseDate__range=(start_date, end_date),
@@ -245,12 +432,13 @@ class AdminOrderReportView(APIView):
         # Add data rows with alternating colors
         for row, order in enumerate(orders, 2):
             company = getattr(order.purchaser, 'company', None)
+            date = getattr(order, 'paid_datetime', '')
             row_data = [
                 order.id,
                 _(order.status) ,
                 _(order.order_status),
                 order.purchaseDate,
-                getattr(order, 'paid_datetime', ''),
+                '' if date == '' else format_date_arabic(getattr(order, 'paid_datetime', '')) if language == 'ar' else getattr(order, 'paid_datetime', ''),
                 getattr(company, 'name', ''),
                 getattr(company, 'register_number', ''),
                 getattr(company, 'credit', ''),

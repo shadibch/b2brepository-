@@ -144,6 +144,10 @@ const Modal = ({ children, onClose }) => {
   ) : (
     <span>   {formatNumber(product.base_price, product.currency)}   </span>
   )}</div>
+  <div style={{color: product.availibility == 'M'
+  ? 
+    'red' : 'green' ,fontWeight:'bold'}}>{
+      t(product.availibility == 'M' ? 'Market' : 'Stock')}</div>
         {/* Attributes */}
         {product.attributs && (
           <div className="attributes">

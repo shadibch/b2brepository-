@@ -92,3 +92,29 @@ msgstr "تم التسليم"
 #
 msgid "PND"
 msgstr "قيد الانتظار"
+
+#
+msgid "Name"
+msgstr "الاسم"
+
+#
+msgid "Part Id"
+msgstr "رقم المنتج"
+
+#
+msgid "Order ID"
+msgstr "رقم الطلب"
+#
+msgid "Branch"
+msgstr "اسم الفرع"
+#
+
+msgid "Price"
+msgstr "السعر"
+
+#
+msgid "Quantity"
+msgstr "الكمية"
+
+msgid "Products Order"
+msgstr "منتجات الطلب"

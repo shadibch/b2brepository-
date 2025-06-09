@@ -32,7 +32,7 @@ class ProductInstanceUpdateSerializer(serializers.ModelSerializer):
         media = obj.product.media.all()
         return media[0].file.url if media and media.count() > 0 else None
      def get_cart_items_count(self,obj):
-        return obj.cart.instances.count()
+        return obj.cart.instances.count() if obj.cart else obj.order.items.count()
      def get_project_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
         language = request.LANGUAGE_CODE if request else "en"  

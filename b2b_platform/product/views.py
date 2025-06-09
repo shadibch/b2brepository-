@@ -963,8 +963,10 @@ class ProductAdminViewSet(ModelViewSet):
                 closest_category = Category.objects.get(id=category_id)
                 subgroups = json.loads(request.data.get('subgroups', '[]'))
                 price = request.data.get('base_price')
-                
+                stock_quantity = request.data.get('stock_quantity')
                 # Validate translations
+                availibility = request.data.get('availibility')
+
                 if not any(trans.get('name') for trans in translations):
                     return Response(
                         {'error': 'At least one translation must be provided'},
@@ -980,7 +982,9 @@ class ProductAdminViewSet(ModelViewSet):
                     name=name,
                     part_id=part_id,
                     base_price=price,
-                    closest_category=closest_category
+                    stock_quantity = stock_quantity,
+                    closest_category=closest_category,
+                    availibility = availibility
                 )
                 category = closest_category
                 categories = []
@@ -1029,11 +1033,13 @@ class ProductAdminViewSet(ModelViewSet):
                 
                 # Parse JSON data
                 translations = json.loads(request.data.get('translations', '[]'))
-                category_id = request.data.get('category')
-                
+                category_id = request.data.get('closest_category')
+                print(category_id)
+                closest_category = Category.objects.get(id=category_id)
+                stock_quantity = request.data.get('stock_quantity')
                 subgroups = json.loads(request.data.get('subgroups', '[]'))
                 price = request.data.get('price')
-
+                availibility = request.data.get('availibility')
                 # Validate translations
                 if not any(trans.get('name') for trans in translations):
                     return Response(
@@ -1045,9 +1051,16 @@ class ProductAdminViewSet(ModelViewSet):
                 name = next(trans['name'] for trans in translations if trans.get('name'))
                 product.name = name
                 product.price = price
-                product.category_id = category_id
+                product.closest_category=closest_category
+                product.stock_quantity = stock_quantity
+                product.availibility = availibility
                 product.save()
-
+                category = closest_category
+                categories = []
+                while category:
+                    categories.append(category)
+                    category = category.parent
+                product.categories.set(categories)
                 # Update translations
                 product.translations.all().delete()
                 for trans in translations:

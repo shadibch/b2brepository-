@@ -220,3 +220,18 @@ class OrderListView(ListAPIView):
         # Filter orders by the logged-in user
         return Order.objects.filter(purchaser__company=self.request.user.company).order_by('-purchaseDate') if self.request.user.role == 'company_admin' else Order.objects.filter(purchaser=self.request.user).order_by('-purchaseDate') 
 
+
+
+from rest_framework.exceptions import NotFound
+
+
+class OrderItemDetails(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            raise NotFound("Order not found.")
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)

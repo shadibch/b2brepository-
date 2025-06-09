@@ -374,6 +374,7 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
       const response = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, {
         purchaser: selectedCompany.value,
         is_percentage: isPercentage,
+ 
         discount_value: parseFloat(discountValue)
       }, {
         headers: {
@@ -577,7 +578,8 @@ export default function ProductManagement() {
     en: { name: "", description: "" },
     ar: { name: "", description: "" }
   });
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState('');
+  const [availability, setAvailability] = useState('M');
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
   const [message, setMessage] = useState(null);
@@ -593,7 +595,7 @@ export default function ProductManagement() {
   const [partId, setPartId] = useState('');
   const [tempImages, setTempImages] = useState([]);
   const [tempPreviewUrls, setTempPreviewUrls] = useState([]);
-
+  const [stock_quantity, setStock_quantity] = useState(0);
   useEffect(() => {
     if (!searchQuery.trim()) {
       if (selectedCategory?.id) {
@@ -690,13 +692,15 @@ export default function ProductManagement() {
           const formData = new FormData();
           formData.append('images', files[0]);
           
-          await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`, formData, {
+          await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`,
+             formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
           });
 
-          const response = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
+          const response = await 
+          axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
           setSelected(response.data);
         } catch (error) {
           console.error("Error updating product images:", error);
@@ -930,6 +934,7 @@ export default function ProductManagement() {
     setTempImages([]);
     setTempPreviewUrls([]);
     setSelectedImageIndex(0);
+    setStock_quantity(0);
   };
 
   const handleSave = async () => {
@@ -969,9 +974,11 @@ export default function ProductManagement() {
         }
 
         formData.append('base_price', price);
+        formData.append('availibility', availability);
         formData.append('subgroups', JSON.stringify(selectedSubgroups));
         formData.append('name', firstFilledName);
-
+        formData.append('stock_quantity', stock_quantity);
+        console.log(JSON.stringify(formData));
         // Add temporary images if creating new product
         if (!selected?.id) {
           tempImages.forEach(image => {
@@ -1111,7 +1118,8 @@ export default function ProductManagement() {
 
       // Set price
       setPrice(detailedProduct.base_price || '');
-
+      setAvailability(detailedProduct.availibility);
+      setStock_quantity(detailedProduct.stock_quantity);
       // Set groups and subgroups
       setSelectedGroups(detailedProduct.groups);
       setSelectedSubgroups(detailedProduct.subgroups);
@@ -1304,10 +1312,22 @@ export default function ProductManagement() {
                           <Form.Label>{t('Part ID')}</Form.Label>
                           <Form.Control
                             type="text"
-                            value={selected ? selected.part_id : (partId || '')}
-                            onChange={(e) => !selected && setPartId(e.target.value)}
+                            value={selected ? selected.part_id :
+                               (partId || '')}
+                            onChange={(e) =>  setPartId(e.target.value)}
                             disabled={!!selected}
                             placeholder={t('Enter Part ID')}
+                          />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                          <Form.Label>{t('Stock Quantity')}</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={stock_quantity}
+                            onChange={(e) =>
+                              setStock_quantity(parseInt(e.target.value) || 0)}
+                            placeholder={t('Enter Stock Quantity')}
                           />
                         </Form.Group>
 
@@ -1319,6 +1339,17 @@ export default function ProductManagement() {
                             onChange={(e) => setPrice(e.target.value)}
                             placeholder={t('Enter price')}
                           />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                          <Form.Label>{t('Availability')}</Form.Label>
+                          <Form.Select
+                            value={availability}
+                            onChange={(e) => setAvailability(e.target.value)}
+                            className="form-control"
+                          >
+                            <option value="M">{t('Market')}</option>
+                            <option value="S">{t('Stock')}</option>
+                          </Form.Select>
                         </Form.Group>
 
                         {renderImageSection()}

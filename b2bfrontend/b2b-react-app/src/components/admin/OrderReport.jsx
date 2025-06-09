@@ -2,20 +2,51 @@ import React, { useState } from "react";
 import { t, isRTL } from '../../utils/translator';
 import axiosInstance from "../axiosInstance";
 import {  Button,Card,Form } from 'react-bootstrap';
+import DatePicker from "react-multi-date-picker";
+import DateObject from "react-date-object";
+import "react-datepicker/dist/react-datepicker.css";
+import { registerLocale } from "react-datepicker";
+import ar from 'date-fns/locale/ar-SA';
+import arabic_ar from 'react-date-object/locales/arabic_ar';
+import arabic from "react-date-object/calendars/arabic";
+import gregorian from "react-date-object/calendars/gregorian";
+
 const OrderReport = () => {
-  const [startDate, setStartDate] = useState(
-    new Date(new Date().setMonth(new Date().getMonth() - 3)).toISOString().slice(0, 10)
-  );
+  const getThreeMonthsAgo = () => {
+    const date = new DateObject();
+    date.month -= 3;
+    return date;
+  };
+
+  const [startDate, setStartDate] = useState(getThreeMonthsAgo());
+  
+
   const [orderStatus, setOrderStatus] = useState("UDL");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const formatHijriDate = (date) => {
+    if (!date) return '';
+    const options = { calendar: 'islamic-umalqura', year: 'numeric', month: 'long', day: 'numeric' };
+    return new Intl.DateTimeFormat('ar-SA', options).format(date);
+  };
+
+  const formatDateForAPI = (date) => {
+    if (!date) return '';
+    return date.convert(gregorian).format("YYYY-MM-DD");
+  };
 
   const handleDownload = async () => {
     setLoading(true);
     setError(null);
+    const formattedStartDate = formatDateForAPI(startDate);
+
+    const params = new URLSearchParams({
+      start_date: formattedStartDate  ,
+      "order_status" : orderStatus
+      });
     try {
       const response = await axiosInstance.get(
-        `/api/admin/orders/report/?start_date=${startDate}&order_status=${orderStatus}`,
+        `/api/admin/orders/report/?${params.toString()}`,
         { responseType: "blob" }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -65,13 +96,23 @@ const OrderReport = () => {
             <Form.Label className="block text-gray-700 font-semibold mb-2" htmlFor="order-date">
               {t('Order Purchase Date')}:
             </Form.Label>
-            <input
-              id="order-date"
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-300 px-4 py-2"
-            />
+            <DatePicker
+                selected={startDate}
+                onChange={date => setStartDate(date)}
+                locale={isRTL() ? arabic_ar : undefined}
+                calendar={isRTL() ?  arabic : undefined}
+                dateFormat={isRTL() ? "yyyy/MM/dd" : "yyyy-MM-dd"}
+                calendarStartDay={isRTL() ? 6 : 0}
+                maxDate={new Date()}
+                value={startDate}
+                className="form-control"
+                required
+              />
+              <small className="text-muted">
+                {formatHijriDate(startDate)}
+              </small>
+         
+           
           </Form.Group>
 
           <Form.Group>

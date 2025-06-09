@@ -16,6 +16,7 @@ CURRENCY_CHOICES = [
     ]
 LOCALES_CHOICES=[('en', 'English'), ('ar', 'Arabic')]
 
+PRODUCT_AVAILIBLE = [('M','Market') , ('S' , 'Stock')]
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)  # ✅ Unique category name
@@ -91,6 +92,7 @@ class Product(models.Model):
         choices=CURRENCY_CHOICES,
         default="SAR"  # ✅ Default to Saudi Arabian Riyal
     )
+    availibility = models.CharField(max_length=1,choices=PRODUCT_AVAILIBLE,default='M')
 
     def __str__(self):
         return f"{self.name}, {self.part_id}, {self.currency}"

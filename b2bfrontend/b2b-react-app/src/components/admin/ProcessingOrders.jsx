@@ -16,8 +16,8 @@ export default function ProcessingOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showItems, setShowItems] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
-  
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   useEffect(() => {
     fetchOrders();
   }, [currentPage]);
@@ -30,6 +30,27 @@ export default function ProcessingOrders() {
     } catch (error) {
       setMessage({ type: 'danger', text: t('Error fetching orders') });
     }
+  };
+
+  const handleDownload = async (order) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get(
+        `/api/admin/orders/items/${order.id}/`,
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `orders_instances_${order.id}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      setError(t('Failed to generate report'));
+    }
+    setLoading(false);
   };
 
   const handleSearch = () => {
@@ -99,6 +120,15 @@ export default function ProcessingOrders() {
         </Alert>
       )}
 
+{error && (
+        <Alert 
+          variant="danger"
+          onClose={() => setError(null)} 
+          dismissible
+        >
+          {error}
+        </Alert>
+      )}
       {showItems && selectedOrder && (
         <div className="order-details mb-4">
           {selectedOrder.items.map((item) => (
@@ -175,6 +205,16 @@ export default function ProcessingOrders() {
                   onClick={() => handleSelectedOrder(order)}
                 >
                   {t('View')}
+                </Button>
+
+
+                <Button
+                 
+                  size="sm"
+                  onClick={() => handleDownload(order)}
+                  disabled={loading}
+                >
+                  {t('Download')}
                 </Button>
 
                 <Button

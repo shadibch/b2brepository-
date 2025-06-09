@@ -259,5 +259,19 @@
    "Manage Products": "إدارة المنتجات",
    "Edit":"تحرير",
    "Companies Management":"إدارة الشركات",
-   "View" : "إظهار"
+   "View" : "إظهار",
+   "Download":"تحميل",
+   "Add Image":"اضافة صورة",
+   "Stock Quantity":"الكمية المتاحة",
+   "Enter Stock Quantity":"ادخل الكمية المتاحة",
+   "Download Reports": "تنزيل التقرير",
+   "Start Date" : "من تاريخ",
+   "End Date" : "الى تاريخ",
+   "Downloading...": "تنزيل.....",
+   "Please select a start date": "الرجاء اختيار تاريخ البدء",
+   "Report downloaded successfully":"تم تنزيل التقرير بنجاح",
+   "Error downloading report":"خطأ في تنزيل التقرير",
+   "Requests Report":"تقرير المنتجات",
+   "Market": "من السوق",
+   "Stock" : "من المخزن"
 }

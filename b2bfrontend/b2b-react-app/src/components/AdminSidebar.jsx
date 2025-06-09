@@ -32,7 +32,8 @@ const AdminSidebar = ({ setActivePage   }) => {
     "/admin/processing-orders":"1",
     "/admin/undelivered-orders":"1",
     "/admin/order_report":"5",
-    "/admin/company-admin" : "6"
+    "/admin/company-admin" : "6",
+    "/admin/report-management": "5"
     // Language and logout not route-based
   };
 
@@ -91,6 +92,9 @@ const AdminSidebar = ({ setActivePage   }) => {
           <Accordion.Body>
             <Link to="/admin/order_report" className="sidebar-item" onClick={() => setActivePage("/admin/order_report")}>
               {t("Order Report")}
+            </Link>
+            <Link to="/admin/report-management" className="sidebar-item" onClick={() => setActivePage("/admin/report-management")}>
+              {t("Requests Report")}
             </Link>
           </Accordion.Body>
         </Accordion.Item>
