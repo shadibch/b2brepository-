@@ -109,6 +109,9 @@ class ExecutePaidOrderView(APIView):
 
         serializer = OrderPaidSerializer(order)
         return Response(serializer.data)
+from django.http import JsonResponse
+
+
 
 class ProcessingOrdersView(ListAPIView):
     permission_classes = [IsAuthenticated, IsSuperUser]
@@ -123,7 +126,7 @@ class ProcessingOrdersView(ListAPIView):
             queryset = queryset.filter(purchaser__company__name__icontains=query)
 
         return queryset.order_by('-purchaseDate')
-
+from django.db.models import F
 class ReadyToDeliverView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUser]
 
@@ -135,6 +138,22 @@ class ReadyToDeliverView(APIView):
                 {"error": "Invalid order status"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        unqaequated_items = order.items.filter(product__stock_quantity__lt=F('quantity')).values_list('product__name', flat=True)
+        if(len(unqaequated_items) > 0):
+            items_str = ", ".join(unqaequated_items)
+            return JsonResponse(
+    {'error': _("Not enough items in the stock:  %(items_str)s") % {'items_str': items_str}},
+    status=400
+)
+        items = order.items.all()
+        products_to_update = []
+
+        for item in items:
+            product = item.product
+            product.stock_quantity -= item.quantity
+            products_to_update.append(product)
+
+        Product.objects.bulk_update(products_to_update, ['stock_quantity'])
 
         order.order_status = 'UDL'
         order.save()
@@ -201,6 +220,7 @@ class AdminDetailsReportPeriodView(APIView):
             _("Quantities In Stock"),
             _("Company"),
             _("Purchase Date"),
+            _("Company Credit"),
             _("Credit"),
            
         ]
@@ -230,7 +250,10 @@ class AdminDetailsReportPeriodView(APIView):
                                                instance.currency, language),
                 instance.product.stock_quantity,
                 instance.order.purchaser.company.name,
-                format_date_arabic( instance.order.purchaseDate) if language == 'ar' else instance.order.purchaseDate,
+                format_date_arabic( 
+                    instance.order.purchaseDate) if language == 'ar' else instance.order.purchaseDate
+                ,
+                self.format_currency_localized(getattr(instance.order.purchaser.company, 'credit', 0), 'SAR', language),
                 self.format_currency_localized(
                     self.calculatesRmainsCredit(instance.order.purchaser.company), 
                     instance.currency, language)
@@ -266,6 +289,8 @@ class AdminDetailsReportPeriodView(APIView):
         except Exception as e:
         # Fallback in case of formatting failure
             return f"{amount:,.2f} {currency_code}"
+    def userOrdersSum(self,user):
+        return sum(self.get_total_price(order) for order in user.orders.filter(order_status='UNP').all() )  
     def calculatesRmainsCredit(self,company):
        credit = company.credit
        ordersSum = sum(self.userOrdersSum(user) for user in company.users.all())
@@ -276,6 +301,12 @@ class AdminDetailsReportPeriodView(APIView):
     def get_total_price(self, obj):
         return sum(item.price * item.quantity for item in obj.items.all())
 class AdminOrderDetailsReportView(APIView):
+    def calculatesRmainsCredit(self,company):
+       credit = company.credit
+       ordersSum = sum(self.userOrdersSum(user) for user in company.users.all())
+       return credit - ordersSum
+    def userOrdersSum(self,user):
+        return sum(self.get_total_price(order) for order in user.orders.filter(order_status='UNP').all() )  
     permission_classes = [IsAdminUser]
     def get(self, request,order_id):
         language = request.LANGUAGE_CODE
@@ -303,7 +334,7 @@ class AdminOrderDetailsReportView(APIView):
         info_font = Font(bold=True)
 
         # Row 1: Headers
-        header_labels = [_("Company Name"), _("Company Credit"), _("Order ID"), _("Total Price")]
+        header_labels = [_("Company Name"), _("Company Credit"),_("Credit"),  _("Order ID"), _("Total Price")]
         for col, header in enumerate(header_labels, 1):
             cell = ws.cell(row=1, column=col, value=header)
             cell.font = header_font
@@ -315,6 +346,7 @@ class AdminOrderDetailsReportView(APIView):
         row2_data = [
             getattr(company, 'name', ''),
             self.format_currency_localized(getattr(company, 'credit', 0), 'SAR', language),
+            self.format_currency_localized(self.calculatesRmainsCredit(company),'SAR', language),
             order.id,
             self.format_currency_localized(self.get_total_price(order), 'SAR', language)
         ]
@@ -380,6 +412,26 @@ class AdminOrderDetailsReportView(APIView):
 
 class AdminOrderReportView(APIView):
     permission_classes = [IsAdminUser]
+    def userOrdersSum(self,user):
+        return sum(self.get_total_price(order) for order in user.orders.filter(order_status='UNP').all() )  
+    def calculatesRmainsCredit(self,company):
+       credit = company.credit
+       ordersSum = sum(self.userOrdersSum(user) for user in company.users.all())
+       return credit - ordersSum
+    def format_currency_localized(self, amount, currency_code='SAR', locale='ar_SA'):
+        """
+        Format currency using Babel based on locale and currency code.
+
+        :param amount: The numeric value to format.
+        :param currency_code: The ISO 4217 currency code (e.g., 'USD', 'SAR').
+        :param locale: The locale code (e.g., 'en_US', 'ar_SA').
+        :return: A localized currency string.
+        """
+        try:
+            return format_currency(amount, currency_code, locale=locale)
+        except Exception as e:
+        # Fallback in case of formatting failure
+            return f"{amount:,.2f} {currency_code}"
     def get_currency(self,obj):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else 'SAR'      
@@ -388,16 +440,21 @@ class AdminOrderReportView(APIView):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date', datetime.date.today())
         order_status = request.GET.get('order_status')
+        company_id = request.GET.get('company_id')
+        orders = Order.objects.filter(
+            purchaseDate__range=(start_date, end_date),
+            order_status=order_status
+        ).select_related('purchaser__company').prefetch_related('items')
+        if(company_id ) :
+            orders.filter(purchaser__company__id=company_id)
+        
         language = request.LANGUAGE_CODE
         print(start_date)
         if not start_date:
             return HttpResponse(_("Missing start_date"), status=400)
         
 
-        orders = Order.objects.filter(
-            purchaseDate__range=(start_date, end_date),
-            order_status=order_status
-        ).select_related('purchaser__company').prefetch_related('items')
+        
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -419,6 +476,7 @@ class AdminOrderReportView(APIView):
             _("Company Name"),
             _("Company Register Number"),
             _("Company Credit"),
+            _("Credit"),
             _("Total Price")
         ]
 
@@ -437,11 +495,16 @@ class AdminOrderReportView(APIView):
                 order.id,
                 _(order.status) ,
                 _(order.order_status),
-                order.purchaseDate,
+                 format_date_arabic( 
+                   order.purchaseDate) if language == 'ar' else order.purchaseDate
+                ,
                 '' if date == '' else format_date_arabic(getattr(order, 'paid_datetime', '')) if language == 'ar' else getattr(order, 'paid_datetime', ''),
                 getattr(company, 'name', ''),
                 getattr(company, 'register_number', ''),
-                getattr(company, 'credit', ''),
+                self.format_currency_localized(getattr(company, 'credit', 0), 'SAR', language),
+                self.format_currency_localized(
+                    self.calculatesRmainsCredit(company), 
+                    'SAR', language),
                 self.format_currency_localized(self.get_total_price(order),self.get_currency(order), language)
             ]
 

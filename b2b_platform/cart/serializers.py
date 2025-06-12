@@ -42,6 +42,7 @@ class ProductInstanceUpdateSerializer(serializers.ModelSerializer):
     
 class ProductInstanceAdminSerializer(serializers.ModelSerializer):
      part_id = serializers.SerializerMethodField()  
+     product_id = serializers.SerializerMethodField()
      image_path = serializers.SerializerMethodField()
 
      project_name = serializers.SerializerMethodField()
@@ -49,9 +50,10 @@ class ProductInstanceAdminSerializer(serializers.ModelSerializer):
     
      class Meta:
         model = ProductInstance
-        fields = ['branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ]    
+        fields = ['product_id' ,'branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ]    
 
-
+     def get_product_id(self, obj):
+        return obj.product.id  
      def get_part_id(self, obj):
         return obj.product.part_id
      def get_image_path(self, obj):

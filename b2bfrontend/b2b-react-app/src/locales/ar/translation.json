@@ -273,5 +273,7 @@
    "Error downloading report":"خطأ في تنزيل التقرير",
    "Requests Report":"تقرير المنتجات",
    "Market": "من السوق",
-   "Stock" : "من المخزن"
+   "Stock" : "من المخزن",
+   "Search company... (min. 3 characters)" : "ابحث عن الشركة... (الحد الأدنى 3 أحرف)",
+   "Order marked as ready to deliver": "الطلب جاهز للتسليم"
 }

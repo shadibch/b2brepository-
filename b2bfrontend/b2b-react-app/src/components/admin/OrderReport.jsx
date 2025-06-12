@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { t, isRTL } from '../../utils/translator';
 import axiosInstance from "../axiosInstance";
 import {  Button,Card,Form } from 'react-bootstrap';
@@ -10,6 +10,7 @@ import ar from 'date-fns/locale/ar-SA';
 import arabic_ar from 'react-date-object/locales/arabic_ar';
 import arabic from "react-date-object/calendars/arabic";
 import gregorian from "react-date-object/calendars/gregorian";
+import AsyncSelect from 'react-select/async';
 
 const OrderReport = () => {
   const getThreeMonthsAgo = () => {
@@ -19,11 +20,28 @@ const OrderReport = () => {
   };
 
   const [startDate, setStartDate] = useState(getThreeMonthsAgo());
-  
-
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const [orderStatus, setOrderStatus] = useState("UDL");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Load companies for autocomplete
+  const loadCompanies = async (inputValue) => {
+    if (inputValue.length < 3) {
+      return [];
+    }
+    try {
+      const response = await axiosInstance.get(`/api/admin/companies/?search=${inputValue}`);
+      return response.data.results.map(company => ({
+        value: company.id,
+        label: company.name
+      }));
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      return [];
+    }
+  };
+
   const formatHijriDate = (date) => {
     if (!date) return '';
     const options = { calendar: 'islamic-umalqura', year: 'numeric', month: 'long', day: 'numeric' };
@@ -41,9 +59,11 @@ const OrderReport = () => {
     const formattedStartDate = formatDateForAPI(startDate);
 
     const params = new URLSearchParams({
-      start_date: formattedStartDate  ,
-      "order_status" : orderStatus
-      });
+      start_date: formattedStartDate,
+      order_status: orderStatus,
+      ...(selectedCompany && { company_id: selectedCompany.value })
+    });
+
     try {
       const response = await axiosInstance.get(
         `/api/admin/orders/report/?${params.toString()}`,
@@ -111,8 +131,24 @@ const OrderReport = () => {
               <small className="text-muted">
                 {formatHijriDate(startDate)}
               </small>
-         
-           
+          </Form.Group>
+
+          <Form.Group>
+            <Form.Label className="block text-gray-700 font-semibold mb-2">
+              {t('Company')}:
+            </Form.Label>
+            <AsyncSelect
+              cacheOptions
+              defaultOptions
+              value={selectedCompany}
+              onChange={setSelectedCompany}
+              loadOptions={loadCompanies}
+              placeholder={t('Search company... (min. 3 characters)')}
+              isClearable
+              className="react-select-container"
+              classNamePrefix="react-select"
+              minInputLength={3}
+            />
           </Form.Group>
 
           <Form.Group>
@@ -142,7 +178,7 @@ const OrderReport = () => {
               shadow-md`}
             type="button"
           >
-            {loading ? t('Generating...') : t('Generate Report')}
+           {loading ? t('Downloading...') : t('Generate Report')}
           </Button>
         </div>
       </div>

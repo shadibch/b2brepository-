@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Company, Branch, Contract
 from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany, BranchSerializerContractCompany
-
+from django.db.models import Q
 class FilterCompanyByNameAPIView(APIView):
     def get(self, request, *args, **kwargs):
         query_string = request.query_params.get('q', '')  # Get the query string from the request
@@ -143,7 +143,15 @@ class CompanyViewSet(ListAPIView):
     permission_classes = [IsSuperUser]
     
     def get_queryset(self):
-        return Company.objects.all().order_by('name')
+        queryset = Company.objects.all().order_by('name')
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(register_number__icontains=search_query)
+            )
+        
+        return queryset.order_by('name') 
 
 class ContractItemsView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]

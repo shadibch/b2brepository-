@@ -4,6 +4,8 @@ import axiosInstance from "../axiosInstance";
 import {API_BASE_URL,DEFAULT_IMAGE} from '../../utils/settings';
 import "./styles.css";
 import "./shared.css";
+import { useLocation } from 'react-router-dom';
+
 import {
   t,
   switchLanguage,
@@ -12,6 +14,9 @@ import {
   formatNumber,
 } from "../../utils/translator";
 import AsyncSelect from 'react-select/async';
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
 
 const RichTextEditor = ({ value, onChange, dir, placeholder }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -26,6 +31,7 @@ const RichTextEditor = ({ value, onChange, dir, placeholder }) => {
     { name: 'Tahoma', value: 'Tahoma, sans-serif' }
   ];
 
+   
   const handleBold = () => {
     document.execCommand('bold', false, null);
   };
@@ -578,6 +584,7 @@ export default function ProductManagement() {
     en: { name: "", description: "" },
     ar: { name: "", description: "" }
   });
+   
   const [price, setPrice] = useState('');
   const [availability, setAvailability] = useState('M');
   const [images, setImages] = useState([]);
@@ -596,7 +603,26 @@ export default function ProductManagement() {
   const [tempImages, setTempImages] = useState([]);
   const [tempPreviewUrls, setTempPreviewUrls] = useState([]);
   const [stock_quantity, setStock_quantity] = useState(0);
+ 
+  const query = useQuery();
+  const [productId,setProductId] = useState(query.get('product_id'));
+
   useEffect(() => {
+    const fetchProductById = async () => {
+      if(productId) {
+        try {
+          const response = await axiosInstance.get(`/api/admin/product-detail/${productId}/`);
+          const product = response.data;
+          handleProductSelect(product);
+          setProductId( undefined);
+        } catch (error) {
+          console.error("Error fetching product:", error);
+          setMessage({ type: "danger", text: t("Error fetching product") });
+        }
+      }
+    };
+
+    fetchProductById();
     if (!searchQuery.trim()) {
       if (selectedCategory?.id) {
         fetchProductsByCategory(selectedCategory.id);
@@ -606,7 +632,7 @@ export default function ProductManagement() {
     }
     fetchCategories();
     fetchGroups();
-  }, [currentPage, selectedCategory]);
+  }, [currentPage, selectedCategory, productId]);
 
   const fetchProducts = async () => {
     try {

@@ -118,3 +118,21 @@ msgstr "الكمية"
 
 msgid "Products Order"
 msgstr "منتجات الطلب"
+#
+msgid "Credit"
+msgstr "ما تبقى من التامين"
+
+#
+msgid "Company"
+msgstr "الشركة"
+
+#
+msgid "Quantities In Stock"
+msgstr "الكمية في المخزن"
+
+#
+msgid "Purchased Items"
+msgstr "المنتوجات المشتراة"
+#
+msgid "Not enough items in the stock:  %(items_str)s"
+msgstr "لا يوجد ما يكفي من هذه العناصر في المخزن: %(items_str)s"

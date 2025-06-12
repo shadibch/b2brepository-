@@ -18,6 +18,12 @@ export default function ProcessingOrders() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const handleViewItem = (item) => {
+    
+    const url = `/admin/item-management/?product_id=${item.product_id}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
   useEffect(() => {
     fetchOrders();
   }, [currentPage]);
@@ -75,6 +81,7 @@ export default function ProcessingOrders() {
       fetchOrders();
       setShowConfirmModal(false);
     } catch (error) {
+      setShowConfirmModal(false);
       setMessage({ 
         type: 'danger', 
         text: error.response?.data?.error || t('Error updating order') 
@@ -140,7 +147,7 @@ export default function ProcessingOrders() {
               />
               <div className="cart-item-info">
                 <h2 className="cart-item-title">{item.branch_name}</h2>
-                <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.project_name}</h2>
+                <h2 className="cart-item-title" onClick={() => handleViewItem(item)}>{item.project_name}</h2>
                 <div className="cart-item-controls">
                   <input
                     type="number"

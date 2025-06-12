@@ -184,7 +184,7 @@ export default function ReportManagement() {
               onClick={handleDownload}
               disabled={isLoading || !startDate}
             >
-              {isLoading ? t('Downloading...') : t('Download Report')}
+              {isLoading ? t('Downloading...') : t('Generate Report')}
             </Button>
           </Form>
         </Card.Body>
