@@ -9,6 +9,7 @@
   "login": "نسجيل الدخول",
   "signup": "مستحدم حديد",
   "myorders": "طلباتي",
+  "My Orders": "طلباتي",
   "messages": "الرسائل",
   "switchbranch": "تغيير الفرع",
   "email": "البريد الإلكتروني",
@@ -26,6 +27,7 @@
   "required_field": "هذه الحقل مطلوب.",
   "invalid_email": "عنوان البريد الإلكتروني غير صالح.",
   "home": "الصفحة الرئيسية",
+  "Home": "الصفحة الرئيسية",
   "reset":"إعادة الظبط",
   "about_this_item": "عن هذا المنتج",
   "Branches": "الأفرع",
@@ -275,5 +277,8 @@
    "Market": "من السوق",
    "Stock" : "من المخزن",
    "Search company... (min. 3 characters)" : "ابحث عن الشركة... (الحد الأدنى 3 أحرف)",
-   "Order marked as ready to deliver": "الطلب جاهز للتسليم"
+   "Order marked as ready to deliver": "الطلب جاهز للتسليم",
+    "PRJ" : "الموافقة جزئية",
+    "Contracts" : "العقود",
+    "Item has added to the shopping cart" : "تمت إضافة العنصر إلى سلة التسوق"
 }

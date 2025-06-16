@@ -145,7 +145,7 @@ from babel.numbers import format_currency, format_decimal
 from reportlab.platypus import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_RIGHT
-
+from django.db.models import Q
 
 def format_arabic_number(value):
     return get_display(arabic_reshaper.reshape(format_decimal(value, locale='ar_SA')))
@@ -263,7 +263,7 @@ def generate_invoice_pdf(order, invoice):
         Paragraph(process_arabic("الوصف"), arabic_style)
     ]]
 
-    for item in order.items.all():
+    for item in order.items.filter(~Q(status='RJC')).all():
         description = Paragraph(process_arabic(item.branch.name + ': ' + item.product.name), arabic_style)
         quantity = format_arabic_number(item.quantity)
         item_price = format_arabic_currency(item.price, item.currency)
@@ -290,7 +290,7 @@ def generate_invoice_pdf(order, invoice):
     elements.append(Spacer(1, 20))
 
     # Totals
-    subtotal = sum(item.price * item.quantity for item in order.items.all())
+    subtotal = sum(item.price * item.quantity for item in order.items.filter(~Q(status='RJC')).all())
     totals_data = [[
         Paragraph(format_arabic_currency(subtotal), arabic_style),
         Paragraph(process_arabic("المجموع الفرعي"), arabic_style)

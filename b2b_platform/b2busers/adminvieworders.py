@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsSuperUser
 from cart.models import *
-from cart.serializers import OrderExtendedSerializer,OrderSerializerAdminHistory, OrderPaidSerializer
+from cart.serializers import ProductInstanceAdminSerializer,OrderExtendedSerializer,OrderSerializerAdminHistory, OrderPaidSerializer
 from django.shortcuts import get_object_or_404 
 from .OrderInvoiceView import OrderViewSet,sendemai
 from rest_framework.response import Response
@@ -52,6 +52,22 @@ def format_date_arabic(d):
     h = Gregorian(d.year, d.month, d.day).to_hijri()
     monthasstr = hijri_months[h.month - 1]
     return f"{h.year}/{monthasstr}/{h.day}"
+class AdminUpdateProductInstance(APIView):
+    permission_classes = [IsAuthenticated, IsSuperUser]  # Ensure user is logged in and is superuser
+    serializer_class = ProductInstanceAdminSerializer           # Should b
+    def post(self, request, productinstance_id):
+        productinstance = get_object_or_404(ProductInstance, id=productinstance_id)  # or order_id=order_id if that's the field name
+        status_value = request.data.get("status")
+        rejection_reason = request.data.get("rejection_reason")
+        productinstance.status = status_value
+        productinstance.rejection_reason = rejection_reason
+        productinstance.save()
+        
+        
+        
+
+        return Response({"message": "Order has been rejected."}, status=status.HTTP_201_CREATED)
+from django.db.models import Count, F, Value
 class AdminUpdateOrder(APIView):
     permission_classes = [IsAuthenticated, IsSuperUser]  # Ensure user is logged in and is superuser
     serializer_class = OrderExtendedSerializer           # Should b
@@ -60,7 +76,12 @@ class AdminUpdateOrder(APIView):
         status_value = request.data.get("status")
         rejection_reason = request.data.get("rejection_reason")
         order.status = status_value
+        
         order.rejection_reason = rejection_reason
+        items = order.items.filter(status='RJC').all()
+        if status_value == 'ACC':
+            if(len(items) > 0 ):
+                order.status = 'PRJ'
         order.save()
 
         if status_value == 'ACC':
@@ -75,7 +96,7 @@ class AdminResendAdmin(APIView):
         invoice = get_object_or_404(Invoice,id=invoice_id)
 
         return sendemai(invoice.order,invoice)
-
+from django.db.models import Q
 class PaidOrdersView(ListAPIView):
     permission_classes = [IsAuthenticated, IsSuperUser]
     serializer_class = OrderPaidSerializer
@@ -83,7 +104,7 @@ class PaidOrdersView(ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params.get('q', '')
-        queryset = Order.objects.filter(status='ACC', 
+        queryset = Order.objects.filter( Q(status='ACC') | Q(status='PRJ'), 
                                         order_status='UNP')
 
         if query:
@@ -97,7 +118,7 @@ class ExecutePaidOrderView(APIView):
     def post(self, request, order_id):
         order = get_object_or_404(Order, id=order_id)
         
-        if order.status != 'ACC' or order.order_status != 'UNP':
+        if (order.status != 'ACC' and order.status != 'PRJ') or order.order_status != 'UNP' :
             return Response(
                 {"error": "Invalid order status"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -120,7 +141,7 @@ class ProcessingOrdersView(ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params.get('q', '')
-        queryset = Order.objects.filter(status='ACC', order_status='PRC')
+        queryset = Order.objects.filter( Q(status='ACC')|Q(status = 'PRJ'), order_status='PRC')
 
         if query:
             queryset = queryset.filter(purchaser__company__name__icontains=query)
@@ -133,19 +154,19 @@ class ReadyToDeliverView(APIView):
     def post(self, request, order_id):
         order = get_object_or_404(Order, id=order_id)
         
-        if order.status != 'ACC' or order.order_status != 'PRC':
+        if (order.status != 'ACC' and order.status != 'PRJ') or order.order_status != 'PRC':
             return Response(
                 {"error": "Invalid order status"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        unqaequated_items = order.items.filter(product__stock_quantity__lt=F('quantity')).values_list('product__name', flat=True)
+        unqaequated_items = order.items.filter(~Q(status = 'RJC')).filter(product__stock_quantity__lt=F('quantity')).values_list('product__name', flat=True)
         if(len(unqaequated_items) > 0):
             items_str = ", ".join(unqaequated_items)
             return JsonResponse(
     {'error': _("Not enough items in the stock:  %(items_str)s") % {'items_str': items_str}},
     status=400
 )
-        items = order.items.all()
+        items = order.items.filter(~Q(status = 'RJC')).all()
         products_to_update = []
 
         for item in items:
@@ -233,7 +254,7 @@ class AdminDetailsReportPeriodView(APIView):
         header_font = Font(color="FFFFFF", bold=True)
         alt_row_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
         light_row_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
-        info_font = Font(bold=True)
+        info_font = Font( bold=True)
         for col, header in enumerate(headers,1):
             cell = ws.cell(row=1, column=col, value=header)
             cell.fill = header_fill
@@ -299,7 +320,7 @@ class AdminDetailsReportPeriodView(APIView):
     def userOrdersSum(self,user):
         return sum(self.get_total_price(order) for order in user.orders.filter(order_status='UNP').all() )   
     def get_total_price(self, obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.filter(~Q(status = 'RJC')).all())
 class AdminOrderDetailsReportView(APIView):
     def calculatesRmainsCredit(self,company):
        credit = company.credit
@@ -376,11 +397,13 @@ class AdminOrderDetailsReportView(APIView):
 
             # Apply alternating row colors
             row_fill = alt_row_fill if row % 2 == 0 else light_row_fill
-            
+            cellfont =   Font(strike=True,color = '8B0000') if instance.status == 'RJC' else Font() 
+         
             for col, value in enumerate(row_data, 1):
                 cell = ws.cell(row=row, column=col, value=value)
                 cell.fill = row_fill
                 cell.alignment = Alignment(horizontal='center')
+                cell.font = cellfont
 
         # Auto-adjust column widths
         for col in range(1, len(headers) + 1):
@@ -393,7 +416,7 @@ class AdminOrderDetailsReportView(APIView):
         wb.save(response)
         return response
     def get_total_price(self, obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.filter(~Q(status = 'RJC')).all())
     def format_currency_localized(self, amount, currency_code='SAR', locale='ar_SA'):
         """
         Format currency using Babel based on locale and currency code.
@@ -528,7 +551,7 @@ class AdminOrderReportView(APIView):
         return response
 
     def get_total_price(self, obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.filter(~Q(status = 'RJC')).all())
 
 
 

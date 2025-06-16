@@ -4,10 +4,24 @@ from rest_framework.permissions import IsAuthenticated
 
 class NavigationLinksAPIView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure user is authenticated
-
+    def is_contract(self,user):
+        return user.company and user.company.branches.filter(contract__isnull=False).exists()
     def get(self, request):
         user = request.user
-        
+        staffLink = [
+                {"name": "Home", "url": "/"},
+                {"name": "My Orders", "url": "/orders"},
+             
+            ]
+        if(self.is_contract(user)):
+            staffLink = [
+                {"name": "Home", "url": "/"},
+                {"name": "My Orders", "url": "/orders"},
+              
+                {"name" : "Contract", "url": "/contracts"} 
+            ]
+            
+        print(str(staffLink))  
         # Define links based on role
         role_links = {
             "company_admin": [
@@ -15,11 +29,7 @@ class NavigationLinksAPIView(APIView):
                 {"name": "Manage Users", "url": "users"},
                 {"name": "Orders", "url": "orders"},
             ],
-            "staff": [
-                {"name": "Home", "url": "/"},
-                {"name": "My Orders", "url": "/orders"},
-                {"name": "Support", "url": "/support"},
-            ],
+            "staff": staffLink,
             "guest": [
                 {"name": "Home", "url": "/"},
                 {"name": "Login", "url": "/login"},
@@ -29,5 +39,5 @@ class NavigationLinksAPIView(APIView):
         
         # Get links based on user role
         links = role_links.get(user.role, role_links["guest"])  # Default to 'guest' if no role
-        
+        print(links)
         return Response({"links": links})

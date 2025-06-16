@@ -2,6 +2,8 @@
 from rest_framework import serializers
 from .models import *
 from product.utils import *
+from django.db.models import Q
+from product.serializers import ProductSerializer
 class CartSerializer(serializers.ModelSerializer):
      cart_items_count = serializers.SerializerMethodField()
      class Meta:
@@ -23,7 +25,7 @@ class ProductInstanceUpdateSerializer(serializers.ModelSerializer):
     
      class Meta:
         model = ProductInstance
-        fields = ['branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ,'cart_items_count']    
+        fields = ['branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ,'cart_items_count','status','rejection_reason']    
 
 
      def get_part_id(self, obj):
@@ -50,7 +52,9 @@ class ProductInstanceAdminSerializer(serializers.ModelSerializer):
     
      class Meta:
         model = ProductInstance
-        fields = ['product_id' ,'branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ]    
+        fields = ['product_id' ,'branch_name','project_name' ,
+                   'id', 'part_id', 'image_path', 'price',  'currency',
+                       'quantity', 'branch','cart','status','rejection_reason' ]    
 
      def get_product_id(self, obj):
         return obj.product.id  
@@ -77,10 +81,7 @@ class CartDetailsSerializer(serializers.ModelSerializer):
         fields = ['total_price', 'currency', 'instances']  # ✅ Corrected here
 
     def get_total_price(self, obj):
-        total = 0
-        for instance in obj.instances.all():
-            total += instance.quantity * instance.price
-        return total
+        return sum(item.price * item.quantity for item in obj.instances.all()) 
 
     def get_currency(self,obj):
         instances =  obj.instances.all()
@@ -89,7 +90,11 @@ class CartDetailsSerializer(serializers.ModelSerializer):
         sorted_instances = obj.instances.all().order_by('id')
         serializer = ProductInstanceUpdateSerializer(sorted_instances, many=True)
         return serializer.data
-
+class ContractSerializer(serializers.ModelSerializer):
+    items = ProductSerializer(many=True)
+    class Meta:
+        model = Contract
+        fields = ["items"]
 
 class OrderSerializer(serializers.ModelSerializer):
     items = ProductInstanceUpdateSerializer(many=True)
@@ -103,7 +108,7 @@ class OrderSerializer(serializers.ModelSerializer):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else None      
     def get_total_price(self,obj):
-        return sum(item.price * item.quantity for item in obj.items.all())  
+        return sum(item.price * item.quantity for item in obj.items.filter( ~Q(status = 'RJC')).all())  
 
 
 class OrderSerializerHistory(serializers.ModelSerializer):
@@ -116,7 +121,7 @@ class OrderSerializerHistory(serializers.ModelSerializer):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else None      
     def get_total_price(self,obj):
-        return sum(item.price * item.quantity for item in obj.items.all()) 
+       return sum(item.price * item.quantity for item in obj.items.filter( ~Q(status = 'RJC')).all())  
 class OrderSerializerAdminHistory(serializers.ModelSerializer):
     total_price = serializers.SerializerMethodField()
     currency = serializers.SerializerMethodField()
@@ -130,7 +135,7 @@ class OrderSerializerAdminHistory(serializers.ModelSerializer):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else None      
     def get_total_price(self,obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.filter( ~Q(status = 'RJC')).all())  
     def get_company_name(self,obj):
         return obj.purchaser.company.name
     def get_company_registered_number(elf,obj):
@@ -154,7 +159,7 @@ class OrderExtendedSerializer(serializers.ModelSerializer):
         instances =  obj.items.all()
         return instances[0].currency if instances.count() > 0 else None      
     def get_total_price(self,obj):
-        return sum(item.price * item.quantity for item in obj.items.all())
+        return sum(item.price * item.quantity for item in obj.items.filter(~Q(status = 'RJC')).all())
     def get_company_name(self,obj):
         return obj.purchaser.company.name
     def get_company_registered_number(elf,obj):

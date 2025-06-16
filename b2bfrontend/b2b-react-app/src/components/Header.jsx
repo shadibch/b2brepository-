@@ -11,6 +11,7 @@ const Header = ({ setProducts }) => {
   const { itemscount ,setitemscount} = useHeaderContext();
   const { setSelectedBranchId} = useHeaderContext();
   const [query, setQuery] = useState(''); // Store the input value
+  const[links,setLinks] = useState([]);
   const navigate = useNavigate(); // Handle navigation
   const location = useLocation(); // Check the current location
   const token = localStorage.getItem("authToken"); // Retrieve token
@@ -53,7 +54,14 @@ const Header = ({ setProducts }) => {
       window.location.reload();
     }
   };
-
+  const fetchLinks = async () => {
+    try {
+      const response = await axiosInstance.get("/api/navigation/");
+      setLinks(response.data.links); // Store fetched links
+    } catch (error) {
+      console.error("Error fetching navigation links:", error);
+    }
+  };
   const fetchBranches = async () => {
     try {
       const response = await axiosInstance.get("/api/branches/");
@@ -86,6 +94,7 @@ const Header = ({ setProducts }) => {
 
     fetchUserData();
     fetchBranches();
+    fetchLinks();
 
   }, [token,itemscount]); // ✅ Adding token as a dependency
 
@@ -123,7 +132,11 @@ const Header = ({ setProducts }) => {
             <hr />
             {user && (
               <>
-                <Link className="dropdown-item" to="/orders">{t('myorders')}</Link>
+                {links.map((link) => (
+                  <Link key={link.url} className="dropdown-item" to={link.url}>{t(link.name)}</Link>
+                ))}
+           
+               
                                 <hr />
                 {branches.length > 0 && (
                   <>

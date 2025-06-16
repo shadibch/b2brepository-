@@ -18,7 +18,7 @@ CURRENCY_CHOICES = [
         # ✅ Add more currencies as needed
     ]
 
-STATUS_CHOICES = [("PND","Pending"), ("ACC","Accepted"),("RJC","Rejected")]
+STATUS_CHOICES = [("PND","Pending"), ("ACC","Accepted"),("RJC","Rejected"), ("PRJ","Partial Rejected")]
 ORDER_STATUS_CHOICES = [("UNP","Unpaid"), ("PRC","Processing"), ("UDL","To be delivered"),("DLV","Delivered")]
 class Cart(models.Model):
     purchaser = models.OneToOneField(CustomUser,on_delete=models.CASCADE, null=True,related_name="activecart" )
@@ -87,7 +87,7 @@ class ProductInstance(models.Model):
     branch = models.ForeignKey(Branch,on_delete=models.SET_NULL,null=True,related_name="related_items")
     cart = models.ForeignKey('Cart', on_delete=models.SET_NULL, null=True, related_name="instances")
     order = models.ForeignKey('Order',on_delete=models.SET_NULL, null=True, related_name="items")
-
+    rejection_reason = models.CharField(null=True,blank=True);
 
     def __str__(self):
         return f"{self.product}, {self.price}, {self.quantity}"

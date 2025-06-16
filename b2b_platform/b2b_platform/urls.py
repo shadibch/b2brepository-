@@ -24,7 +24,7 @@ from company.views import FilterCompanyByNameAPIView,UserBranchListAPIView
 from company.views import *
 from navigation.views import NavigationLinksAPIView
 from cart.views import *
-from cart.views import *
+
 from company.views import *
 from b2busers.adminview import *
 from b2busers.adminvieworders import *
@@ -101,7 +101,10 @@ urlpatterns = [
     path('api/admin/companies/', CompanyViewSet.as_view(), name='company-admin'),
     path('api/admin/requests/',AdminDetailsReportPeriodView.as_view()),
     path('api/order/details/<int:order_id>/' , OrderItemDetails.as_view()),
+    path('api/contract/',contracts),
+    path('api/admin/product_instance/update/<int:productinstance_id>/',AdminUpdateProductInstance.as_view()),
     path('api/companies/<int:company_id>/branches/', get_company_branches, name='company-branches'),
+    
     # Catch-all route for SPA
 
 ]

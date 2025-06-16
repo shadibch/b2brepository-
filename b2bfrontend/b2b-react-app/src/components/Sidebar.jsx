@@ -36,7 +36,7 @@ const Sidebar = ({ setActivePage }) => { // ✅ Accept setActivePage from parent
 
       <nav className="sidebar-nav">
         {links.map((link) => (
-		<a className="sidebar-item" href="#" onClick={() => setActivePage(link.url)}
+		<a className="sidebar-item" href={link.url} onClick={() => setActivePage(link.url)}
 >{t(link.name)}</a>
          
         ))}

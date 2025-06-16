@@ -16,7 +16,8 @@ const AccountSettings = () => {
       case "branches":
         return <Branches />;
       case "orders":
-        return <OrdersPage/>
+        return <OrdersPage/>;
+        
       default:
         return <UserManagement />;
     }

@@ -12,6 +12,7 @@ export default function OrderManagement() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(0);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -43,11 +44,34 @@ export default function OrderManagement() {
       { status: "ACC" },
       { headers: { "Content-Type": "application/json" } }
     );
+    selectedOrder.status = 'ACC';
     setMessage({ type: "success", text: message });
     await fetchOrders();
-    setSelectedOrder(null);
+    
   };
 
+  const handleRejectItem = async (productInstance, message) => {
+    if(!productInstance.rejection_reason) {
+      setMessage({ type: "danger", text: t('rejected_error_message') });
+      return;
+    }
+    await axiosInstance.post(`api/admin/product_instance/update/${productInstance.id}/`, {
+      status: "RJC",
+      rejection_reason: productInstance.rejection_reason
+    });
+    setMessage({ type: "success", text: message });
+    productInstance.status = 'RJC';
+  }
+
+
+  const handleAcceptedItem = async (productInstance, message) => {
+   
+    await axiosInstance.post(`api/admin/product_instance/update/${productInstance.id}/`, {
+      status: "ACC"
+    });
+    setMessage({ type: "success", text: message });
+    productInstance.status = 'ACC';
+  }
   const handleReject = async (message) => {
     if (!rejectionReason.trim()) {
       setMessage({ type: "danger", text: t('rejected_error_message') });
@@ -58,6 +82,7 @@ export default function OrderManagement() {
       rejection_reason: rejectionReason,
     });
     setMessage({ type: "success", text: message });
+    selectedOrder.status = 'RJC';
     await fetchOrders();
     setSelectedOrder(null);
   };
@@ -83,21 +108,65 @@ export default function OrderManagement() {
                 />
                 <div className="cart-item-info">
                   <h2 className="cart-item-title">{item.branch_name}</h2>
-                  <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.project_name}</h2>
-                  <div className="cart-item-controls">
+                  <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)} 
+                    style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }}>
+                    {item.project_name}
+                  </h2>
 
+                    {(item.status == 'RJC') &&(
+                        <h2 className="cart-item-title"  
+                        style={{ 
+                          textDecoration:  'line-through' ,
+                          color:  '#8B0000' 
+                        }}>
+                        {item.rejection_reason}
+                      </h2>
+    
+                    )}
+
+
+                  <div className="cart-item-controls">
                     <input
                       type="number"
                       value={(item.quantity)}
                       min={1}
                       disabled
+                      style={{ 
+                        textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                        color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                      }}
                     />
-
                   </div>
                 </div>
-                <div className="cart-item-price" >
+                <div className="cart-item-price" 
+                  style={{ 
+                    textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                    color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                  }}>
                   {formatNumber(item.price, item.currency)}
                 </div>
+                {(item.status == 'INT' ) && (
+                  
+                  <div>
+                      <Form.Group >
+            <Form.Label className="block font-medium">{t('rejected_label')}:</Form.Label>
+            <Form.Control
+              className="w-full border rounded p-2"
+              value={(item.rejection_reason)}
+              onChange={(e) => {item.rejection_reason = e.target.value;}}
+              disabled={false}
+            />
+          </Form.Group>
+         
+                    <div className="flex gap-4 mt-4">
+                      <Button onClick={() => handleAcceptedItem(item,t('accepted_message'))} className="px-4 py-2 bg-green-600 text-white rounded">{t('accept')}</Button>
+                      <Button onClick={() => handleRejectItem(item, t('rejected_message'))} className="px-4 py-2 bg-red-600 text-white rounded">{t('reject')}</Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             <span>
@@ -110,6 +179,8 @@ export default function OrderManagement() {
 
               </div>
             </span>
+            
+
           </div>
 
           <Form.Group >
@@ -121,12 +192,12 @@ export default function OrderManagement() {
               disabled={false}
             />
           </Form.Group>
-
-          <div className="flex gap-4 mt-4">
-            <Button onClick={() => handleAccept(t('accepted_message'))} className="px-4 py-2 bg-green-600 text-white rounded">{t('accept')}</Button>
-
-            <Button onClick={() => handleReject(t('rejected_message'))} className="px-4 py-2 bg-red-600 text-white rounded">{t('reject')}</Button>
-          </div>
+          {(selectedOrder.status !== 'ACC' && selectedOrder.status !== 'RJC') && (
+            <div className="flex gap-4 mt-4">
+              <Button onClick={() => handleAccept(t('accepted_message'))} className="px-4 py-2 bg-green-600 text-white rounded">{t('accept')}</Button>
+              <Button onClick={() => handleReject(t('rejected_message'))} className="px-4 py-2 bg-red-600 text-white rounded">{t('reject')}</Button>
+            </div>
+          )}
         </div>
       )}
 

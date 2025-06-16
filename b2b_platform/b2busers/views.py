@@ -13,6 +13,8 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .permissions import IsSuperUserOrCompanyAdmin
 from rest_framework.permissions import IsAuthenticated
+from .serializers import StaffUserDetailSerializer
+from .permissions import IsCompanyAdmin
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -47,12 +49,12 @@ class LoginAPIView(TokenObtainPairView):
             return Response({
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "main_url" : "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user) else "/"
+                "main_url" : "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
             })
         else:
             return Response({"error": "Invalid credentials"}, status=400)
     def is_contract(self,user):
-        return user.company and user.company.branches.filter(contract__isnull=False).exists()
+        return user.is_authenticated and user.company and user.role != "company_admin" and  user.company.branches.filter(contract__isnull=False).exists()
 
 class RegisterStaffView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]  # ✅ Restrict access
@@ -122,8 +124,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import StaffUserDetailSerializer
-from .permissions import IsCompanyAdmin
+
 
 class StaffUserDetailView(APIView):
     permission_classes = [IsAuthenticated, IsCompanyAdmin]  # ✅ Restrict access to company admins

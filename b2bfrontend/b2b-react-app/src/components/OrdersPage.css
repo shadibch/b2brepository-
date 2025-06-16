@@ -34,7 +34,9 @@
   .row-accepted {
     background-color: #d4edda; /* Green */
   }
-  
+  .row-partially-rejected {
+    background-color: violet;
+  }
   .pagination {
     display: flex;
     justify-content: center;

@@ -62,12 +62,21 @@ def addItem(request, branchid):
 from datetime import datetime
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def contracts(request):
+    for branch in request.user.branches.all():
+        if(branch.contract):
+            data = ContractSerializer(branch.contract,context={'request': request}).data
+            return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def cart(request):
     cart = Cart.objects.filter(purchaser=request.user).first()
     if cart is None:
         cart = Cart.objects.create(purchaser=request.user)
         for branch in request.user.branches.all():
-            print(branch.contract)
+        
             if branch.contract:
                 for product in branch.contract.items.all():
                     print("Number of items ******" +  str(len(branch.contract.items.all())))
@@ -93,7 +102,7 @@ def cartdetails(request):
             print(branch.contract)
             if branch.contract:
                 for product in branch.contract.items.all():
-                    print("Number of items ******" +  str(len(branch.contract.items.all())))
+                    
                     ProductInstance.objects.create(
                         product=product,
                         price=calculate(request.user,product),

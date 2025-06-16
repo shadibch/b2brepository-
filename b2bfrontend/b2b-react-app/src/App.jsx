@@ -16,6 +16,9 @@ import OrdersPage from "./components/Orders";
 import AdministratorPage from "./components/AdministratorPage"; // Import this
 import "./i18n";
 import { HeaderProvider } from "./components/HeaderContext";
+import Branches from "./components/Branches";
+import UserManagement from "./components/UserManagement";
+import Contracts from "./components/Contracts";
 
 function App() {
   const token = localStorage.getItem("authToken");
@@ -40,6 +43,9 @@ function App() {
         <Route path="/order" element={<Order />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/admin/*" element={<AdministratorPage />} /> {/* ✅ Admin route */}
+       <Route path="/branches" element={<Branches/>} />
+       <Route path="/users" element={<UserManagement></UserManagement>} />
+       <Route path="/contracts" element={<Contracts/>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </HeaderProvider>

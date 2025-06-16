@@ -49,7 +49,9 @@ const OrdersPage = () => {
       case "RJC":
         return "row-rejected"; // Red row
       case "ACC":
-        return "row-accepted"; // Green row
+        return "row-accepted"; // Green ro
+      case "PRJ":
+        return "row-partially-rejected";
       default:
         return "";
     }
@@ -70,17 +72,44 @@ const OrdersPage = () => {
               />
               <div className="cart-item-info">
                 <h2 className="cart-item-title">{item.branch_name}</h2>
-                <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.project_name}</h2>
+                
+                
+                <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}
+                    style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }}>
+                  
+                  
+                  {item.project_name}</h2>
+                  {(item.status == 'RJC') &&(
+                        <h2 className="cart-item-title"  
+                        style={{ 
+                          textDecoration:  'line-through' ,
+                          color:  '#8B0000' 
+                        }}>
+                        {item.rejection_reason}
+                      </h2>
+    
+                    )}
                 <div className="cart-item-controls">
                   <input
                     type="number"
                     value={item.quantity}
                     min={1}
                     disabled
+                    style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }}
                   />
                 </div>
               </div>
-              <div className="cart-item-price">
+              <div className="cart-item-price"
+              style={{ 
+                textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+              }}>
                 {formatNumber(item.price, item.currency)}
               </div>
             </div>
@@ -136,7 +165,7 @@ const OrdersPage = () => {
                   {t('View')}
                 </Button>
 
-                {order.order_status != "UNP" ? (
+                {order.status == "ACC" || order.status == "PRJ" ? (
                
                   <a
                     href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}

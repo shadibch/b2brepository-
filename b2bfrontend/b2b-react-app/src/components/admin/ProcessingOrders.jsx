@@ -147,17 +147,39 @@ export default function ProcessingOrders() {
               />
               <div className="cart-item-info">
                 <h2 className="cart-item-title">{item.branch_name}</h2>
-                <h2 className="cart-item-title" onClick={() => handleViewItem(item)}>{item.project_name}</h2>
+                <h2 className="cart-item-title" onClick={() => handleViewItem(item)}
+                    style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }}
+                  >{item.project_name}</h2>
+                  {(item.status == 'RJC') &&(
+                        <h2 className="cart-item-title"  
+                        style={{ 
+                          textDecoration:  'line-through' ,
+                          color:  '#8B0000' 
+                        }}>
+                        {item.rejection_reason}
+                      </h2>
+    
+                    )}
+
                 <div className="cart-item-controls">
                   <input
                     type="number"
                     value={item.quantity}
                     min={1}
                     disabled
-                  />
+                    style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }} />
                 </div>
               </div>
-              <div className="cart-item-price">
+              <div className="cart-item-price"   style={{ 
+                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
+                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    }}>
                 {formatNumber(item.price, item.currency)}
               </div>
             </div>
