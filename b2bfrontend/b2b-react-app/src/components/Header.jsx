@@ -4,6 +4,7 @@ import axiosInstance from "./axiosInstance";
 import { useHeaderContext } from "./HeaderContext";
 
 import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
+import { Alert } from "react-bootstrap";
 const Header = ({ setProducts }) => {
   const [user, setUser] = useState(null);
   const [branches, setBranches] = useState([]);
@@ -12,9 +13,11 @@ const Header = ({ setProducts }) => {
   const { setSelectedBranchId} = useHeaderContext();
   const [query, setQuery] = useState(''); // Store the input value
   const[links,setLinks] = useState([]);
+  const[message,setMessage]= useState(null);
   const navigate = useNavigate(); // Handle navigation
   const location = useLocation(); // Check the current location
   const token = localStorage.getItem("authToken"); // Retrieve token
+  const expiry_order = localStorage.getItem("expiry_order");
   const handleChange = (e) => {
     setSelectedBranchId(e.target.value);
   };
@@ -36,6 +39,23 @@ const Header = ({ setProducts }) => {
   const handleSearchEvent = (event) => {
     fetchActiveCart();
   };
+  const handleExpirayOrder = (event) => {
+    const eventData = event.detail;
+    const expiryDate = isRTL() ? 
+      formatHijriDate(new Date(eventData[0])) :
+      eventData[0];
+    const orderId = eventData[1];
+    setMessage(t('order_expiry_message', { orderId, expiryDate }));
+  }
+
+  // Format date for display in Hijri
+  const formatHijriDate = (date) => {
+    if (!date) return '';
+    const options = { calendar: 'islamic-umalqura', year: 'numeric', month: 'long', day: 'numeric' };
+    return new Intl.DateTimeFormat('ar-SA', options).format(date);
+  };
+
+  window.addEventListener('expiry_order',handleExpirayOrder);
 
   window.addEventListener('updateCart', handleSearchEvent);
   const changeLanguage = (lang) => {
@@ -90,11 +110,22 @@ const Header = ({ setProducts }) => {
       return;
     }
 
+
     fetchActiveCart();
 
     fetchUserData();
     fetchBranches();
     fetchLinks();
+    if(expiry_order && !message) {
+      console.log(expiry_order);
+      const exp = expiry_order.split(",");
+      const expiryDate = isRTL() ? 
+      formatHijriDate(new Date(exp[0])) :
+      exp[0];
+    const orderId = exp[1];
+    setMessage(t('order_expiry_message', { orderId, expiryDate }));
+    
+    }
 
   }, [token,itemscount]); // ✅ Adding token as a dependency
 
@@ -103,6 +134,7 @@ const Header = ({ setProducts }) => {
       <div className="header-left">
         <h1 className="logo">B2B</h1>
       </div>
+      {message && <Alert variant="success">{message}</Alert>}
 
       <div className="header-middle">
         <input

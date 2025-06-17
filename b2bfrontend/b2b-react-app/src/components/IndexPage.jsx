@@ -80,6 +80,11 @@ const navigate = useNavigate();
       setProducts(event.detail); // event.detail contains new search results
     };
   
+
+    const dispatchEvent = (event)=>{
+      navigate(event.detail);
+    };
+    window.addEventListener('dispatch', dispatchEvent);
     window.addEventListener('searchResults', handleSearchEvent);
   
     // Clean up event listener when component unmounts

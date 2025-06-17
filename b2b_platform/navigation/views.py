@@ -18,7 +18,7 @@ class NavigationLinksAPIView(APIView):
                 {"name": "Home", "url": "/"},
                 {"name": "My Orders", "url": "/orders"},
               
-                {"name" : "Contract", "url": "/contracts"} 
+                {"name" : "Contracts", "url": "/contracts"} 
             ]
             
         print(str(staffLink))  

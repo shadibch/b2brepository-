@@ -24,7 +24,18 @@ const Login = () => {
             const response = await axiosInstance.post("/api/login/", formData);
             localStorage.setItem("authToken", response.data.access);
             localStorage.setItem("refreshToken", response.data.refresh);
-            localStorage.setItem("main_url", response.data.main_url);
+            if(!response.data.main_url.includes('cartdetails')) {
+             localStorage.setItem("main_url", response.data.main_url);
+            }else {
+                const forwardDispatch =new CustomEvent('dispatch', { detail:
+                    response.data.main_ur });
+               window.dispatchEvent(forwardDispatch); 
+            }
+            const searchEvent = new CustomEvent('expiry_order', { detail:
+                 response.data.expiry_order });
+            window.dispatchEvent(searchEvent);
+            localStorage.setItem("expiry_order" , response.data.expiry_order);
+           
             navigate(response.data.main_url);
 
         } catch (err) {

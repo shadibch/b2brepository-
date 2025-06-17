@@ -30,6 +30,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return data
 
+from django.db.models import Q
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -46,11 +47,23 @@ class LoginAPIView(TokenObtainPairView):
          
         if user:
             refresh = RefreshToken.for_user(user)
-            return Response({
+            response = {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
                 "main_url" : "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
-            })
+            }
+            if not user.is_superuser:
+                latest, id = user.orders.filter(
+    Q(status='ACC') | Q(status='PRJ'),
+    order_status='UNP'
+).order_by('-invoice__expirePaymentDate'
+).values_list('invoice__expirePaymentDate', 'id', flat=False).first()
+
+
+
+                if(latest):
+                    response["expiry_order"] = (latest,id)
+            return Response(response)
         else:
             return Response({"error": "Invalid credentials"}, status=400)
     def is_contract(self,user):

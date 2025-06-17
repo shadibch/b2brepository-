@@ -280,5 +280,7 @@
    "Order marked as ready to deliver": "الطلب جاهز للتسليم",
     "PRJ" : "الموافقة جزئية",
     "Contracts" : "العقود",
-    "Item has added to the shopping cart" : "تمت إضافة العنصر إلى سلة التسوق"
+    "Item has added to the shopping cart" : "تمت إضافة العنصر إلى سلة التسوق",
+    "order_expiry_message": "سينتهي الطلب {{orderId}} في {{expiryDate}}",
+    "PURCHASE_DATETIME_EXCEED": "لقد تجاوزت زمن دفع طلب قديم. الرجاء تسديد الثمن لتكمل عملية شراء جديدة"
 }

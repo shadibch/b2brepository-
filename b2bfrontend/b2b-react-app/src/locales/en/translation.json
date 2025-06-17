@@ -112,8 +112,9 @@
  "Base Name":"Sub Group Base Name",
  "Group updated successfully":"Group updated successfully",
  "Group created successfully":"Group created successfully",
- "PRJ" : "Partally Accepted"
-
-
-  
+ "PRJ" : "Partally Accepted",
+ "Contracts" : "Contracts",
+ "Item has added to the shopping cart" : "Item has added to the shopping cart",
+ "order_expiry_message": "Order {{orderId}} will expire on {{expiryDate}}",
+ "PURCHASE_DATETIME_EXCEED":"You have exceeded your old waiting period. Please pay to complete a new purchase."
 }

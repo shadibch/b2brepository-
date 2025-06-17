@@ -113,6 +113,7 @@ def cartdetails(request):
                 )
     serialized_cart = CartDetailsSerializer(cart, context={'request': request}).data
     return Response(serialized_cart)
+import datetime
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def purchaseRequest(request):
@@ -138,6 +139,18 @@ def purchaseRequest(request):
             {"detail": "PURCHASE_LIMIT_EXCEED"},
             status=status.HTTP_400_BAD_REQUEST
         )
+    latest = user.orders.filter(
+    Q(status='ACC') | Q(status='PRJ'),
+    order_status='UNP'
+).order_by('-invoice__expirePaymentDate'
+).values_list('invoice__expirePaymentDate', flat=True).first()
+
+    if(latest and latest < datetime.datetime.now()):
+        return Response(
+            {"detail": "PURCHASE_DATETIME_EXCEED"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
 
     # Step 5: Proceed with order creation
     order = Order.objects.create(
