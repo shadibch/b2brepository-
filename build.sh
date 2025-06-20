@@ -12,7 +12,7 @@ ls -l
 pip install -r requirements.txt
 
 # Apply migrations
-python manage.py migrate
+#python manage.py migrate
 
 # Collect static files (if using static files)
 python manage.py collectstatic --noinput
