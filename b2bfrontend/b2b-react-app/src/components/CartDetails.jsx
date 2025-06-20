@@ -62,7 +62,7 @@ export default function CreateDetails() {
     setShowModal(false);
   };
   const handleClick = () => {
-    axiosInstance.post('api/purchase_request/')
+    axiosInstance.post('/api/purchase_request/')
       .then((response) => {
         const searchEvent = new CustomEvent('updateCart');
       window.dispatchEvent(searchEvent);

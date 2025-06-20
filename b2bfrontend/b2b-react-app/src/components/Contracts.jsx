@@ -40,7 +40,7 @@ export default function Contracts() {
   };
 
   const handleAddedItem = async (item) => {
-    axiosInstance.post(`api/add-item/${selectedBranchId}/`,{
+    axiosInstance.post(`/api/add-item/${selectedBranchId}/`,{
       
       "product": item.id,
       "quantity": item.quantity

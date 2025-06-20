@@ -38,7 +38,7 @@ const OrdersPage = () => {
   const handleSelectedOrder = async (order) => {
     
    const order_id = order.id;
-    const response = await axiosInstance.get(`api/order/details/${order_id}/`);
+    const response = await axiosInstance.get(`/api/order/details/${order_id}/`);
     setSelectedOrder(response.data);
     setShowItems(true);
   };

@@ -40,7 +40,7 @@ router.register(r'products', ProductAdminViewSet, basename='product-admin')
 
 import os
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('administrator/', admin.site.urls),
     path('api/', include('company.urls')),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

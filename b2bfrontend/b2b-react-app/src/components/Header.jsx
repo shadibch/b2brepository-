@@ -41,11 +41,14 @@ const Header = ({ setProducts }) => {
   };
   const handleExpirayOrder = (event) => {
     const eventData = event.detail;
+    const date = eventData[0];
+    if(date != undefined) {
     const expiryDate = isRTL() ? 
-      formatHijriDate(new Date(eventData[0])) :
-      eventData[0];
+      formatHijriDate(new Date(date)) :
+      date;
     const orderId = eventData[1];
     setMessage(t('order_expiry_message', { orderId, expiryDate }));
+    }
   }
 
   // Format date for display in Hijri
@@ -116,7 +119,8 @@ const Header = ({ setProducts }) => {
     fetchUserData();
     fetchBranches();
     fetchLinks();
-    if(expiry_order && !message) {
+    if(expiry_order != "undefined" &&
+      expiry_order &&expiry_order.length >1 && !message) {
       console.log(expiry_order);
       const exp = expiry_order.split(",");
       const expiryDate = isRTL() ? 

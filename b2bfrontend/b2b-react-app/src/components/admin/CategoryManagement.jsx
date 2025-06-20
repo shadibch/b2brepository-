@@ -403,7 +403,7 @@ export default function CategoryManager() {
   };
 
   const selectItem = async (cat) => {
-    const res = await axiosInstance.get(`api/admin/category/${cat.id}`);
+    const res = await axiosInstance.get(`/api/admin/category/${cat.id}`);
     setSelected(res.data);
   };
 

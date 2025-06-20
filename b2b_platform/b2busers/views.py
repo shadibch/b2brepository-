@@ -53,17 +53,17 @@ class LoginAPIView(TokenObtainPairView):
                 "main_url" : "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
             }
             if not user.is_superuser:
-                latest, id = user.orders.filter(
+                result = user.orders.filter(
     Q(status='ACC') | Q(status='PRJ'),
     order_status='UNP'
 ).order_by('-invoice__expirePaymentDate'
 ).values_list('invoice__expirePaymentDate', 'id', flat=False).first()
 
-
-
-                if(latest):
+                if result:
+                    latest, id = result
                     response["expiry_order"] = (latest,id)
             return Response(response)
+            
         else:
             return Response({"error": "Invalid credentials"}, status=400)
     def is_contract(self,user):

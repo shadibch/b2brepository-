@@ -71,24 +71,40 @@ from django.db.models import Count, F, Value
 class AdminUpdateOrder(APIView):
     permission_classes = [IsAuthenticated, IsSuperUser]  # Ensure user is logged in and is superuser
     serializer_class = OrderExtendedSerializer           # Should b
+    from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .OrderInvoiceView import OrderViewSet
+
+from .permissions import IsSuperUser  # Your custom class
+
+
+class AdminUpdateOrder(APIView):
+    permission_classes = [IsAuthenticated, IsSuperUser]
+
     def post(self, request, order_id):
-        order = get_object_or_404(Order, id=order_id)  # or order_id=order_id if that's the field name
+        order = get_object_or_404(Order, id=order_id)
         status_value = request.data.get("status")
         rejection_reason = request.data.get("rejection_reason")
-        order.status = status_value
         
+        order.status = status_value
         order.rejection_reason = rejection_reason
-        items = order.items.filter(status='RJC').all()
-        if status_value == 'ACC':
-            if(len(items) > 0 ):
-                order.status = 'PRJ'
+
+        rejected_items = order.items.filter(status='RJC')
+        if status_value == 'ACC' and rejected_items.exists():
+            order.status = 'PRJ'
+        
         order.save()
 
         if status_value == 'ACC':
             orderview = OrderViewSet()
-            return orderview.generate_invoice(order)
+            orderview.generate_invoice(order)
+            return Response({"message": "Invoice generated and emailed successfully."}, status=status.HTTP_201_CREATED)
 
-        return Response({"message": "Order has been rejected."}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Order has been rejected."}, status=status.HTTP_200_OK)
+
 class AdminResendAdmin(APIView):
     permission_classes = [IsAuthenticated]  # Ensure user is logged in and is superuser
     serializer_class = OrderExtendedSerializer

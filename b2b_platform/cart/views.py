@@ -86,7 +86,7 @@ def cart(request):
                         quantity=0,
                         branch=branch,
                         cart=cart,
-                        creationDate=datetime.now() 
+                        creationDate=timezone.now() 
                 )
    
     serialized_cart = CartSerializer(cart, context={'request': request}).data
@@ -109,11 +109,11 @@ def cartdetails(request):
                         quantity=0,
                         branch=branch,
                         cart=cart,
-                        creationDate=datetime.now() 
+                        creationDate=timezone.now() 
                 )
     serialized_cart = CartDetailsSerializer(cart, context={'request': request}).data
     return Response(serialized_cart)
-import datetime
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def purchaseRequest(request):
@@ -145,7 +145,7 @@ def purchaseRequest(request):
 ).order_by('-invoice__expirePaymentDate'
 ).values_list('invoice__expirePaymentDate', flat=True).first()
 
-    if(latest and latest < datetime.datetime.now()):
+    if(latest and latest < timezone.now()):
         return Response(
             {"detail": "PURCHASE_DATETIME_EXCEED"},
             status=status.HTTP_400_BAD_REQUEST

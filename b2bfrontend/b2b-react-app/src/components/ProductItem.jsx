@@ -20,7 +20,7 @@ const ProductItem = () => {
     // Send quantity to API or cart manager
     
     console.log("Adding to cart:", quantity);
-    axiosInstance.post(`api/add-item/${selectedBranchId}/`,{
+    axiosInstance.post(`/api/add-item/${selectedBranchId}/`,{
       
         "product": product.id,
         "quantity": quantity
