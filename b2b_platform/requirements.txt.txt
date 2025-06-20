@@ -1,6 +1,6 @@
 # Core Django
 Django>=4.2.0  
-
+whitenoise[brotli]
 # Django REST Framework
 djangorestframework>=3.14.0  
 
