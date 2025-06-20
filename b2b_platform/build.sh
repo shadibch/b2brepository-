@@ -6,6 +6,8 @@ set -o errexit
 # Change to the subdirectory
 cd b2b_platform
 
+ls -l
+
 # Install dependencies
 pip install -r requirements.txt
 
