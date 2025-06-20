@@ -39,7 +39,7 @@ SECRET_KEY = '***REMOVED***'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['b2brepository.onrender.com']
 AUTH_USER_MODEL = 'b2busers.CustomUser'
 
 
