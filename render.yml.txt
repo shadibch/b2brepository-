@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: b2b-platform
+    env: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: cd b2b_platform && gunicorn b2b_platform.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: b2b_platform.settings
+      - key: PYTHON_VERSION
+        value: 3.10
+      # Add other secrets like DB_URL, SECRET_KEY, etc.
