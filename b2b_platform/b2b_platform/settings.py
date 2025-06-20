@@ -138,10 +138,10 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'b2b_platform_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'NAME': 'b2bplay',
+        'USER': 'shadibch',
+        'PASSWORD': '***REMOVED***',
+        'HOST': '***REMOVED***',
         'PORT': '5432',  # Default PostgreSQL port
     }
 }
