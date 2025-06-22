@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     'cart',
     'cloudinary_storage',  # Must come before django.contrib.staticfiles
     'cloudinary',
-    'storages',
 ]
 
 MIDDLEWARE = [
