@@ -1,6 +1,7 @@
 from django.db import models
 from company.models import Company
 from django.db import models
+from cloudinary.models import CloudinaryField
 CURRENCY_CHOICES = [
         ("USD", "United States Dollar"),
         ("EUR", "Euro"),
@@ -20,7 +21,7 @@ PRODUCT_AVAILIBLE = [('M','Market') , ('S' , 'Stock')]
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)  # ✅ Unique category name
-    file = models.FileField(upload_to="product_media/")
+    file = models.CloudinaryField('file')
     parent = models.ForeignKey('Category', blank=True, on_delete=models.SET_NULL, null=True, related_name="children") 
     groups = models.ManyToManyField('ProductGroup', related_name="categories_groups")  # ✅ One-to-Many Relationship
     def __str__(self):
