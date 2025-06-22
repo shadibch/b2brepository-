@@ -695,7 +695,7 @@ class CategorySaveView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 import cloudinary.uploader
-import cloudinary.uploader
+
 
 class CategoryAdminCreateUpdateView(CreateAPIView):
     permission_classes = [IsSuperUser]
@@ -721,7 +721,7 @@ class CategoryAdminCreateUpdateView(CreateAPIView):
 
             with transaction.atomic():
                 file_url = None
-                if file:
+                if file: 
                     # Upload to Cloudinary manually
                     upload_result = cloudinary.uploader.upload(file)
                     file_url = upload_result.get('secure_url')
@@ -883,9 +883,11 @@ class ProductAdminViewSet(ModelViewSet):
 
             # Delete the old media and create new one
             media_items[index].delete()
+            upload_result = cloudinary.uploader.upload(image)
+            file_url = upload_result.get('secure_url')
             ProductMedia.objects.create(
                 product=product,
-                file=image,
+                file=file_url,
                 media_type='image'
             )
 
@@ -939,11 +941,13 @@ class ProductAdminViewSet(ModelViewSet):
                 )
 
             image = request.FILES['images']
+            upload_result = cloudinary.uploader.upload(image)
+            file_url = upload_result.get('secure_url')
             
             # Create new media
             ProductMedia.objects.create(
                 product=product,
-                file=image,
+                file=file_url,
                 media_type='image'
             )
 
@@ -1005,10 +1009,12 @@ class ProductAdminViewSet(ModelViewSet):
 
                 # Handle images
                 images = request.FILES.getlist('images')
+                upload_result = cloudinary.uploader.upload(image)
+                file_url = upload_result.get('secure_url')
                 for image in images:
                     ProductMedia.objects.create(
                         product=product,
-                        file=image
+                        file=file_url
                     )
 
                 # Set groups and subgroups
@@ -1077,9 +1083,12 @@ class ProductAdminViewSet(ModelViewSet):
                 if 'images' in request.FILES:
                     images = request.FILES.getlist('images')
                     for image in images:
+                        upload_result = cloudinary.uploader.upload(image)
+                        file_url = upload_result.get('secure_url')
+
                         ProductMedia.objects.create(
                             product=product,
-                            file=image
+                            file=file_url
                         )
 
                 # Update groups and subgroups

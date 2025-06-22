@@ -145,7 +145,7 @@ class AttributeValue(models.Model):
 
 class ProductMedia(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="media")
-    file = models.FileField(upload_to="product_media/")
+    file = models.URLField()
     media_type = models.CharField(max_length=10, choices=[("image", "Image"), ("video", "Video")])
     def __str__(self):
         return f"{self.product, self.file}"
