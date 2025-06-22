@@ -21,7 +21,7 @@ import {
   formatLocal
 } from "../../utils/translator";
 import { EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import axios from 'axios';
+
 import axiosInstance from '../axiosInstance';
 import { API_BASE_URL, DEFAULT_IMAGE } from '../../utils/settings';
 
@@ -64,7 +64,7 @@ const BranchManagement = ({ company }) => {
   const handleAddProducts = async (selectedProducts) => {
     try {
       setLoading(true);
-      await axios.post(`/api/branches/${selectedBranch.id}/contract/items/`, {
+      await axiosInstance.post(`/api/branches/${selectedBranch.id}/contract/items/`, {
         items: selectedProducts,
       });
       message.success('Products added successfully');

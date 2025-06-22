@@ -4,7 +4,7 @@ import { Table, Form, Button, Alert, Modal ,FormSelect } from "react-bootstrap";
 import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber,formatDate,formatLocal} from '../../utils/translator';
 import ReactPaginate from "react-paginate";
 import './UserManagement.css';
-const API_BASE = 'api/admin';
+const API_BASE = '/api/admin';
 
 
 const ManagedUsersPage = () => {

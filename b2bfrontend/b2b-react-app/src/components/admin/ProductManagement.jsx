@@ -314,7 +314,7 @@ const GroupSelector = ({ groups, selectedGroups, onGroupSelect, selectedSubgroup
                   key={subgroup.id}
                   type="radio"
                   name={`group-${group.id}`}
-                  label={subgroup.name}
+                  label={<span style={{ color: 'black' }}>{subgroup.name}</span>}
                   checked={selectedSubgroups.includes(subgroup.id)}
                   onChange={() => onSubgroupSelect(subgroup.id, group.id)}
                 />
