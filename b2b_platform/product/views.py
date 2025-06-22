@@ -694,6 +694,8 @@ class CategorySaveView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+import cloudinary.uploader
+import cloudinary.uploader
 
 class CategoryAdminCreateUpdateView(CreateAPIView):
     permission_classes = [IsSuperUser]
@@ -703,42 +705,42 @@ class CategoryAdminCreateUpdateView(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            # Parse JSON data from form fields
             translations_data = json.loads(request.data.get('translations', '[]'))
             groups = json.loads(request.data.get('groups', '[]'))
-            
+
             if not any(trans.get('name') for trans in translations_data):
                 return Response(
                     {'error': 'At least one translation must be provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             name = next(trans.get('name') for trans in translations_data if trans.get('name'))
             category_id = request.data.get('id')
-            
-            # Handle file upload
             file = request.FILES.get('file')
             parent_id = request.data.get('parent')
 
             with transaction.atomic():
+                file_url = None
+                if file:
+                    # Upload to Cloudinary manually
+                    upload_result = cloudinary.uploader.upload(file)
+                    file_url = upload_result.get('secure_url')
+
                 if category_id and category_id != 'null' and category_id != '':
-                    # Update existing category
                     category = get_object_or_404(Category, id=category_id)
                     category.name = name
                     if file:
-                        category.file = file
+                        category.file = file_url
                     if parent_id and parent_id != 'null':
                         category.parent_id = parent_id
                     category.save()
                 else:
-                    # Create new category
                     category = Category.objects.create(
                         name=name,
-                        file=file,
+                        file=file_url,
                         parent_id=parent_id if parent_id and parent_id != 'null' else None
                     )
 
-                # Update translations
                 category.translations.all().delete()
                 for trans_data in translations_data:
                     if trans_data.get('name'):
@@ -748,7 +750,6 @@ class CategoryAdminCreateUpdateView(CreateAPIView):
                             name=trans_data['name']
                         )
 
-                # Update groups
                 if groups:
                     category.groups.set(groups)
 

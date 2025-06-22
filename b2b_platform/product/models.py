@@ -21,7 +21,7 @@ PRODUCT_AVAILIBLE = [('M','Market') , ('S' , 'Stock')]
 
 class Category(models.Model):
     name = models.CharField(max_length=255, unique=True)  # ✅ Unique category name
-    file = CloudinaryField('file')
+    file = models.URLField(blank=True, null=True) 
     parent = models.ForeignKey('Category', blank=True, on_delete=models.SET_NULL, null=True, related_name="children") 
     groups = models.ManyToManyField('ProductGroup', related_name="categories_groups")  # ✅ One-to-Many Relationship
     def __str__(self):
