@@ -149,7 +149,7 @@ class ProductSerializer(serializers.ModelSerializer):
       
 
     def get_media_list(self, obj):
-        return [media.file.url for media in obj.media.all()]  # ✅ Returns URLs of media files
+        return [media.file for media in obj.media.all()]  # ✅ Returns URLs of media files
  # ✅ Returns URLs of media files
 
 from .models import ProductGroup, ProductSubGroup
@@ -386,7 +386,7 @@ class ProductAdminSerializer(serializers.ModelSerializer):
 
     def get_media_list(self, obj):
         request = self.context.get('request')
-        return [request.build_absolute_uri(media.file.url) for media in obj.media.all()] if request else []
+        return [request.build_absolute_uri(media.file) for media in obj.media.all()] if request else []
 
 class ProductDetailedAdminSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
@@ -411,7 +411,7 @@ class ProductDetailedAdminSerializer(serializers.ModelSerializer):
         return translations
 
     def get_media_list(self, obj):
-        return [media.file.url for media in obj.media.all()]
+        return [media.file for media in obj.media.all()]
 
     def get_category_hierarchy(self, obj):
         hierarchy = []
