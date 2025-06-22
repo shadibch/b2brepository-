@@ -864,25 +864,23 @@ class ProductAdminViewSet(ModelViewSet):
         try:
             product = self.get_object()
             index = int(request.query_params.get('index', 0))
-            
+         
             if 'images' not in request.FILES:
                 return Response(
                     {'error': 'No image file provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+            print("Passed Images")
             image = request.FILES['images']
             
             # Get the media item at the specified index
             media_items = list(product.media.all())
-            if index >= len(media_items):
-                return Response(
-                    {'error': 'Invalid media index'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
+            print(index)
+            print(len(media_items))
+            
             # Delete the old media and create new one
-            media_items[index].delete()
+            if index < len(media_items):
+                media_items[index].delete()
             upload_result = cloudinary.uploader.upload(image)
             file_url = upload_result.get('secure_url')
             ProductMedia.objects.create(
