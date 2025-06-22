@@ -37,7 +37,7 @@ LOCALE_PATHS = [
 SECRET_KEY = '***REMOVED***'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['b2brepository.onrender.com']
 AUTH_USER_MODEL = 'b2busers.CustomUser'
@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'product',
     'cart',
-
+    'cloudinary',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -124,8 +125,8 @@ EMAIL_HOST_EMAIL = os.environ.get('EMAIL_HOST_EMAIL', 'noreply@example.com')
 
 
 
-MEDIA_URL = "/media/"  # ✅ URL prefix for media files
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # ✅ Storage location for uploaded media files
+#MEDIA_URL = "/media/"  # ✅ URL prefix for media files
+#MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # ✅ Storage location for uploaded media files
 
 
 REST_FRAMEWORK = {
@@ -167,7 +168,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 

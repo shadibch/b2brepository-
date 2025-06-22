@@ -3,7 +3,8 @@ Django>=4.2.0
 whitenoise[brotli]
 # Django REST Framework
 djangorestframework>=3.14.0  
-
+cloudinary
+django-cloudinary-storage
 # JWT Authentication
 djangorestframework-simplejwt>=5.3.0  
 
