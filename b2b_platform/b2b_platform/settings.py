@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -61,8 +66,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'product',
     'cart',
+    'cloudinary_storage',  # Must come before django.contrib.staticfiles
     'cloudinary',
-    'cloudinary_storage',
     'storages',
 ]
 
@@ -95,7 +100,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 ROOT_URLCONF = 'b2b_platform.urls'
-import os
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -112,9 +117,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'b2b_platform.wsgi.application'
-import os
-from dotenv import load_dotenv
-load_dotenv() 
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.example.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
@@ -124,11 +126,16 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'yourpassword')
 
 EMAIL_HOST_EMAIL = os.environ.get('EMAIL_HOST_EMAIL', 'noreply@example.com')
 
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
 
-
-#MEDIA_URL = "/media/"  # ✅ URL prefix for media files
-#MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # ✅ Storage location for uploaded media files
-
+# Media files configuration for Cloudinary
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'  # This will be overridden by Cloudinary URLs
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -169,13 +176,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
