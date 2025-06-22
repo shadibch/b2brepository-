@@ -166,6 +166,7 @@ src={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` :
   ) : (
     <span>{formatNumber(product.base_price,product.currency)}</span>
   )}
+  <p/>
 <span style={{color: product.availibility == 'M'
   ? 
     'red' : 'green' ,fontWeight:'bold'}}>{
