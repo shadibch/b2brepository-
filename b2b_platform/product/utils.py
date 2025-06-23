@@ -21,8 +21,9 @@ def calculate(user,obj):
   
     if user.is_authenticated:
         product_price = ProductPrice.objects.filter(product=obj, purchaser=user.company).first()
-        return (
-            product_price.flat_discount if product_price and product_price.flat_discount
+       
+        return ( 0 if not product_price else
+            product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
             else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
             else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
             else obj.base_price

@@ -124,59 +124,60 @@ const navigate = useNavigate();
         <div className={`bottom-section ${isSidebarOpen ? "shrink" : "expand"}`} >
          
           <div className="product-grid">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="product-item"
-                onClick={() => navigate(`/productitem/${product.part_id}`)} // ✅ Navigates on click
-              onMouseEnter={(e) => {
-  if (product.media_list.length > 1) {
-    e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[1]}`;
-  }
-}}
+          {products.map((product) => (
+  <div
+    key={product.id}
+    className="product-item"
+    onClick={() => navigate(`/productitem/${product.part_id}`)}
+    onMouseEnter={(e) => {
+      if (product.media_list.length > 1) {
+        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[1]}`;
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (product.media_list.length > 1) {
+        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[0]}`;
+      }
+    }}
+  >
+    {/* ✅ Product Image */}
+    <img
+      src={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
+      alt={product.name}
+      className="product-image"
+    />
 
-onMouseLeave={(e) => {
-  if (product.media_list.length > 1) {
-    e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[0]}`;
-  }
-}}
+    {/* ✅ Product Name */}
+    <p className="product-name">{truncateText(product.name)}</p>
 
-              >
-                {/* ✅ Product Image */}
-                <img 
-src={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
+    {/* ✅ Product Price */}
+    <p className="product-price">
+      {product.price > 0 ? (
+        <>
+          <span style={{ color: "red" }}>{formatNumber(product.price, product.currency)}</span>{" "}
+          <span style={{ color: "black", textDecoration: "line-through", fontSize: 12 }}>
+            {formatNumber(product.base_price, product.currency)}
+          </span>
+        </>
+      ) : (
+        <span>{formatNumber(product.base_price, product.currency)}</span>
+      )}
+    </p>
 
-  alt={product.name} 
-  className="product-image" 
-/>
-
-                {/* ✅ Product Name (Truncated if too long) */}
-                <p className="product-name">{truncateText(product.name)}</p>
-
-                {/* ✅ Product Price */}
-                <p className="product-price">
-  {product.price > 0 ? (
-    <>
-      <span style={{ color: "red" }}>{formatNumber(product.price,product.currency)}</span>
-      {" "}
-      <span style={{ color: "black", textDecoration: "line-through", fontSize:12 }}>
-        {formatNumber(product.base_price,product.currency)}
+    {/* ✅ Availability - moved to new line */}
+    <p>
+      <span
+        style={{
+          color: product.availibility === 'M' ? 'red' : 'green',
+          fontWeight: 'bold'
+        }}
+      >
+        {t(product.availibility === 'M' ? 'Market' : 'Stock')}
       </span>
-    </>
-  ) : (
-    <span>{formatNumber(product.base_price,product.currency)}</span>
-  )}
-  <p/>
-<span style={{color: product.availibility == 'M'
-  ? 
-    'red' : 'green' ,fontWeight:'bold'}}>{
-      t(product.availibility == 'M' ? 'Market' :
-       'Stock')}</span>
-</p>
+    </p>
+  </div>
+))}
 
-
-              </div>
-            ))}
           </div>
         </div>
       </Container>
