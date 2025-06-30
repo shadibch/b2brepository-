@@ -64,6 +64,7 @@ def addItem(request, branchid):
 def reorder(request,order_id):
     order = get_object_or_404(Order, id=order_id)  # Fetch the product by its ID
     itens = order.items.all()
+    print( "**** " + itens.count() )
     user = request.user
 
     # 1. Check if the user has a cart

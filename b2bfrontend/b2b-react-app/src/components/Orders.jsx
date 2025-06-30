@@ -6,6 +6,7 @@ import "./OrdersPage.rtl.css";
 import { Table, Button, Form, Alert, Modal, Pagination } from 'react-bootstrap';
 import { API_BASE_URL, DEFAULT_IMAGE } from "../utils/settings";
 import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber,formatDate,formatLocal} from '../utils/translator';
+import { useNavigate, useLocation } from "react-router-dom";
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -13,7 +14,7 @@ const OrdersPage = () => {
   const [showItems, setShowItems] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const itemsPerPage = 10; // Number of rows per page
-
+  const navigate = useNavigate();
   useEffect(() => {
         document.body.classList.toggle("rtl", isRTL());
      
@@ -44,8 +45,8 @@ const OrdersPage = () => {
   };
 
   const handleReorder = async (order) => {
-    const response = await axiosInstance.get(`api/reorder/${order.id}/`);
-    navigator.navigate('/cartdetails');
+    const response = await axiosInstance.post(`api/reorder/${order.id}/`);
+    navigate('/cartdetails');
   };
   const getRowClass = (status) => {
     switch (status) {
