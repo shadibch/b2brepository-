@@ -186,7 +186,7 @@ const OrdersPage = () => {
                 )
                  
                 }
-                <a onClick={() => handleReorder(order)}>{t('Reorder')} </a>
+                <Button onClick={() => handleReorder(order)}>{t('Reorder')} </Button>
                 
               </td>
             </tr>

@@ -282,5 +282,6 @@
     "Contracts" : "العقود",
     "Item has added to the shopping cart" : "تمت إضافة العنصر إلى سلة التسوق",
     "order_expiry_message": "سينتهي الطلب {{orderId}} في {{expiryDate}}",
-    "PURCHASE_DATETIME_EXCEED": "لقد تجاوزت زمن دفع طلب قديم. الرجاء تسديد الثمن لتكمل عملية شراء جديدة"
+    "PURCHASE_DATETIME_EXCEED": "لقد تجاوزت زمن دفع طلب قديم. الرجاء تسديد الثمن لتكمل عملية شراء جديدة",
+    "Reorder" : "اعادة الطلب"
 }
