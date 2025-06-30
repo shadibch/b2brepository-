@@ -72,6 +72,7 @@ urlpatterns = [
     path('api/cart/', cart, name='cart'),
     path('api/cart_details/',cartdetails),
     path('api/purchase_request/',purchaseRequest),
+    path('api/reorder/<int:order_id>/', reorder, name='reorder'),
     path('api/update_item/<int:id>/' , updateItem),
     path('api/delete_item/<int:id>/' , delete),
     path('api/orders/', OrderListView.as_view(), name='order-list'),

@@ -42,6 +42,11 @@ const OrdersPage = () => {
     setSelectedOrder(response.data);
     setShowItems(true);
   };
+
+  const handleReorder = async (order) => {
+    const response = await axiosInstance.get(`api/reorder/${order.id}/`);
+    navigator.navigate('/cartdetails');
+  };
   const getRowClass = (status) => {
     switch (status) {
       case "PND":
@@ -165,7 +170,7 @@ const OrdersPage = () => {
                   {t('View')}
                 </Button>
 
-                {order.status == "ACC" || order.status == "PRJ" ? (
+                {order.status == "ACC" || order.status == "PRJ" && (
                
                   <a
                     href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
@@ -174,9 +179,14 @@ const OrdersPage = () => {
                   >
                     {t('Download Invoice')}
                   </a>
-                ) : (
-                  "-"
-                )}
+
+                  
+
+                )
+                 
+                }
+                <a onClick={() => handleReorder(order)}>{t('Reorder')} </a>
+                
               </td>
             </tr>
           ))}

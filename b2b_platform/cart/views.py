@@ -59,6 +59,41 @@ def addItem(request, branchid):
         serializer = ProductInstanceUpdateSerializer(product_instance)
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reorder(request,order_id):
+    order = get_object_or_404(Order, id=order_id)  # Fetch the product by its ID
+    itens = order.items.all()
+    user = request.user
+
+    # 1. Check if the user has a cart
+    cart, created = Cart.objects.get_or_create(purchaser=user)
+    for item in itens:
+        existing_instance = ProductInstance.objects.filter(cart=cart, product=item.product,
+                                                           branch = item.branch).first()
+    
+        if existing_instance:
+        # If the product instance exists, update the quantity
+            existing_instance.quantity += item.quantity
+            existing_instance.save()  # Save the updated instance
+
+        
+        else:
+        # If the product instance doesn't exist, create a new instance
+            price = calculate(request.user,item.product)
+            if(price == 0):
+                price = item.product.base_price
+            product_instance = ProductInstance.objects.create(
+                product=item.product,
+                price=price,  # assuming Product has a price
+                creationDate=timezone.now(),
+                quantity=item.quantity,
+                cart=cart,
+                currency='SAR',  # or you can fetch dynamically
+                status='INT',
+                branch=item.branch  # You might want to pass branch in future
+            )
+    return Response(status=status.HTTP_201_CREATED)        
 from datetime import datetime
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -257,3 +292,84 @@ class OrderItemDetails(APIView):
             raise NotFound("Order not found.")
         serializer = OrderSerializer(order)
         return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def reorder(request, order_id):
+    """
+    Reorder API - Add items from a previous order to user's cart
+    """
+    try:
+        # Get the order and verify ownership
+        order = get_object_or_404(Order, id=order_id)
+        
+        # Check if the user owns this order
+        if order.purchaser != request.user:
+            return Response(
+                {"detail": "You can only reorder your own orders."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get or create user's cart
+        cart, created = Cart.objects.get_or_create(purchaser=request.user)
+        
+        # Get all items from the order (excluding rejected items)
+        order_items = order.items.filter(status__in=['ACC', 'INT']).select_related('product', 'branch')
+        
+        if not order_items.exists():
+            return Response(
+                {"detail": "No valid items found in this order to reorder."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Add items to cart
+        added_items = []
+        for order_item in order_items:
+            # Check if item already exists in cart for this product and branch
+            existing_cart_item = cart.instances.filter(
+                product=order_item.product,
+                branch=order_item.branch
+            ).first()
+            
+            if existing_cart_item:
+                # Update quantity if item already exists
+                existing_cart_item.quantity += order_item.quantity
+                existing_cart_item.save()
+                added_items.append({
+                    'product': order_item.product.name,
+                    'branch': order_item.branch.name,
+                    'quantity': order_item.quantity,
+                    'action': 'updated'
+                })
+            else:
+                # Create new cart item
+                ProductInstance.objects.create(
+                    cart=cart,
+                    product=order_item.product,
+                    branch=order_item.branch,
+                    price=order_item.price,
+                    quantity=order_item.quantity,
+                    currency=order_item.currency,
+                    creationDate=timezone.now()
+                )
+                added_items.append({
+                    'product': order_item.product.name,
+                    'branch': order_item.branch.name,
+                    'quantity': order_item.quantity,
+                    'action': 'added'
+                })
+        
+        # Return updated cart data
+        cart_serializer = CartDetailsSerializer(cart, context={'request': request})
+        
+        return Response({
+            "message": f"Successfully reordered {len(added_items)} items from order #{order_id}",
+            "added_items": added_items,
+            "cart": cart_serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {"detail": f"Error processing reorder: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
