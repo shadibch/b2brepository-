@@ -62,7 +62,7 @@ class ProductInstanceAdminSerializer(serializers.ModelSerializer):
         return obj.product.part_id
      def get_image_path(self, obj):
         media = obj.product.media.all()
-        return media[0].file.url if media and media.count() > 0 else None
+        return media[0].file if media and media.count() > 0 else None
     
      def get_project_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
