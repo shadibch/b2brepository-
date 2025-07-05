@@ -56,6 +56,7 @@
   display: flex;
   gap: 10px;
 }
+
 .branch-grid {
   display: flex;
   flex-direction: column;
@@ -65,4 +66,35 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px; /* Space between checkboxes */
+}
+
+/* Branch Checkbox Labels - Improved Visibility */
+.branch-grid .form-check {
+  margin-bottom: 8px;
+}
+
+.branch-grid .form-check-label {
+  color: #333 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  cursor: pointer;
+  padding-left: 5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.branch-grid .form-check-input:checked + .form-check-label {
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+
+/* Ensure checkbox labels are visible in both light and dark themes */
+.branch-grid .form-check-label:hover {
+  color: #000 !important;
+  text-decoration: underline;
+}
+
+/* RTL Support for branch checkboxes */
+[dir="rtl"] .branch-grid .form-check-label {
+  padding-left: 0;
+  padding-right: 5px;
 }
