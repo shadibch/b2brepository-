@@ -283,5 +283,14 @@
     "Item has added to the shopping cart" : "تمت إضافة العنصر إلى سلة التسوق",
     "order_expiry_message": "سينتهي الطلب {{orderId}} في {{expiryDate}}",
     "PURCHASE_DATETIME_EXCEED": "لقد تجاوزت زمن دفع طلب قديم. الرجاء تسديد الثمن لتكمل عملية شراء جديدة",
-    "Reorder" : "اعادة الطلب"
+    "Reorder" : "اعادة الطلب",
+    "All fields are required." : "جميع الحقول مطلوبة.",
+    "Invalid phone number format." : "تنسيق رقم الهاتف غير صالح.",
+    "Clear":"مسح جميع الحقول",
+    "Save Branch" : "حفظ الفرع",
+    "Email already exists." : "البريد الإلكتروني موجود.",
+    "Password is required." : "كلمة المرور مطلوبة.",
+    "Passwords do not match." : "كلمات المرور غير متطابقة.",
+    "User updated successfully!" : "تم تحديث المستخدم بنجاح!",
+    "User created successfully!" :"تم إنشاء المستخدم بنجاح!"
 }

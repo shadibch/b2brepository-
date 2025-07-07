@@ -39,13 +39,13 @@ const Branches = () => {
 
   const handleSave = async () => {
     if (!formData.name || !formData.phone || !formData.address) {
-      setMessage({ type: "danger", text: "All fields are required." });
+      setMessage({ type: "danger", text: t('All fields are required.') });
       return;
     }
 
     const phoneRegex = /^\+?[1-9][0-9]{7,14}$/;
     if (!phoneRegex.test(formData.phone)) {
-      setMessage({ type: "danger", text: "Invalid phone number format." });
+      setMessage({ type: "danger", text: t('Invalid phone number format.') });
       return;
     }
 
@@ -114,8 +114,8 @@ const Branches = () => {
           </Form.Group>
 
           <div className="button-group">
-            <Button variant="secondary" onClick={handleClear}>Clear</Button> {/* ✅ New "Clear" Button */}
-            <Button variant="success" onClick={handleSave}>Save Branch</Button>
+            <Button variant="secondary" onClick={handleClear}>{t('Clear')}</Button> {/* ✅ New "Clear" Button */}
+            <Button variant="success" onClick={handleSave}>{t('Save Branch')}</Button>
           </div>
         </Form>
       </div>

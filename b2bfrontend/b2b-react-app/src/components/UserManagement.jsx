@@ -3,7 +3,7 @@ import axiosInstance from "./axiosInstance";
 import { Table, Form, Button, Alert, Modal } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import "./UserManagement.css";
-import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber} from '../utils/translator';
+import { t } from '../utils/translator';
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -93,7 +93,7 @@ const handleRowClick = async (user) => {
       try {
         const response = await axiosInstance.get(`/api/user/${formData.email}`);
         if (response.data.exists) {
-          setEmailError("Email already exists.");
+          setEmailError(t('Email already exists.') );
         } else {
           setEmailError(null);
         }
@@ -105,7 +105,7 @@ const handleRowClick = async (user) => {
 
   const handleSave = async () => {
     if (!formData.email || !formData.first_name || !formData.last_name) {
-      setMessage({ type: "danger", text: "All fields are required." });
+      setMessage({ type: "danger", text: t('All fields are required.') });
       return;
     }
 
@@ -114,12 +114,12 @@ const handleRowClick = async (user) => {
       if (emailError) return;
 
       if (!formData.password || !formData.password_confirmation) {
-        setMessage({ type: "danger", text: "Password is required." });
+        setMessage({ type: "danger", text: t('Password is required.') });
         return;
       }
 
       if (formData.password !== formData.password_confirmation) {
-        setMessage({ type: "danger", text: "Passwords do not match." });
+        setMessage({ type: "danger", text: t('Passwords do not match.') });
         return;
       }
     }
@@ -133,7 +133,7 @@ const handleRowClick = async (user) => {
       const response = await axiosInstance.post(endpoint, payload);
 
       if (response.status === 200 || response.status === 201) {
-        setMessage({ type: "success", text: `User ${userId ? "updated" : "created"} successfully!` });
+        setMessage({ type: "success", text: t(`User ${userId ? "updated" : "created"} successfully!`) });
         fetchUsers(); // ✅ Refresh user table
 
         if (!userId) setUserId(response.data.id); // ✅ Store ID after creation
