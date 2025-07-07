@@ -292,5 +292,7 @@
     "Password is required." : "كلمة المرور مطلوبة.",
     "Passwords do not match." : "كلمات المرور غير متطابقة.",
     "User updated successfully!" : "تم تحديث المستخدم بنجاح!",
-    "User created successfully!" :"تم إنشاء المستخدم بنجاح!"
+    "User created successfully!" :"تم إنشاء المستخدم بنجاح!",
+    "Add" : "اضافة",
+    "Remove" : "حذف"
 }

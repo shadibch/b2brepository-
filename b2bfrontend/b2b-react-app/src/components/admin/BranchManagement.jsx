@@ -155,22 +155,22 @@ const BranchManagement = ({ company }) => {
 
   const productColumns = [
     {
-      title: t('name'),
+      title: t('Product Name'),
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Part ID',
+      title: t('Part ID'),
       dataIndex: 'part_id',
       key: 'part_id',
     },
     {
-      title: t('price'),
+      title: t('Product Price'),
       dataIndex: 'base_price',
       key: 'base_price'
     },
     {
-      title: 'Image',
+      title: t('Product Image'),
       key: 'image',
       render: (_, record) => (
         <Image
@@ -192,7 +192,7 @@ const BranchManagement = ({ company }) => {
                 addProduct(record);
             }}
           >
-            {t(selectedBranch.contract?.items.includes(record.id) ? 'Remove' : 'Add')}
+            {t(selectedBranch.contract?.items.includes(record.id) ? t('Remove') : t('Add'))}
           </Button>
         </Space>
       ),
