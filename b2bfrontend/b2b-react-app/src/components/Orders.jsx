@@ -3,10 +3,12 @@ import axiosInstance from "./axiosInstance"; // Ensure this is correctly configu
 import ReactPaginate from "react-paginate"; // For pagination
 import "./OrdersPage.css"; // Add your custom styles
 import "./OrdersPage.rtl.css";
-import { Table, Button, Form, Alert, Modal, Pagination } from 'react-bootstrap';
+
 import { API_BASE_URL, DEFAULT_IMAGE } from "../utils/settings";
 import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber,formatDate,formatLocal} from '../utils/translator';
 import { useNavigate, useLocation } from "react-router-dom";
+import Button from './ui/Button'; // Import the reusable Button
+
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -161,33 +163,34 @@ const OrdersPage = () => {
                   ? formatNumber(order.total_price, order.currency)
                   : "-"}
               </td>
-              <td>{t(order.order_status)}</td>
-              <td>
-              <Button
-                 
-                  size="sm"
-                  onClick={() => handleSelectedOrder(order)}
-                >
-                  {t('View')}
-                </Button>
-
-                {order.status == "ACC" || order.status == "PRJ" && (
-               
-                  <a
-                    href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t('Download Invoice')}
-                  </a>
-
-                  
-
-                )
-                 
-                }
-                <Button onClick={() => handleReorder(order)}>{t('Reorder')} </Button>
+              <td className="py-2 px-4">{t(order.order_status)}</td>
+              <td className="py-2 px-4">
+                <div className="flex flex-col gap-2 items-stretch">
+                  <Button
                 
+                    className="custom-view-btn"
+                    onClick={() => handleSelectedOrder(order)}
+                  >
+                    {t('View')}
+                  </Button>
+                  {(order.status === "ACC" || order.status === "PRJ") && (
+                    <a
+                      href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-center px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 text-xs font-semibold"
+                    >
+                      {t('Download Invoice')}
+                    </a>
+                  )}
+                  <Button
+                    variant="info"
+                    className="custom-reorder-btn"
+                    onClick={() => handleReorder(order)}
+                  >
+                    {t('Reorder')}
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

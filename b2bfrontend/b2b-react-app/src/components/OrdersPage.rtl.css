@@ -74,3 +74,62 @@ body.rtl {
     margin-left: auto;
   }
   
+  /* Button Styles */
+.custom-view-btn {
+  background-color: #2563eb !important; /* Blue */
+  color: white !important;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.custom-view-btn:hover {
+  background-color: #1d4ed8 !important; /* Darker blue */
+}
+
+.custom-reorder-btn {
+  background-color: #10b981 !important; /* Green */
+  color: white !important;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.75rem; /* text-xs equivalent */
+}
+
+.custom-reorder-btn:hover {
+  background-color: #059669 !important; /* Darker green */
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 20px 0;
+}
+
+.pagination li {
+  margin: 0 5px;
+}
+
+.pagination a {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination .active a {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.pagination-previous a,
+.pagination-next a {
+  background-color: #f3f4f6;
+}
