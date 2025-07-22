@@ -21,7 +21,7 @@ const ManagedUsersPage = () => {
     last_name: '',
     company_name: '',
     company_register_number: '',
-    company_credit: '',
+    company_credit: 0,
     company_period: '',
     is_active: false,
   });
@@ -89,17 +89,23 @@ const ManagedUsersPage = () => {
 
   const updateUser = async (activeUpdate = null,message=`${t('user_updated')}`) => {
     if (!selectedUser) return;
-
+    if(formData.company_credit == '' || formData.company_credit ==0) {
+      setMessage({ type: "danger", text: t('Credit amount is mandatory and should be more than 0') });
+    }
+    if(formData.company_period == '' || formData.company_period ==0) {
+      setMessage({ type: "danger", text: t('Period is mandatory and should be more than 0') });
+    }
     try {
       const data = {
         credit: formData.company_credit,
         period: formData.company_period,
       };
       if (activeUpdate !== null) data.active = activeUpdate;
-
+      console.log(JSON.stringify(data));
       await axiosInstance.post(`${API_BASE}/update_user/${selectedUser.id}`, data);
       setMessage({ type: "success", text: message });
       handleSearch(currentPage + 1);
+      formData.is_active = true;
     } catch (err) {
       setMessage({ text: `${'error_user_update'}.` , type: 'danger' });
     }
