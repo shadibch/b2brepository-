@@ -958,6 +958,7 @@ class ProductAdminViewSet(ModelViewSet):
             )
 
     def create(self, request, *args, **kwargs):
+       
         try:
             with transaction.atomic():
                 # Parse JSON data from form fields
@@ -969,17 +970,17 @@ class ProductAdminViewSet(ModelViewSet):
                 stock_quantity = request.data.get('stock_quantity')
                 # Validate translations
                 availibility = request.data.get('availibility')
-
+                
                 if not any(trans.get('name') for trans in translations):
                     return Response(
                         {'error': 'At least one translation must be provided'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-
+                
                 # Get the first available name for the base name
                 name = next(trans['name'] for trans in translations if trans.get('name'))
                 part_id = request.data.get('part_id')
-
+                print("Start Created 3")
                 # Create product
                 product = Product.objects.create(
                     name=name,
@@ -989,6 +990,7 @@ class ProductAdminViewSet(ModelViewSet):
                     closest_category=closest_category,
                     availibility = availibility
                 )
+                print("Start Created 4")
                 category = closest_category
                 categories = []
                 while category:
@@ -1004,17 +1006,18 @@ class ProductAdminViewSet(ModelViewSet):
                             name=trans.get('name', ''),
                             description=trans.get('description', '')
                         )
+                print("Start Created 5")
 
                 # Handle images
                 images = request.FILES.getlist('images')
-                upload_result = cloudinary.uploader.upload(image)
-                file_url = upload_result.get('secure_url')
-                for image in images:
+                for image in images :
+                    upload_result = cloudinary.uploader.upload(image)
+                    file_url = upload_result.get('secure_url')
                     ProductMedia.objects.create(
                         product=product,
                         file=file_url
                     )
-
+                print("Start Created 6")
                 # Set groups and subgroups
 
                 product.subgroups.set(subgroups)
@@ -1026,6 +1029,9 @@ class ProductAdminViewSet(ModelViewSet):
                 }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            print(e)
+            import traceback
+            traceback.print_exc()
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
