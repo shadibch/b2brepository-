@@ -122,7 +122,7 @@ class ProductSerializer(serializers.ModelSerializer):
     attributs = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price", "media_list","closest_category","discount","availibility"]  # ✅ Ensure 'price' is included
+        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price", "media_list","closest_category","discount","availibility","image_path"]  # ✅ Ensure 'price' is included
     def get_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
         language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
