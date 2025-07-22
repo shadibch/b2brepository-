@@ -101,7 +101,7 @@ const ManagedUsersPage = () => {
         period: formData.company_period,
       };
       if (activeUpdate !== null) data.active = activeUpdate;
-      console.log(JSON.stringify(data));
+      
       await axiosInstance.post(`${API_BASE}/update_user/${selectedUser.id}`, data);
       setMessage({ type: "success", text: message });
       handleSearch(currentPage + 1);

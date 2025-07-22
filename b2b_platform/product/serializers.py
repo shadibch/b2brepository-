@@ -117,6 +117,7 @@ class ProductSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
     media_list = serializers.SerializerMethodField()  # ✅ Get list of media
     name = serializers.SerializerMethodField() 
+    image_path = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
     class Meta:
@@ -144,8 +145,8 @@ class ProductSerializer(serializers.ModelSerializer):
         
         # ✅ Ensure price is rounded to two decimal places
         return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-        
+    def get_image_path(self, obj):
+        return obj.media.all()[0].file if obj.media.all().count() > 0 else None
       
 
     def get_media_list(self, obj):
