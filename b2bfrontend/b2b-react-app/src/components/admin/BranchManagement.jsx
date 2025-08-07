@@ -178,25 +178,7 @@ const BranchManagement = ({ company }) => {
           src={record.media_list.length > 0 ? `${API_BASE_URL}${record.media_list[0]}` : DEFAULT_IMAGE}
         />
       ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            onClick={() => {
-              selectedBranch.contract?.items.includes(record.id) ? 
-                deleteItem(record) : 
-                addProduct(record);
-            }}
-          >
-            {t(selectedBranch.contract?.items.includes(record.id) ? t('Remove') : t('Add'))}
-          </Button>
-        </Space>
-      ),
-    },
+    }
   ];
 
   return (

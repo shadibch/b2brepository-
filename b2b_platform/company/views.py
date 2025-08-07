@@ -7,7 +7,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Company, Branch, Contract
-from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany, BranchSerializerContractCompany
+from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany
 from django.db.models import Q
 class FilterCompanyByNameAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -105,11 +105,26 @@ from rest_framework import status
 from .models import Branch
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsSuperUserOrCompanyAdmin
+from .serializers import BranchSerializerCompany
 @api_view(['GET'])
 def get_company_branches(request, company_id):
     branches = Branch.objects.filter(company_id=company_id).prefetch_related("contract")
-    serializer = BranchSerializerContractCompany(branches, many=True)
+    serializer = BranchSerializerCompany(branches, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+# views.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Branch
+from .serializers import BranchWithProductSerializer
+
+@api_view(['GET'])
+def get_company_branches_with_product(request, company_id, product_id):
+    branches = Branch.objects.filter(company_id=company_id).prefetch_related('contract__items')
+    serializer = BranchWithProductSerializer(branches, many=True, context={'product_id': product_id})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class DeleteBranchView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]  # ✅ Restrict access
@@ -162,6 +177,7 @@ class ContractItemsView(APIView):
             contract, created = Contract.objects.get_or_create(branch=branch)
             
             items = request.data.get('items', [])
+          
             contract.items.add(*items)
             
             return Response({'message': 'Items added successfully'}, status=status.HTTP_200_OK)

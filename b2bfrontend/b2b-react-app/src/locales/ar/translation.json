@@ -296,5 +296,7 @@
     "Add" : "اضافة",
     "Remove" : "حذف",
     "Credit amount is mandatory and should be more than 0" : "مبلغ الائتمان إلزامي ويجب أن يكون أكثر من 0",
-    "Period is mandatory and should be more than 0" : "الفترة إلزامية ويجب أن تكون أكثر من 0"
+    "Period is mandatory and should be more than 0" : "الفترة إلزامية ويجب أن تكون أكثر من 0",
+    "Add Product" : "إضافة منتج",
+    "Remove Product" : "إزالة منتج"
 }

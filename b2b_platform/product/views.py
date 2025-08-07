@@ -764,6 +764,91 @@ class CategoryAdminCreateUpdateView(CreateAPIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+from cart.serializers import *
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_POST
+from .models import Product
+from company.models import Branch,ProductContract # Adjust according to your models
+from django.http import JsonResponse, HttpResponseBadRequest
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.db import transaction
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+
+from .models import Product  # or your actual model for the relationship
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from company.serializers import BranchWithProductSerializer
+from company.models import Branch,ProductContract
+
+class ProductBranchDeleteView(APIView):
+    permission_classes = [IsAuthenticated,IsSuperUser]
+    serializer_class=BranchWithProductSerializer
+    @action(detail=True, methods=['post'])
+    def post(self,request, product_id, branch_id):
+        product = get_object_or_404(Product, id=product_id)
+        branch = get_object_or_404(Branch, id=branch_id)
+        print(request.body)
+        try:
+            data = json.loads(request.body)
+            print(data.get('body'))
+            price = data.get('body').get('price')
+        
+        except (json.JSONDecodeError, KeyError):
+            return HttpResponseBadRequest("Invalid JSON or missing fields.")
+
+        product = get_object_or_404(Product, id=product_id)
+        branch = get_object_or_404(Branch, id=branch_id)
+        with transaction.atomic():
+
+            product_branch_price = ProductContract.objects.create(product=product, price=price)
+    
+            contract, created = Contract.objects.get_or_create(branch=branch)
+            contract.items.add(product_branch_price)
+
+    # Add your logic here: maybe save the product-branch-price link
+    # Example: BranchProduct is a model that links product + branch + price
+
+    # Dummy return
+        return JsonResponse({
+            'message': 'Product added to branch successfully',
+            'product_id': product_id,
+            'branch_id': branch_id,
+            'price': price
+        })
+        return JsonResponse(data)
+    @action(detail=True, methods=['delete'])
+    def delete(self, request, product_id, branch_id):
+        # Make sure product and branch exist
+        product = get_object_or_404(Product, id=product_id)
+        branch = get_object_or_404(Branch, id=branch_id)
+
+        # Get the contract associated with the branch
+        contract = get_object_or_404(Contract, branch=branch)
+        print(contract)
+        print(product_id)
+
+        # Find the ProductContract to delete (product + contract match)
+        product_contract = contract.items.filter(product__id=product_id)
+
+        # Delete the ProductContract instance
+        product_contract.delete()
+        serializer = BranchWithProductSerializer(branch,context={'product_id': product_id})
+        print(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 class ProductAdminViewSet(ModelViewSet):
     permission_classes = [IsSuperUser]
@@ -777,6 +862,35 @@ class ProductAdminViewSet(ModelViewSet):
             part_id = str(uuid.uuid4().hex[:8]).upper()
             if not Product.objects.filter(part_id=part_id).exists():
                 return part_id
+            
+
+    @action(detail=True, methods=['get'])
+    def contractprices(self, request, pk=None):
+        """Get all prices for a product"""
+        product = self.get_object()
+        prices = list(map(lambda x: x.contracts, product.product_contract.all()))
+
+        serializer = ContractSerializer(prices, many=True)
+        return Response(serializer.data)
+    @action(detail=True, methods=['post'])
+    def addContractPrice(self,request, pk=None):
+        product = self.get_object()
+        try:
+            branch_id = request.data.get('branch_id');
+            branch = get_object_or_404(Branch,branch_id)
+            price = request.data.get('price');
+            contract = Contract.objects.get_or_create(branch=branch)
+            producet_price ,created = ProductContract.get_or_create(product=product,
+                                                                    price=price, contracts=contract)
+         
+            serializer = ContractSerializer(price)
+            return Response(serializer.data)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     # Add price-related methods
     @action(detail=True, methods=['get'])
@@ -1141,5 +1255,12 @@ class ProductDetailedAdminView(APIView):
                 {'error': 'Product not found'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+from company.models import *
+class ProductPriceAdminView(APIView):
+    permission_classes = [IsSuperUser]
+    def get(self, request, product_id,branch_id):
+        product = get_object_or_404(Product, product_id)
+        branch = get_object_or_404(Branch,branch_id)
+        return price(product,branch)
 
-
+    

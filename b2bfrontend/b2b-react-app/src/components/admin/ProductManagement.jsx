@@ -5,6 +5,7 @@ import {API_BASE_URL,DEFAULT_IMAGE} from '../../utils/settings';
 import "./styles.css";
 import "./shared.css";
 import { useLocation } from 'react-router-dom';
+import BranchContractManagement from './BranchAdminContractManagement';
 
 import {
   t,
@@ -551,6 +552,180 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
           ))}
         </tbody>
       </Table>
+
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>{t('Confirm Delete')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {t('Are you sure you want to delete this price?')}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            {t('Cancel')}
+          </Button>
+          <Button variant="danger" onClick={handleConfirmDelete}>
+            {t('Delete')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+};
+
+
+
+
+const ProductContractPrices = ({ product,  onPriceAdded, onPriceDeleted }) => {
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [isPercentage, setIsPercentage] = useState(true);
+  const [discountValue, setDiscountValue] = useState('');
+  const [prices, setPrices] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [priceToDelete, setPriceToDelete] = useState(null);
+  const [message, setMessage] = useState(null);
+  const [editingPrice, setEditingPrice] = useState(null);
+  const [selectedBranch,setSelectedBranch]  = useState(null);
+  useEffect(() => {
+    
+  }, [product]);
+
+  const loadPrices = async () => {
+    try {
+      const response = await axiosInstance.get(`/api/admin/products/${product.id}/contractprices/${selectedBranch}/`);
+      setPrices(response.data);
+    } catch (error) {
+      setMessage({ type: 'danger', text: t('Error loading prices') });
+    }
+  };
+
+  const loadCompanyOptions = async (inputValue) => {
+    try {
+      const response = await axiosInstance.get(`/filter-companies/?q=${inputValue}`);
+      return response.data.map(company => ({
+        value: company.id,
+        label: `${company.name} (${company.register_number})`
+      }));
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      return [];
+    }
+
+
+    
+  };
+
+  const handleAddPrice = async () => {
+    try {
+      if (!selectedCompany) {
+        setMessage({ type: 'danger', text: t('Please select a company') });
+        return;
+      }
+
+      if (!discountValue) {
+        setMessage({ type: 'danger', text: t('Please enter a discount value') });
+        return;
+      }
+
+      const response = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, {
+        purchaser: selectedCompany.value,
+        is_percentage: isPercentage,
+ 
+        discount_value: parseFloat(discountValue)
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      await loadPrices();
+      setMessage({ type: 'success', text: editingPrice ? t('Price updated successfully') : t('Price added successfully') });
+      resetForm();
+
+      if (onPriceAdded) {
+        onPriceAdded(response.data);
+      }
+    } catch (error) {
+      setMessage({ 
+        type: 'danger', 
+        text: error.response?.data?.error || t('Error adding price') 
+      });
+    }
+  };
+
+  const handleDeleteClick = (price) => {
+    setPriceToDelete(price);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await axiosInstance.delete(`/api/admin/products/${product.id}/delete_price/?price_id=${priceToDelete.id}`);
+      await loadPrices();
+      setMessage({ type: 'success', text: t('Price deleted successfully') });
+      
+      if (onPriceDeleted) {
+        onPriceDeleted(priceToDelete.id);
+      }
+    } catch (error) {
+      setMessage({ 
+        type: 'danger', 
+        text: error.response?.data?.error || t('Error deleting price') 
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setPriceToDelete(null);
+    }
+  };
+
+  const handleEditClick = (price) => {
+    setEditingPrice(price);
+    setSelectedCompany({
+      value: price.purchaser,
+      label: price.company_name
+    });
+    setIsPercentage(price.percentage_discount !== null);
+    setDiscountValue(price.percentage_discount !== null ? price.percentage_discount : price.flat_discount);
+  };
+
+  const resetForm = () => {
+    setSelectedCompany(null);
+    setIsPercentage(true);
+    setDiscountValue('');
+    setEditingPrice(null);
+  };
+
+  return (
+    <div>
+      {message && (
+        <Alert 
+          variant={message.type} 
+          onClose={() => setMessage(null)} 
+          dismissible
+        >
+          {message.text}
+        </Alert>
+      )}
+
+      <Form className="mb-4">
+        <Form.Group className="mb-3">
+          <Form.Label>{t('Company')}</Form.Label>
+          <AsyncSelect
+            cacheOptions
+            defaultOptions
+            value={selectedCompany}
+            onChange={setSelectedCompany}
+            loadOptions={loadCompanyOptions}
+            placeholder={t('Search for a company...')}
+            isClearable
+          />
+        </Form.Group>
+
+      </Form>
+
+      
+      {}
+      {selectedCompany && <BranchContractManagement company={selectedCompany} product={product} />}
 
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
@@ -1395,6 +1570,27 @@ export default function ProductManagement() {
                       {selected && (
                         <Tab eventKey="prices" title={t('Prices')}>
                           <ProductPrices 
+                            product={selected} 
+                            onPriceAdded={() => {
+                              // Refresh product details if needed
+                              if (selected) {
+                                handleProductSelect(selected);
+                              }
+                            }}
+                            onPriceDeleted={() => {
+                              // Refresh product details if needed
+                              if (selected) {
+                                handleProductSelect(selected);
+                              }
+                            }}
+                          />
+                        </Tab>
+                      )}
+
+
+{selected && (
+                        <Tab eventKey="contracts" title={t('Contracts')}>
+                          <ProductContractPrices 
                             product={selected} 
                             onPriceAdded={() => {
                               // Refresh product details if needed

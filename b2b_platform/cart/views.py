@@ -100,8 +100,9 @@ from datetime import datetime
 @permission_classes([IsAuthenticated])
 def contracts(request):
     for branch in request.user.branches.all():
-        if(branch.contract):
+        if(branch.contract and len(branch.contract.items.all()) >0):
             data = ContractSerializer(branch.contract,context={'request': request}).data
+          
             return Response(data)
 
 
@@ -109,16 +110,17 @@ def contracts(request):
 @permission_classes([IsAuthenticated])
 def cart(request):
     cart = Cart.objects.filter(purchaser=request.user).first()
+    print(Cart)
     if cart is None:
         cart = Cart.objects.create(purchaser=request.user)
         for branch in request.user.branches.all():
         
-            if branch.contract:
-                for product in branch.contract.items.all():
+            if branch.contract and len(branch.contract.items.all()) >0:
+                for product_contract in branch.contract.items.all():
                     print("Number of items ******" +  str(len(branch.contract.items.all())))
                     ProductInstance.objects.create(
-                        product=product,
-                        price=calculate(request.user,product),
+                        product=product_contract.product,
+                        price=product_contract.price,
                         quantity=0,
                         branch=branch,
                         cart=cart,
@@ -132,16 +134,17 @@ from product.utils import calculate
 @permission_classes([IsAuthenticated])
 def cartdetails(request):
     cart = Cart.objects.filter(purchaser=request.user).first()
+    print(cart)
     if cart is None:
         cart = Cart.objects.create(purchaser=request.user)
         for branch in request.user.branches.all():
             print(branch.contract)
-            if branch.contract:
-                for product in branch.contract.items.all():
-                    
+            if branch.contract and len(branch.contract.items.all()) >0:
+                for product_contract in branch.contract.items.all():
+                    print(product_contract.price)
                     ProductInstance.objects.create(
-                        product=product,
-                        price=calculate(request.user,product),
+                        product=product_contract.product,
+                        price=product_contract.price,
                         quantity=0,
                         branch=branch,
                         cart=cart,

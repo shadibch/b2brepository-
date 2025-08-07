@@ -90,11 +90,21 @@ class CartDetailsSerializer(serializers.ModelSerializer):
         sorted_instances = obj.instances.all().order_by('id')
         serializer = ProductInstanceUpdateSerializer(sorted_instances, many=True)
         return serializer.data
+    
+from product.serializers import ProductAdminSerializer
+class ProductContractSerializer(serializers.ModelSerializer):
+    product = ProductAdminSerializer()
+    class Meta:
+        model = ProductContract
+        fields = ["product", "price"]
+
+from company.serializers import BranchSerializer
 class ContractSerializer(serializers.ModelSerializer):
-    items = ProductSerializer(many=True)
+    items = ProductContractSerializer(many=True)
+    branch = BranchSerializer()
     class Meta:
         model = Contract
-        fields = ["items"]
+        fields = ["items","branch"]
 
 class OrderSerializer(serializers.ModelSerializer):
     items = ProductInstanceUpdateSerializer(many=True)

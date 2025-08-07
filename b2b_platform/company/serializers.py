@@ -17,20 +17,39 @@ class BranchSerializerCompany(serializers.ModelSerializer):
         model = Branch
         fields = ['id', 'name', 'address', 'phone']
 
-class BranchSerializerContractCompany(serializers.ModelSerializer):
-    contract = serializers.SerializerMethodField()
+
+# serializers.py
+from rest_framework import serializers
+from .models import Branch
+from product.utils import price   # import your util here
+from cart.models import Product
+class BranchWithProductSerializer(serializers.ModelSerializer):
+    product_exist = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
 
     class Meta:
         model = Branch
-        fields = ['id', 'name', 'address', 'phone', 'contract']
+        fields = ['id', 'name', 'address', 'phone', 'product_exist', 'price']
 
-    def get_contract(self, obj):
-        if hasattr(obj, 'contract'):
-            return {
-                'id': obj.contract.id,
-                'items': [item.id for item in obj.contract.items.all()]
-            }
-        return None
+    def get_product_exist(self, obj):
+        product_id = self.context.get('product_id')
+        if not product_id:
+            return False
+        contract = getattr(obj, 'contract', None)
+        if contract and contract.items.filter(product_id=product_id).exists():
+            return True
+        return False
+
+    def get_price(self, obj):
+        product_id = self.context.get('product_id')
+        if not product_id:
+            return None
+        print(product_id)
+        product = Product.objects.get(id=product_id)
+        return price( obj,product)
+
+        
+
 
 
 

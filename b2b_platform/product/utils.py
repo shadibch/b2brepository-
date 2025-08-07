@@ -17,12 +17,23 @@ def get_filtered_products(user, subgroup_id_lists):
         queryset = queryset.annotate(base_priceprice=Subquery(custom_price_subquery))
 
     return queryset
+from company.models import ProductContract
 def calculate(user,obj):
   
-    if user.is_authenticated:
+    if user.is_authenticated and user.company:
+        branchs = user.branches.all()
+        if branchs.count() == 1:
+            branch = branchs.first()
+            contract = getattr(branch, 'contract', None)
+         
+            if contract:
+                product_contract = ProductContract.objects.filter(product=obj, contracts=contract).first()
+
+                if product_contract:
+                    return product_contract.price
         product_price = ProductPrice.objects.filter(product=obj, purchaser=user.company).first()
        
-        return ( 0 if not product_price else
+        return ( obj.base_price if not product_price else
             product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
             else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
             else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
@@ -30,7 +41,20 @@ def calculate(user,obj):
             )
     else:
         return  obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount > 0 else 0
-        
+def price(branch,obj):
+    if hasattr(branch, 'contract'):
+        product_contract = ProductContract.objects.filter(product=obj, contracts=branch.contract).first()
+        if product_contract:
+            return product_contract.price
+    product_price = ProductPrice.objects.filter(product=obj, purchaser=branch.company).first()
+       
+    return ( obj.base_price if not product_price else
+                product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
+                else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
+                else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
+                else obj.base_price
+            )
+      
 def getProductName(language,obj):
     translation = obj.translations.filter(language=language).first()
     return translation.name if translation else obj.name

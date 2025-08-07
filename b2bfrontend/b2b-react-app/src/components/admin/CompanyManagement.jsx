@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import axiosInstance from '../axiosInstance';
 
 const { Title } = Typography;
 
@@ -52,12 +53,12 @@ const CompanyManagement = () => {
       const values = await form.validateFields();
       setLoading(true);
       
-      await axios.patch(`/api/companies/${selectedCompany.id}/`, {
+      await axiosInstance.patch(`/api/companies/${selectedCompany.id}/`, {
         credit: values.credit,
         period: values.period,
       });
       
-      message.success('Company updated successfully');
+      message.success(t('Company updated successfully'));
       setIsModalVisible(false);
       fetchCompanies();
     } catch (error) {

@@ -193,7 +193,7 @@ const CompanyAdminPage = () => {
             <Input disabled />
           </Form.Item>
         </Form>
-        {selectedCompany && <BranchManagement company={selectedCompany} />}
+    
       </Modal>
     </div>
   );
