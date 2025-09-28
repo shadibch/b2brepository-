@@ -19,20 +19,22 @@ def get_filtered_products(user, subgroup_id_lists):
     return queryset
 from company.models import ProductContract
 def calculate(user,obj):
-  
+    
     if user.is_authenticated and user.company:
         branchs = user.branches.all()
+        
         if branchs.count() == 1:
             branch = branchs.first()
-            contract = getattr(branch, 'contract', None)
-         
-            if contract:
+            
+            if hasattr(branch, 'contract'):
+                contract = branch.contract
                 product_contract = ProductContract.objects.filter(product=obj, contracts=contract).first()
-
+              
                 if product_contract:
+              
                     return product_contract.price
         product_price = ProductPrice.objects.filter(product=obj, purchaser=user.company).first()
-       
+
         return ( obj.base_price if not product_price else
             product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
             else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
@@ -46,10 +48,12 @@ def price(branch,obj):
         product_contract = ProductContract.objects.filter(product=obj, contracts=branch.contract).first()
         if product_contract:
             return product_contract.price
+    print(f"******************{branch.company}******************")
     product_price = ProductPrice.objects.filter(product=obj, purchaser=branch.company).first()
        
     return ( obj.base_price if not product_price else
-                product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
+                product_price.flat_discount if 
+                product_price.flat_discount and product_price.flat_discount >0
                 else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
                 else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
                 else obj.base_price

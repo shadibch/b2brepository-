@@ -1,0 +1,1 @@
+python manage.py runserver --settings=b2b_platform.settings_debug

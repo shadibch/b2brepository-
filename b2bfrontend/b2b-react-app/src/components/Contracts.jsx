@@ -73,18 +73,19 @@ const handleQuantityChange = (id, newQuantity) => {
         <h1 className="cart-title">{t("Contracts")}</h1>
 
         {contracts?.items.map((item) => (
-          <div key={item.id} className="cart-item">
+          <div key={item.product.id} className="cart-item">
             <img
-              src={item.image_path ? `${API_BASE_URL}${item.image_path}` : DEFAULT_IMAGE}
-              alt={item.project_name}
+              src={item.product.image_path ? `${API_BASE_URL}${item.product.image_path}` : DEFAULT_IMAGE}
+              alt={item.product.project_name}
               className="cart-item-image"
             />
 
 
 
             <div className="cart-item-info">
+              
              
-              <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.name}</h2>
+              <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.product.name}</h2>
               <div className="cart-item-controls">
 
                 <input
