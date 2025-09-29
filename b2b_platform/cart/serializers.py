@@ -100,11 +100,26 @@ class ProductContractSerializer(serializers.ModelSerializer):
 
 from company.serializers import BranchSerializer
 class ContractSerializer(serializers.ModelSerializer):
-    items = ProductContractSerializer(many=True)
-    branch = BranchSerializer()
+    branch = serializers.SerializerMethodField()
+    items = serializers.SerializerMethodField()
+
     class Meta:
-        model = Contract
-        fields = ["items","branch"]
+        model = Branch
+        fields = ["branch", "items"]
+
+    def get_branch(self, obj):
+        # Serialize branch using your existing BranchSerializer
+        from .serializers import BranchSerializer
+        return BranchSerializer(obj).data
+
+    def get_items(self, obj):
+        # obj here is a Branch instance (because ContractSerializer is branch-based)
+        contracts = obj.branch_contract.all()  # your related_name
+        products = [pc.product for pc in contracts]
+        return ProductSerializer(products, many=True,context=self.context).data
+
+
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = ProductInstanceUpdateSerializer(many=True)

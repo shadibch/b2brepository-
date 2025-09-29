@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 class NavigationLinksAPIView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure user is authenticated
     def is_contract(self,user):
-        return user.company and user.company.branches.filter(contract__isnull=False).exists()
+        return user.company and user.company.branches.filter(branch_contract__isnull=False).exists()
     def get(self, request):
         user = request.user
         staffLink = [

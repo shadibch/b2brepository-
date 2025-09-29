@@ -26,13 +26,12 @@ def calculate(user,obj):
         if branchs.count() == 1:
             branch = branchs.first()
             
-            if hasattr(branch, 'contract'):
-                contract = branch.contract
-                product_contract = ProductContract.objects.filter(product=obj, contracts=contract).first()
+           
+            product_contract = ProductContract.objects.filter(product=obj, branch=branch).first()
               
-                if product_contract:
+            if product_contract:
               
-                    return product_contract.price
+                return product_contract.price
         product_price = ProductPrice.objects.filter(product=obj, purchaser=user.company).first()
 
         return ( obj.base_price if not product_price else
@@ -44,10 +43,10 @@ def calculate(user,obj):
     else:
         return  obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount > 0 else 0
 def price(branch,obj):
-    if hasattr(branch, 'contract'):
-        product_contract = ProductContract.objects.filter(product=obj, contracts=branch.contract).first()
-        if product_contract:
-            return product_contract.price
+    
+    product_contract = ProductContract.objects.filter(product=obj, branch=branch).first()
+    if product_contract:
+        return product_contract.price
     print(f"******************{branch.company}******************")
     product_price = ProductPrice.objects.filter(product=obj, purchaser=branch.company).first()
        

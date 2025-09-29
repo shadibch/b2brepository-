@@ -1,4 +1,5 @@
 from django.shortcuts import render
+
 from rest_framework.decorators import api_view
 
 # Create your views here.
@@ -6,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Company, Branch, Contract
+from .models import Company, Branch, ProductContract
 from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany
 from django.db.models import Q
 class FilterCompanyByNameAPIView(APIView):
@@ -108,7 +109,7 @@ from .permissions import IsSuperUserOrCompanyAdmin
 from .serializers import BranchSerializerCompany
 @api_view(['GET'])
 def get_company_branches(request, company_id):
-    branches = Branch.objects.filter(company_id=company_id).prefetch_related("contract")
+    branches = Branch.objects.filter(company_id=company_id)
     serializer = BranchSerializerCompany(branches, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -121,7 +122,7 @@ from .serializers import BranchWithProductSerializer
 
 @api_view(['GET'])
 def get_company_branches_with_product(request, company_id, product_id):
-    branches = Branch.objects.filter(company_id=company_id).prefetch_related('contract__items')
+    branches = Branch.objects.filter(company_id=company_id).prefetch_related('branch_contract')
     serializer = BranchWithProductSerializer(branches, many=True, context={'product_id': product_id})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -174,11 +175,12 @@ class ContractItemsView(APIView):
     def post(self, request, branch_id):
         try:
             branch = Branch.objects.get(pk=branch_id)
-            contract, created = Contract.objects.get_or_create(branch=branch)
-            
             items = request.data.get('items', [])
-          
-            contract.items.add(*items)
+            for item in items:
+                product = Product.objects.get(pk=item)
+                contract, created = ProductContract.objects.get_or_create(branch=branch,product=product)
+            
+         
             
             return Response({'message': 'Items added successfully'}, status=status.HTTP_200_OK)
         except Branch.DoesNotExist:
@@ -187,10 +189,11 @@ class ContractItemsView(APIView):
     def delete(self, request, branch_id, item_id):
         try:
             branch = Branch.objects.get(pk=branch_id)
-            if not branch.contract:
+            if not branch.branch_contract:
                 return Response({'error': 'No contract found'}, status=status.HTTP_404_NOT_FOUND)
-            
-            branch.contract.items.remove(item_id)
+            product = Product.objects.get(pk=item_id)
+            ProductContract.objects.filter(branch=branch, product=product).delete()
+
             return Response({'message': 'Item removed successfully'}, status=status.HTTP_200_OK)
         except Branch.DoesNotExist:
             return Response({'error': 'Branch not found'}, status=status.HTTP_404_NOT_FOUND)

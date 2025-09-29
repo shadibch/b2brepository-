@@ -100,8 +100,8 @@ from datetime import datetime
 @permission_classes([IsAuthenticated])
 def contracts(request):
     for branch in request.user.branches.all():
-        if(branch.contract and len(branch.contract.items.all()) >0):
-            data = ContractSerializer(branch.contract,context={'request': request}).data
+        if(branch.branch_contract and len(branch.branch_contract.all()) >0):
+            data = ContractSerializer(branch,context={'request': request}).data
           
             return Response(data)
 
@@ -115,9 +115,9 @@ def cart(request):
         cart = Cart.objects.create(purchaser=request.user)
         for branch in request.user.branches.all():
         
-            if branch.contract and len(branch.contract.items.all()) >0:
-                for product_contract in branch.contract.items.all():
-                    print("Number of items ******" +  str(len(branch.contract.items.all())))
+            if branch.branch_contract and len(branch.branch_contract.all()) >0:
+                for product_contract in branch.branch_contract.all():
+                    print("Number of items ******" +  str(len(branch.branch_contract.all())))
                     ProductInstance.objects.create(
                         product=product_contract.product,
                         price=product_contract.price,
@@ -138,10 +138,10 @@ def cartdetails(request):
     if cart is None:
         cart = Cart.objects.create(purchaser=request.user)
         for branch in request.user.branches.all():
-            print(branch.contract)
-            if branch.contract and len(branch.contract.items.all()) >0:
-                for product_contract in branch.contract.items.all():
-                    print(product_contract.price)
+
+            if branch.branch_contract and len(branch.branch_contract.all()) >0:
+                for product_contract in branch.branch_contract.all():
+
                     ProductInstance.objects.create(
                         product=product_contract.product,
                         price=product_contract.price,

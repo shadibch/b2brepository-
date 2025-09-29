@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, Branch, Contract
+from .models import Company, Branch
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,8 +35,8 @@ class BranchWithProductSerializer(serializers.ModelSerializer):
         product_id = self.context.get('product_id')
         if not product_id:
             return False
-        contract = getattr(obj, 'contract', None)
-        if contract and contract.items.filter(product_id=product_id).exists():
+        contract = getattr(obj, 'branch_contract', None)
+        if contract and contract.all().filter(product_id=product_id).exists():
             return True
         return False
 

@@ -67,7 +67,8 @@ class LoginAPIView(TokenObtainPairView):
         else:
             return Response({"error": "Invalid credentials"}, status=400)
     def is_contract(self,user):
-        return user.is_authenticated and user.company and user.role != "company_admin" and  user.company.branches.filter(contract__isnull=False).exists()
+        return user.is_authenticated and user.company and user.role != "company_admin" and user.company.branches.filter(branch_contract__isnull=False).exists()
+
 
 class RegisterStaffView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]  # ✅ Restrict access

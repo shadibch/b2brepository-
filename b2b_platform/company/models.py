@@ -10,22 +10,32 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 class ProductContract(models.Model):
-    product = models.ForeignKey('product.Product',
-                                   on_delete=models.DO_NOTHING)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-class Contract(models.Model):
-    items = models.ManyToManyField(
-        ProductContract,
-        related_name='contracts',
-        blank=True
-    )
-    branch = models.OneToOneField(
-        'Branch',
+    CURRENCY_CHOICES = [
+        ("SAR", "Saudi Riyal"),
+        ("USD", "US Dollar"),
+    ]
+    product = models.ForeignKey(
+        "product.Product",
         on_delete=models.CASCADE,
-        related_name='contract',
-        null=True,
-        blank=True
+        related_name="branch_prices"
     )
+    branch = models.ForeignKey(
+        "company.Branch",
+        on_delete=models.CASCADE,
+        related_name="branch_contract"
+    )
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+
+    class Meta:
+        unique_together = ("product", "branch")  # Ensures uniqueness
+        verbose_name = "Product Branch Price"
+        verbose_name_plural = "Product Branch Prices"
+
+    def __str__(self):
+        return f"{self.product} @ {self.branch} - {self.price} {self.currency}"
+
+
 
 class Branch(models.Model):
     name = models.CharField(max_length=255)

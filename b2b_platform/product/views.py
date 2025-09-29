@@ -811,10 +811,9 @@ class ProductBranchDeleteView(APIView):
         branch = get_object_or_404(Branch, id=branch_id)
         with transaction.atomic():
 
-            product_branch_price = ProductContract.objects.create(product=product, price=price)
-    
-            contract, created = Contract.objects.get_or_create(branch=branch)
-            contract.items.add(product_branch_price)
+            product_branch_price = ProductContract.objects.create(product=product, 
+            branch=branch,price=price,currency=data.get('currency', 'SAR'))
+         
 
     # Add your logic here: maybe save the product-branch-price link
     # Example: BranchProduct is a model that links product + branch + price
@@ -868,7 +867,7 @@ class ProductAdminViewSet(ModelViewSet):
     def contractprices(self, request, pk=None):
         """Get all prices for a product"""
         product = self.get_object()
-        prices = list(map(lambda x: x.contracts, product.product_contract.all()))
+        prices = list(map(lambda x: x.branch, product.branch_prices.all()))
 
         serializer = ContractSerializer(prices, many=True)
         return Response(serializer.data)
@@ -879,11 +878,13 @@ class ProductAdminViewSet(ModelViewSet):
             branch_id = request.data.get('branch_id');
             branch = get_object_or_404(Branch,branch_id)
             price = request.data.get('price');
-            contract = Contract.objects.get_or_create(branch=branch)
+          
             producet_price ,created = ProductContract.get_or_create(product=product,
-                                                                    price=price, contracts=contract)
+                                                                   branch=branch)
+            producet_price.price = price
+            producet_price.save()
          
-            serializer = ContractSerializer(price)
+            serializer = ContractSerializer(branch)
             return Response(serializer.data)
 
         except Exception as e:
