@@ -115,9 +115,7 @@ class ContractSerializer(serializers.ModelSerializer):
     def get_items(self, obj):
         # obj here is a Branch instance (because ContractSerializer is branch-based)
         contracts = obj.branch_contract.all()  # your related_name
-        products = [pc.product for pc in contracts]
-        return ProductSerializer(products, many=True,context=self.context).data
-
+        return ProductContractSerializer(contracts, many=True,context=self.context).data
 
 
 
