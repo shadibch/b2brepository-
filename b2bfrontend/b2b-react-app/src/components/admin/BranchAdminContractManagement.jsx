@@ -55,22 +55,30 @@ const BranchContractManagement = ({ company,product }) => {
       }
     };
 
-    const handleAddProduct = async (record) => {
+    const handleAddProduct = async (record,e) => {
       const productId = product.id;
       const branchId = record.id;  // assuming you have this
-      const price = record.price;
-    
+      const price = e ? e.target.value :record.price;
+      console.log(price);
+      if(record.price != price) {
+        record.price = price;
+      }
       const response = await axiosInstance.post(`/api/product/${productId}/branches/${branchId}/`, {
         body: {
           price: price
         }
       });
     
+   
+     
+      
+      setEditingKey(null);
+      
+      setPriceMap(prev => ({
+          ...prev,
+          [record.key]: price,
+        }));
     
-      const updatedRecord = { ...record, product_exist: true }; // <- create new object
-      setBranches(prev =>
-        prev.map(branch => branch.id === branchId ? updatedRecord : branch)
-      );
     };
     
 
@@ -88,23 +96,7 @@ const BranchContractManagement = ({ company,product }) => {
       // }));
     };
   
-    const handlePriceSave = async (record) => {
-      const newPrice = priceMap[record.key];
-  
-      if (record.product_exist) {
-        // ✅ Send update request
-        await fetch('/api/update-price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branchId: record.key, price: newPrice }),
-        });
-      } else {
-        // ✅ Send add-product request including price
-        handleAddProduct({ ...record, price: newPrice });
-      }
-  
-      setEditingKey(null);
-    };
+
   
     
     useEffect(() => {
@@ -140,14 +132,14 @@ const BranchContractManagement = ({ company,product }) => {
           return editable ? (
             <InputNumber
               min={0}
-              value={priceMap[record.key] ?? record.price}
+              value={record.price}
               formatter={(value) =>
                 ` ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
               }
               parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              onChange={(value) => handlePriceChange(value, record)}
-              onBlur={() => handlePriceSave(record)}
-              onPressEnter={() => handlePriceSave(record)}
+             
+              onBlur={(e) => handleAddProduct(record,e)}
+            
               autoFocus
             />
           ) : (
@@ -198,7 +190,7 @@ const BranchContractManagement = ({ company,product }) => {
     return (
         <div>
           <Title level={3}>{t('manage_branches')}</Title>
-          <Table columns={columns} dataSource={branches} />
+          <Table columns={columns} dataSource={branches} rowKey="id" />
          
         </div>
       );

@@ -810,9 +810,14 @@ class ProductBranchDeleteView(APIView):
         product = get_object_or_404(Product, id=product_id)
         branch = get_object_or_404(Branch, id=branch_id)
         with transaction.atomic():
-
-            product_branch_price = ProductContract.objects.create(product=product, 
-            branch=branch,price=price,currency=data.get('currency', 'SAR'))
+            product_branch_price = ProductContract.objects.filter(product=product, branch=branch).first()
+            if product_branch_price:
+                product_branch_price.price = price
+                product_branch_price.currency = data.get('currency', 'SAR')
+                product_branch_price.save()
+            else:
+                product_branch_price = ProductContract.objects.create(product=product, 
+                branch=branch,price=price,currency=data.get('currency', 'SAR'))
          
 
     # Add your logic here: maybe save the product-branch-price link
