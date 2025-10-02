@@ -834,21 +834,15 @@ class ProductBranchDeleteView(APIView):
     @action(detail=True, methods=['delete'])
     def delete(self, request, product_id, branch_id):
         # Make sure product and branch exist
-        product = get_object_or_404(Product, id=product_id)
-        branch = get_object_or_404(Branch, id=branch_id)
-
-        # Get the contract associated with the branch
-        contract = get_object_or_404(Contract, branch=branch)
-        print(contract)
-        print(product_id)
-
-        # Find the ProductContract to delete (product + contract match)
-        product_contract = contract.items.filter(product__id=product_id)
-
-        # Delete the ProductContract instance
+        product_contract = get_object_or_404(
+        ProductContract,
+        branch__id=branch_id,
+        product__id=product_id
+    )
+        branch = product_contract.branch
         product_contract.delete()
         serializer = BranchWithProductSerializer(branch,context={'product_id': product_id})
-        print(serializer.data)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
