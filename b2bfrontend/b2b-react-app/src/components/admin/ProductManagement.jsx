@@ -1179,7 +1179,11 @@ export default function ProductManagement() {
         formData.append('subgroups', JSON.stringify(selectedSubgroups));
         formData.append('name', firstFilledName);
         formData.append('stock_quantity', stock_quantity);
-        console.log(JSON.stringify(formData));
+        const obj = Object.fromEntries(formData.entries());
+const json = JSON.stringify(obj);
+
+console.log(json); 
+       
         // Add temporary images if creating new product
         if (!selected?.id) {
           tempImages.forEach(image => {

@@ -1152,6 +1152,7 @@ class ProductAdminViewSet(ModelViewSet):
             )
 
     def update(self, request, *args, **kwargs):
+       
         try:
             with transaction.atomic():
                 product = self.get_object()
@@ -1163,7 +1164,7 @@ class ProductAdminViewSet(ModelViewSet):
                 closest_category = Category.objects.get(id=category_id)
                 stock_quantity = request.data.get('stock_quantity')
                 subgroups = json.loads(request.data.get('subgroups', '[]'))
-                price = request.data.get('price')
+                price = request.data.get('base_price')
                 availibility = request.data.get('availibility')
                 # Validate translations
                 if not any(trans.get('name') for trans in translations):
@@ -1175,11 +1176,12 @@ class ProductAdminViewSet(ModelViewSet):
                 # Update base name
                 name = next(trans['name'] for trans in translations if trans.get('name'))
                 product.name = name
-                product.price = price
+                product.base_price = price
                 product.closest_category=closest_category
                 product.stock_quantity = stock_quantity
                 product.availibility = availibility
                 product.save()
+                
                 category = closest_category
                 categories = []
                 while category:
