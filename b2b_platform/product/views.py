@@ -46,8 +46,11 @@ class ProductListView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
 
-      
-        return Product.objects.all().prefetch_related("media").prefetch_related("translations").all()
+        query = self.request.query_params.get('branch_id')
+        if query:
+            return Product.objects.exclude(branch_prices__branch__id=query).prefetch_related("media").prefetch_related("translations").all()
+        else:
+            return Product.objects.all().prefetch_related("media").prefetch_related("translations")
 
     def get_permissions(self):
         if self.request.user.is_authenticated:
@@ -182,31 +185,56 @@ class WideSearch(ListAPIView):
     pagination_class = ProductPagination  # ✅ Enable pagination
     def get_queryset(self):
         query = self.request.GET.get("q")
-        return self.search_products(query).distinct()
-    def search_products(self, query):
-    # Define the search vectors for both Product and ProductTranslation
+        branch_id = self.request.GET.get('branch_id')
+        return self.search_products(query,branch_id)
+    def search_products(self, query, branch_id):
+        print(branch_id)
+
+    # Build search vectors
         search_vector = (
-            SearchVector('name', weight='A') +  # High priority
-            SearchVector('description', weight='B')  # Medium priority
+            SearchVector('part_id', weight='A') +
+            SearchVector('name', weight='B') +
+            SearchVector('description', weight='C')
         )
 
         translation_search_vector = (
-            SearchVector('translations__name', weight='A') +  # High priority
-            SearchVector('translations__description', weight='B')  # Medium priority
+            SearchVector('part_id', weight='A') +
+            SearchVector('translations__name', weight='B') +
+            SearchVector('translations__description', weight='C')
         )
-        product_search_vector = SearchVector(search_vector)  # Fields in Product model
-        translation_search_vector = SearchVector(translation_search_vector)  # Fields in related ProductTranslation
 
-    # Create the search query
+    # Search query
         search_query = SearchQuery(query)
 
-    # Annotate rank for both Product and ProductTranslation
-        results = Product.objects.annotate(
-            rank=SearchRank(product_search_vector, search_query) + SearchRank(translation_search_vector, search_query)
-        ).filter(rank__gte=0.01).order_by('-rank')  # Ensure results are distinct and ordered by relevance
+    # Annotate rank (for both Product and Translation)
+        results = (
+            Product.objects
+            .annotate(
+                rank=SearchRank(search_vector, search_query) +
+                     SearchRank(translation_search_vector, search_query)
+            )
+            .filter(rank__gte=0.01)
+            .prefetch_related("media", "translations")
+        )
+
+    # Exclude by branch (if given)
+        if branch_id:
+            results = results.exclude(branch_prices__branch__id=branch_id)
+
+    # ⚡ Deduplicate correctly by product ID
+    # This uses DISTINCT ON to keep only one row per product, preserving highest rank
+        results = (
+            results
+            .order_by('id', '-rank')  # Order by ID + rank
+            .distinct('id')           # Keep only one row per product
+             # Final ordering by rank descending
+    )
+
         for product in results:
             print(f"Product ID: {product.id}, Rank: {product.rank}")
+
         return results
+
 
 
 

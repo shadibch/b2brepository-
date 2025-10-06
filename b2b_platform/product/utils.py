@@ -18,6 +18,21 @@ def get_filtered_products(user, subgroup_id_lists):
 
     return queryset
 from company.models import ProductContract
+def calculateByBranch(branch,obj):
+            
+    product_contract = ProductContract.objects.filter(product=obj, branch=branch).first()
+    if product_contract:      
+        return product_contract.price
+    company = branch.company
+    product_price = ProductPrice.objects.filter(product=obj, purchaser=company).first()
+
+    return ( obj.base_price if not product_price else
+        product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
+        else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
+        else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
+        else obj.base_price
+         )
+    
 def calculate(user,obj):
     
     if user.is_authenticated and user.company:

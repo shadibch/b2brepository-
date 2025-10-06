@@ -298,5 +298,13 @@
     "Credit amount is mandatory and should be more than 0" : "مبلغ الائتمان إلزامي ويجب أن يكون أكثر من 0",
     "Period is mandatory and should be more than 0" : "الفترة إلزامية ويجب أن تكون أكثر من 0",
     "Add Product" : "إضافة منتج",
-    "Remove Product" : "إزالة منتج"
+    "Remove Product" : "إزالة منتج",
+    "Contract item added successfully": "تمت إضافة عنصر العقد بنجاح" ,
+    "Failed to add contract item" : "فشل في إضافة عنصر العقد",
+    "Add Contract Item" : "إضافة عنصر العقد",
+    "common": {
+      "ok": "موافق",
+      "cancel": "الغاء"
+    },
+    "Are you sure you want to delete this item ?": "هل أنت متأكد أنك تريد حذف هذا العنصر؟"
 }

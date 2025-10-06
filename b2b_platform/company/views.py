@@ -1,5 +1,8 @@
 from django.shortcuts import render
 
+from cart.serializers import ProductContractBranchAdminSerializer
+from product.models import Product
+from product.serializers import ProductSerializer
 from rest_framework.decorators import api_view
 
 # Create your views here.
@@ -171,6 +174,15 @@ class CompanyViewSet(ListAPIView):
 
 class ContractItemsView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]
+    def get(self, request, branch_id):
+        branch = Branch.objects.get(pk=branch_id)
+        products = ProductContract.objects.filter(branch=branch)
+        serializer = ProductContractBranchAdminSerializer(
+            products,
+            many=True,
+            context={"request": request}   # 👈 pass request here
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, branch_id):
         try:

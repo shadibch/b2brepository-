@@ -40,7 +40,7 @@ const BranchManagement = ({ company }) => {
   const fetchBranches = async () => {
     try {
       const response = await axiosInstance.get(`/api/companies/${company.id}/branches/`);
-      setBranches(response.data);
+      setBranches(response.data.results);
     } catch (error) {
       message.error('Failed to fetch branches');
     }

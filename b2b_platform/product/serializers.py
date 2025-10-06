@@ -1,3 +1,4 @@
+from company.models import Branch
 from rest_framework import serializers
 from .models import *
 from decimal import Decimal, ROUND_HALF_UP
@@ -140,7 +141,12 @@ class ProductSerializer(serializers.ModelSerializer):
         return translation.attributs if translation and translation.attributs else obj.attributs  # Return translated name or fallback
     def get_price(self, obj):
         user = self.context["request"].user
-       
+        request = self.context["request"]
+        branch_id = request.GET.get('branch_id')
+        if(branch_id and user.is_superuser):
+            branch = Branch.objects.get(id=branch_id)
+            price = calculateByBranch(branch,obj)       
+            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)       
         price = calculate(user,obj)
         
         # ✅ Ensure price is rounded to two decimal places

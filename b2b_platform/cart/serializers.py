@@ -97,6 +97,24 @@ class ProductContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductContract
         fields = ["product", "price"]
+class ProductContractBranchAdminSerializer(serializers.ModelSerializer):
+  
+    product_name = serializers.SerializerMethodField()
+    product_part_id = serializers.SerializerMethodField()
+    def get_product_name(self,obj):
+        request = self.context.get("request")  # Access request from serializer context
+        language = request.LANGUAGE_CODE if request else "en" 
+        print(language) # Fallback to default language
+        translation = obj.product.translations.filter(language=language).first()
+        return translation.name if translation and translation.name else obj.name
+
+    def get_product_part_id(self,obj):
+        return obj.product.part_id
+    def get_product_id(self,obj):
+        return obj.product.id
+    class Meta:
+        model = ProductContract
+        fields = ["product_id", "product_name", "product_part_id", "price"]
 
 from company.serializers import BranchSerializer
 class ContractSerializer(serializers.ModelSerializer):
