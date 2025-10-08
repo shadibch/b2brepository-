@@ -60,6 +60,7 @@ urlpatterns = [
     path("api/user/<str:email>/", CheckEmailExistsView.as_view(), name="check-email"),
     path("api/categories/", CategoryListView.as_view(), name="category-list"), 
     path("api/products/", ProductListView.as_view(), name="product-list"),
+    path("api/companies/products/<int:company_id>", ProductsPrices.as_view(), name="product-company-list"),
     path("api/products/category/<int:category_id>/", ProductListByCategoryView.as_view(), name="product-list-by-category"), 
     path("api/product_groups/<int:category_id>/", ProductGroupListView.as_view(), name="product-groups-list"), 
     path("api/filter_products/<int:category_id>/", FilterProductsBySubgroups.as_view(), name="filter-products"),  

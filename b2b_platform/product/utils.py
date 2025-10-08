@@ -32,6 +32,16 @@ def calculateByBranch(branch,obj):
         else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
         else obj.base_price
          )
+def calculatesByCompany(company,obj):
+     product_price = ProductPrice.objects.filter(product=obj, purchaser=company).first()
+     print(str(product_price))
+     return ( obj.base_price if not product_price else
+        product_price.flat_discount if  product_price.flat_discount and product_price.flat_discount >0
+        else obj.base_price * (100 - product_price.percentage_discount) / 100 if product_price and product_price.percentage_discount and product_price.percentage_discount  >0
+        else obj.base_price * (100 - obj.discount) / 100 if obj.discount and obj.discount >0 
+        else obj.base_price
+         )
+
     
 def calculate(user,obj):
     

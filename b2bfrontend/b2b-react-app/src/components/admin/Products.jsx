@@ -10,16 +10,16 @@ import axiosInstance from "../axiosInstance";
 import { formatNumber, isRTL, t } from "../../utils/translator";
 import { API_BASE_URL, DEFAULT_IMAGE } from "../../config";
 import { Checkbox } from "antd";
-const Products = ({ branch_id ,onSelectionChange }) => {
+const Products = ({ reference_id ,onSelectionChange,reference_key }) => {
   
   const [products, setProducts] = useState([]);
 	const [checkedProducts, setCheckedProducts] = useState([]);
   const [query, setQuery] = useState('');
 
 
-  const handleSearch = async (branch_id) => {
+  const handleSearch = async (reference_id) => {
     try {
-      const response = await axiosInstance.get(`/api/search_text?branch_id=${branch_id}&q=${query}`);
+      const response = await axiosInstance.get(`/api/search_text?${reference_key}=${reference_id}&q=${query}`);
       setProducts(response.data.results);
     } catch (error) {
       console.error('Error fetching search results:', error);
@@ -33,9 +33,9 @@ const Products = ({ branch_id ,onSelectionChange }) => {
 
 
   
-  const fetchProducts = async (branch_id) => {
+  const fetchProducts = async (reference_id) => {
     try {
-      const response = await axiosInstance.get(`/api/products/?branch_id=${branch_id}`);
+      const response = await axiosInstance.get(`/api/products/?${reference_key}=${reference_id}`);
       setProducts(response.data.results);
 	   
     } catch (error) {
@@ -64,7 +64,7 @@ const Products = ({ branch_id ,onSelectionChange }) => {
   setProducts([]);
 
       // Otherwise, fetch products normally
-      fetchProducts(branch_id);
+      fetchProducts(reference_id);
     
   
     // --- NEW: Listen for custom 'searchResults' event
@@ -82,7 +82,7 @@ const Products = ({ branch_id ,onSelectionChange }) => {
       window.removeEventListener('searchResults', handleSearchEvent);
     };
   
-  }, [location.state, setProducts,branch_id]);
+  }, [location.state, setProducts,reference_id]);
   
 
   return (
@@ -102,7 +102,7 @@ const Products = ({ branch_id ,onSelectionChange }) => {
           onChange={(e) => setQuery(e.target.value)}
         />
 
-        <button className="search-button" onClick={()=>handleSearch(branch_id)}>  {t('search')}</button>
+        <button className="search-button" onClick={()=>handleSearch(reference_id)}>  {t('search')}</button>
       </div>
 
 

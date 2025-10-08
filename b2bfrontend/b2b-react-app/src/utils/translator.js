@@ -37,6 +37,11 @@ export const formatLocal = (value) => {
   
 }
 
+export const formatPercentage = (value) => {
+ return new Intl.NumberFormat(getCurrentLanguage(), {
+    style: 'percent'
+  }).format(value);  
+}
 
 export const formatDate = (date, locale = getCurrentLanguage()) => {
   return new Intl.DateTimeFormat(locale, {

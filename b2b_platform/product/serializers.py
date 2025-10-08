@@ -146,7 +146,13 @@ class ProductSerializer(serializers.ModelSerializer):
         if(branch_id and user.is_superuser):
             branch = Branch.objects.get(id=branch_id)
             price = calculateByBranch(branch,obj)       
-            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)       
+            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
+        company_id = request.GET.get('company_id')
+        if(company_id and user.is_superuser):
+            company = Company.objects.get(id=company_id)
+            price = calculatesByCompany(company,obj)       
+            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
+
         price = calculate(user,obj)
         
         # ✅ Ensure price is rounded to two decimal places
@@ -444,6 +450,38 @@ class ProductPriceSerializer(serializers.ModelSerializer):
         
     def get_company_name(self, obj):
         return obj.purchaser.name if obj.purchaser else None
+
+
+
+class ProductPriceCompanySerializer(serializers.ModelSerializer):
+    product_name= serializers.SerializerMethodField()
+    product_part_id = serializers.SerializerMethodField()
+    product_id =  serializers.SerializerMethodField()
+    base_price = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
+    currency = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductPrice
+
+        fields = ['id',  'percentage_discount', 'flat_discount', 'product_name','product_part_id',
+        'product_id','base_price','price','currency']
+        
+   
+    def get_product_part_id(self, obj):
+        return obj.product.part_id
+    def get_product_id(self,obj):
+        return obj.product.id
+    def get_product_name(self, obj):  # Replace `get_translated_name` with `get_name`
+        request = self.context.get("request")  # Access request from serializer context
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+        translation = obj.product.translations.filter(language=language).first()
+        return translation.name if translation else obj.product.name  # 
+    def get_base_price(self,obj):
+        return obj.product.base_price
+    def get_currency(self, obj):
+        return obj.product.currency
+    def get_price(self,obj):
+        return obj.product.base_price*(100 -obj.percentage_discount)/100 if obj.percentage_discount else obj.flat_discount
 
 
 

@@ -39,6 +39,15 @@ from rest_framework.pagination import PageNumberPagination
 class ProductPagination(PageNumberPagination):
     page_size = 50  # ✅ Limit results to 50 per page
 
+class ProductsPrices(ListAPIView):
+    serializer_class = ProductPriceCompanySerializer
+    pagination_class = ProductPagination
+    permission_classes = [IsAdminUser] 
+    def get_queryset(self):
+        company_id = self.kwargs.get("company_id")  
+        return ProductPrice.objects.filter(purchaser__id=company_id).prefetch_related("product").all()
+
+
 class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
     pagination_class = ProductPagination
@@ -46,9 +55,12 @@ class ProductListView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
 
-        query = self.request.query_params.get('branch_id')
+        query =      self.request.query_params.get('branch_id')
+        company_id = self.request.query_params.get('company_id')
         if query:
             return Product.objects.exclude(branch_prices__branch__id=query).prefetch_related("media").prefetch_related("translations").all()
+        elif company_id:
+            return Product.objects.exclude(prices__purchaser__id=company_id)
         else:
             return Product.objects.all().prefetch_related("media").prefetch_related("translations")
 
@@ -186,9 +198,10 @@ class WideSearch(ListAPIView):
     def get_queryset(self):
         query = self.request.GET.get("q")
         branch_id = self.request.GET.get('branch_id')
-        return self.search_products(query,branch_id)
-    def search_products(self, query, branch_id):
-        print(branch_id)
+        company_id = self.request.GET.get('company_id')
+        return self.search_products(query,branch_id,company_id)
+    def search_products(self, query, branch_id,company_id):
+  
 
     # Build search vectors
         search_vector = (
@@ -220,6 +233,8 @@ class WideSearch(ListAPIView):
     # Exclude by branch (if given)
         if branch_id:
             results = results.exclude(branch_prices__branch__id=branch_id)
+        elif company_id:
+            results = results.exclude(prices__purchaser__id=company_id)
 
     # ⚡ Deduplicate correctly by product ID
     # This uses DISTINCT ON to keep only one row per product, preserving highest rank
@@ -915,6 +930,7 @@ class ProductAdminViewSet(ModelViewSet):
             return Response(serializer.data)
 
         except Exception as e:
+           
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -932,7 +948,7 @@ class ProductAdminViewSet(ModelViewSet):
     @action(detail=True, methods=['post'])
     def add_price(self, request, pk=None):
         """Add or update a price for a product"""
-        print(request.data)
+       
         product = self.get_object()
         
         try:
@@ -941,6 +957,7 @@ class ProductAdminViewSet(ModelViewSet):
             discount_value = request.data.get('discount_value')
 
             if not purchaser_id or discount_value is None:
+                print("Error: e1" )
                 return Response(
                     {'error': 'Purchaser and discount value are required'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -955,21 +972,24 @@ class ProductAdminViewSet(ModelViewSet):
                     'flat_discount': discount_value if not is_percentage else None
                 }
             )
-
+            print(str(created))
             if not created:
                 # Update existing price
                 if is_percentage:
                     price.percentage_discount = discount_value
                     price.flat_discount = None
+                    price.is_percentage = True
                 else:
                     price.flat_discount = discount_value
                     price.percentage_discount = None
+                    price.is_percentage = False;
                 price.save()
-
+                
             serializer = ProductPriceSerializer(price)
             return Response(serializer.data)
 
         except Exception as e:
+            print("Error:" + str(e))
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
