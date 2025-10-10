@@ -49,7 +49,10 @@ const CompanyAdminPage = () => {
       setMessageState({ type: 'error', content: t('Failed to fetch companies') });
     }
   };
-
+  const renderOrderPageMessage = () => {
+    const rawHtml = t('ORDER_PAGE').replace('{id}', id || '');
+    return { __html: rawHtml };
+};
   useEffect(() => {
     fetchCompanies();
   }, []);
@@ -122,7 +125,7 @@ const CompanyAdminPage = () => {
   const fetchCompanyItems = async (companyId) => {
     try {
       setCompanyItemsLoading(prev => ({ ...prev, [companyId]: true }));
-      const response = await axiosInstance.get(`api/companies/products/${companyId}`);
+      const response = await axiosInstance.get(`/api/companies/products/${companyId}`);
       
       // Attach branchId to each contract item
       const itemsWithCompanyId = response.data.results.map(item => ({

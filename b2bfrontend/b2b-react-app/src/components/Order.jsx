@@ -21,7 +21,7 @@ const Order = () => {
     };
 
     return (
-        <Container className="order-page">
+        <Container>
   
 
             {id && <div className="order-message" dangerouslySetInnerHTML={renderOrderPageMessage()} />}

@@ -114,6 +114,7 @@
  "Group created successfully":"Group created successfully",
  "PRJ" : "Partally Accepted",
  "Contracts" : "Contracts",
+ "Add Company Item" : "Add item to the company",
  "Item has added to the shopping cart" : "Item has added to the shopping cart",
  "order_expiry_message": "Order {{orderId}} will expire on {{expiryDate}}",
  "PURCHASE_DATETIME_EXCEED":"You have exceeded your old waiting period. Please pay to complete a new purchase."
