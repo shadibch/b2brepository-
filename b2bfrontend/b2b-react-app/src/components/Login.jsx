@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-
-import { Container, Form, Button, Alert } from "react-bootstrap";
-
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Alert,
+  Typography,
+  Box,
+  Link as MuiLink,
+} from '@mui/material';
 import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
-import axiosInstance from './axiosInstance'
+import axiosInstance from './axiosInstance';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: "", password: "" });
@@ -51,42 +57,59 @@ const Login = () => {
         }
     });
     return (
-        <Container className="login-container">
+        <Container maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 4 }}>
+                <Typography variant="h4" component="h1" gutterBottom align="center">
+                    {t('login')}
+                </Typography>
 
+                {error && (
+                    <Alert severity="error" sx={{ mb: 3 }}>
+                        {error}
+                    </Alert>
+                )}
 
-            <h2 className="text-center mb-4">{t('login')}</h2>
-
-            {error && <Alert variant="danger">{error}</Alert>}
-
-            <Form onSubmit={handleSubmit} className="login-form">
-                <Form.Group className="mb-3">
-                    <Form.Label>{t('email')}</Form.Label>
-                    <Form.Control
-                        type="email"
+                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
+                        id="email"
+                        label={t('email')}
                         name="email"
+                        type="email"
+                        autoComplete="email"
+                        autoFocus
                         value={formData.email}
                         onChange={handleChange}
-                        required
                     />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                    <Form.Label>{t('password')}</Form.Label>
-                    <Form.Control
-                        type="password"
+                    <TextField
+                        margin="normal"
+                        required
+                        fullWidth
                         name="password"
+                        label={t('password')}
+                        type="password"
+                        id="password"
+                        autoComplete="current-password"
                         value={formData.password}
                         onChange={handleChange}
-                        required
                     />
-                </Form.Group>
-
-                <Button variant="primary" type="submit" className="w-100">
-                    {t('login')}
-                </Button>
-                <Link to="/register_company_admin">{t('signup')}</Link>
-
-            </Form>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
+                    >
+                        {t('login')}
+                    </Button>
+                    <Box textAlign="center">
+                        <MuiLink component={Link} to="/register_company_admin" variant="body2">
+                            {t('signup')}
+                        </MuiLink>
+                    </Box>
+                </Box>
+            </Paper>
         </Container>
     );
 };

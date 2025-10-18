@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import {isAuthenticated} from "./axiosInstance";
+import { useParams, Link } from "react-router-dom";
+import {
+  Container,
+  Grid,
+  Card,
+  CardMedia,
+  Typography,
+  Box,
+  Button,
+  TextField,
+  Chip,
+  Divider,
+  Dialog,
+  DialogContent,
+  Breadcrumbs,
+  Paper,
+  CircularProgress,
+} from '@mui/material';
+import { AddShoppingCart, Home } from '@mui/icons-material';
+import { isAuthenticated } from "./axiosInstance";
 import axiosInstance from "./axiosInstance";
-import ReactDOM from "react-dom";
 import { setitemscount, useHeaderContext } from "./HeaderContext";
-import { t ,isRTL,formatNumber} from '../utils/translator';
-import {API_BASE_URL} from '../utils/settings'
+import { t, isRTL, formatNumber } from '../utils/translator';
+import { API_BASE_URL } from '../utils/settings';
 const ProductItem = () => {
   const { partId } = useParams(); // ✅ Extract product ID from URL
   const [product, setProduct] = useState(null);
@@ -34,16 +51,7 @@ const ProductItem = () => {
   };
   
 
-const Modal = ({ children, onClose }) => {
-  return ReactDOM.createPortal(
-    <div className="modal" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>,
-    document.body
-  );
-};
+// Removed custom Modal component - using Material-UI Dialog instead
 
   useEffect(() => {
     import("./ProductItem.css");
@@ -67,114 +75,199 @@ const Modal = ({ children, onClose }) => {
       .catch(error => console.error("Error fetching product:", error));
   }, [partId]);
 
-  if (!product) return <p>Loading...</p>;
+  if (!product) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
-    <div className="product-container">
-      {/* LEFT: Image Display */}
-      <div className="image-gallery">
-
-        <div className="thumbnail-bar">
-          {product.media_list.map((img, index) => (
-            <img 
-              key={index} 
-              src={API_BASE_URL + img} 
-              alt={`Preview ${index}`} 
-              className="thumbnail"
-              onMouseEnter={() => setSelectedImage(API_BASE_URL + img)} // ✅ Hover to preview
-              onClick={() => setSelectedImage(API_BASE_URL + img)} // ✅ Click to magnify
-            />
-          ))}
-        </div>
-		<div>
-		           <div className="category-navigation">
-				   <a href='/' className="category-link">{t('home')}  &gt; </a>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Home sx={{ mr: 0.5 }} />
+            {t('home')}
+          </Box>
+        </Link>
         {categoryHierarchy.map((category, index) => (
-          <a 
-            key={category.id} 
-            href={`/categorypage/${category.id}`} 
-            className="category-link"
+          <Link
+            key={category.id}
+            to={`/categorypage/${category.id}`}
+            style={{ textDecoration: 'none', color: 'inherit' }}
           >
-            {category.name} {index < categoryHierarchy.length - 1 ?  '>' : ""}
-          </a>
+            {category.name}
+          </Link>
         ))}
-      </div>
-		   <img 
-          className="main-image" 
-          src={selectedImage} 
-          alt="Main Product" 
-          onClick={() => setIsModalOpen(true)} // ✅ Opens modal on click
-        />
-        {isAuthenticated() &&(<>
-        <></>
-        <div className="add_container">
+      </Breadcrumbs>
 
-  <input
-    id="quantity"
-    type="number"
-    min="1"
-    value={quantity}
-    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-    className="quantity-input"
-  />
-  <button className="add_to_cart" onClick={handleAddToCart}>{t('add_to_cart')}</button>
-</div>
+      <Grid container spacing={4}>
+        {/* Left: Image Gallery */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 2 }}>
+            {/* Thumbnail Bar */}
+            <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
+              {product.media_list.map((img, index) => (
+                <Card
+                  key={index}
+                  sx={{
+                    minWidth: 80,
+                    height: 80,
+                    cursor: 'pointer',
+                    border: selectedImage === API_BASE_URL + img ? 2 : 1,
+                    borderColor: selectedImage === API_BASE_URL + img ? 'primary.main' : 'grey.300',
+                  }}
+                  onClick={() => setSelectedImage(API_BASE_URL + img)}
+                >
+                  <CardMedia
+                    component="img"
+                    height="100%"
+                    image={API_BASE_URL + img}
+                    alt={`Preview ${index}`}
+                    sx={{ objectFit: 'contain' }}
+                  />
+                </Card>
+              ))}
+            </Box>
 
-        </>)}
-		</div>
-      </div>
+            {/* Main Image */}
+            <Card
+              sx={{ cursor: 'pointer' }}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <CardMedia
+                component="img"
+                height="400"
+                image={selectedImage}
+                alt="Main Product"
+                sx={{ objectFit: 'contain' }}
+              />
+            </Card>
 
-      {/* Modal for Full Image */}
+            {/* Add to Cart Section */}
+            {isAuthenticated() && (
+              <Box sx={{ mt: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+                <TextField
+                  id="quantity"
+                  type="number"
+                  label={t('quantity')}
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  inputProps={{ min: 1 }}
+                  sx={{ width: 120 }}
+                />
+                <Button
+                  variant="contained"
+                  startIcon={<AddShoppingCart />}
+                  onClick={handleAddToCart}
+                  size="large"
+                >
+                  {t('add_to_cart')}
+                </Button>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
 
-	
+        {/* Right: Product Info */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3 }}>
+            <Typography variant="h4" component="h1" gutterBottom>
+              {product.name}
+            </Typography>
 
-      {/* RIGHT: Product Info */}
-      <div className="product-info">
-        <h2 className="product-header">{product.name}</h2>
-		
-        <hr />
-		<div className="price">{product.price > 0 ? (
-    <>
-      <span style={{ color: "red" }}>  {formatNumber(product.price, product.currency)} </span>
-      {" "}
-      <span style={{ color: "black", textDecoration: "line-through" }}>
-       {formatNumber(product.base_price, product.currency)}   
-      </span>
-    </>
-  ) : (
-    <span>   {formatNumber(product.base_price, product.currency)}   </span>
-  )}</div>
-  <div style={{color: product.availibility == 'M'
-  ? 
-    'red' : 'green' ,fontWeight:'bold'}}>{
-      t(product.availibility == 'M' ? 'Market' : 'Stock')}</div>
-        {/* Attributes */}
-        {product.attributs && (
-          <div className="attributes">
-            {Object.entries(product.attributs).map(([key, value]) => (
-              <p key={key}>
-                <strong>{key}: </strong> {value}
-              </p>
-            ))}
-          </div>
-        )}
-		  {isModalOpen && (
-        <div className="dialog-modal" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content"  onClick={(e) => e.stopPropagation()}>
-            <img src={selectedImage} alt="Magnified Product" />
-          </div>
-        </div>
-      )}
-        <hr />
+            <Divider sx={{ my: 2 }} />
 
-        {/* About Section */}
-        <h3 dir={isRTL() ? "rtl" : "ltr"}><strong>{t("about_this_item")}</strong></h3>
-        <p 
-          dangerouslySetInnerHTML={{ __html: product.description }}
-          dir={isRTL() ? "rtl" : "ltr"}
-        ></p>
-      </div>
-    </div>
+            {/* Price */}
+            <Box sx={{ mb: 2 }}>
+              {product.price > 0 ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography
+                    variant="h4"
+                    component="span"
+                    sx={{ color: 'error.main', fontWeight: 'bold' }}
+                  >
+                    {formatNumber(product.price, product.currency)}
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    component="span"
+                    sx={{
+                      color: 'text.secondary',
+                      textDecoration: 'line-through',
+                    }}
+                  >
+                    {formatNumber(product.base_price, product.currency)}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
+                  {formatNumber(product.base_price, product.currency)}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Availability */}
+            <Chip
+              label={t(product.availibility === 'M' ? 'Market' : 'Stock')}
+              color={product.availibility === 'M' ? 'error' : 'success'}
+              sx={{ mb: 3, fontWeight: 'bold' }}
+            />
+
+            {/* Attributes */}
+            {product.attributs && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('specifications')}
+                </Typography>
+                {Object.entries(product.attributs).map(([key, value]) => (
+                  <Box key={key} sx={{ display: 'flex', mb: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold', minWidth: 120 }}>
+                      {key}:
+                    </Typography>
+                    <Typography variant="body2" sx={{ ml: 1 }}>
+                      {value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            {/* About Section */}
+            <Typography variant="h6" gutterBottom dir={isRTL() ? "rtl" : "ltr"}>
+              <strong>{t("about_this_item")}</strong>
+            </Typography>
+            <Typography
+              variant="body1"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+              dir={isRTL() ? "rtl" : "ltr"}
+            />
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Image Modal */}
+      <Dialog
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0 }}>
+          <CardMedia
+            component="img"
+            image={selectedImage}
+            alt="Magnified Product"
+            sx={{ width: '100%', height: 'auto' }}
+          />
+        </DialogContent>
+      </Dialog>
+    </Container>
   );
 };
 

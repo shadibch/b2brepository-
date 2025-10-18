@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Button } from 'react-bootstrap';
+import { Container, Typography, Paper } from '@mui/material';
 import { t } from '../utils/translator';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './Order.css'; // Create this file for styles
 
 const Order = () => {
     const [id, setId] = useState(null);
@@ -21,10 +20,16 @@ const Order = () => {
     };
 
     return (
-        <Container>
-  
-
-            {id && <div className="order-message" dangerouslySetInnerHTML={renderOrderPageMessage()} />}
+        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
+                {id && (
+                    <Typography
+                        variant="body1"
+                        dangerouslySetInnerHTML={renderOrderPageMessage()}
+                        sx={{ lineHeight: 1.6 }}
+                    />
+                )}
+            </Paper>
         </Container>
     );
 };

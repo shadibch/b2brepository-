@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
 import Header from "./Header";
-import { Container, Button } from "react-bootstrap";
+import {
+  Container,
+  Button,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  Paper,
+} from '@mui/material';
 import axiosInstance from "./axiosInstance";
 import GroupSlide from "./GroupSlide";
-import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber} from '../utils/translator';
-import { useNavigate,useLocation  } from "react-router-dom"; // ✅ Handles navigation
-import {API_BASE_URL,DEFAULT_IMAGE} from '../utils/settings';
+import { t, switchLanguage, isRTL, getCurrentLanguage, formatNumber } from '../utils/translator';
+import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE_URL, DEFAULT_IMAGE } from '../utils/settings';
 const IndexPage = () => {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -101,87 +112,151 @@ const navigate = useNavigate();
     }
   return (
     <>
-	{ categoryId >0 && (<GroupSlide updateProducts={setProducts} isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} categoryId={categoryId} />)}
-      <Container className={`mt-5 text-center ${!isSidebarOpen ? 
-              isRTL() ? "expand-rtl" : "expand" :isRTL() ? "shrink-rtl" : "shrink"} }`}>
-        {/* Upper Part: Rounded Buttons for Categories */}
-        <div className={`categories-container`}>
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant="outline-primary"
-              className="category-button"
-              data-id={category.id} 
-			   onClick={() => fetchProductsByCategory(category.id)}// ✅ Stores ID as a hidden attribute
-            >
-              <img src={category.file} alt={category.name} className="category-icon" />
-              {category.name}
-            </Button>
-          ))}
-        </div>
-
-        {/* ✅ Bottom Part: Product Grid */}
-        <div className={`bottom-section ${isSidebarOpen ? "shrink" : "expand"}`} >
-         
-          <div className="product-grid">
-          {products.map((product) => (
-  <div
-    key={product.id}
-    className="product-item"
-    onClick={() => navigate(`/productitem/${product.part_id}`)}
-    onMouseEnter={(e) => {
-      if (product.media_list.length > 1) {
-        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[1]}`;
-      }
-    }}
-    onMouseLeave={(e) => {
-      if (product.media_list.length > 1) {
-        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[0]}`;
-      }
-    }}
-  >
-    {/* ✅ Product Image */}
-    <img
-      src={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
-      alt={product.name}
-      className="product-image"
-    />
-
-    {/* ✅ Product Name */}
-    <p className="product-name">{truncateText(product.name)}</p>
-
-    {/* ✅ Product Price */}
-    <p className="product-price">
-      {product.price > 0 ? (
-        <>
-          <span style={{ color: "red" }}>{formatNumber(product.price, product.currency)}</span>{" "}
-          <span style={{ color: "black", textDecoration: "line-through", fontSize: 12 }}>
-            {formatNumber(product.base_price, product.currency)}
-          </span>
-        </>
-      ) : (
-        <span>{formatNumber(product.base_price, product.currency)}</span>
+      {categoryId > 0 && (
+        <GroupSlide 
+          updateProducts={setProducts} 
+          isOpen={isSidebarOpen} 
+          toggleSidebar={toggleSidebar} 
+          categoryId={categoryId} 
+        />
       )}
-    </p>
+      
+      <Container maxWidth="xl" sx={{ mt: 5, mb: 4 }}>
+        {/* Categories Section */}
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Grid container spacing={2} justifyContent="center">
+            {categories.map((category) => (
+              <Grid item key={category.id}>
+                <Button
+                  variant="outlined"
+                  onClick={() => fetchProductsByCategory(category.id)}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    p: 2,
+                    minWidth: 120,
+                    height: 100,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={category.file}
+                    alt={category.name}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      mb: 1,
+                      objectFit: 'contain',
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                    {category.name}
+                  </Typography>
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
 
-    {/* ✅ Availability - moved to new line */}
-    <p>
-      <span
-        style={{
-          color: product.availibility === 'M' ? 'red' : 'green',
-          fontWeight: 'bold'
-        }}
-      >
-        {t(product.availibility === 'M' ? 'Market' : 'Stock')}
-      </span>
-    </p>
-  </div>
-))}
+        {/* Products Section */}
+        <Box sx={{ mt: 4 }}>
+          <Grid container spacing={3}>
+            {products.map((product) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: 4,
+                    },
+                  }}
+                  onClick={() => navigate(`/productitem/${product.part_id}`)}
+                >
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
+                    alt={product.name}
+                    sx={{
+                      objectFit: 'contain',
+                      p: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (product.media_list.length > 1) {
+                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[1]}`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (product.media_list.length > 1) {
+                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[0]}`;
+                      }
+                    }}
+                  />
+                  <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                    <Typography
+                      variant="body2"
+                      component="p"
+                      sx={{
+                        fontWeight: 'medium',
+                        mb: 1,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
+                      {truncateText(product.name)}
+                    </Typography>
 
-          </div>
-        </div>
+                    <Box sx={{ mb: 1 }}>
+                      {product.price > 0 ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography
+                            variant="h6"
+                            component="span"
+                            sx={{ color: 'error.main', fontWeight: 'bold' }}
+                          >
+                            {formatNumber(product.price, product.currency)}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            component="span"
+                            sx={{
+                              color: 'text.secondary',
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            {formatNumber(product.base_price, product.currency)}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="h6" component="span" sx={{ fontWeight: 'bold' }}>
+                          {formatNumber(product.base_price, product.currency)}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Chip
+                      label={t(product.availibility === 'M' ? 'Market' : 'Stock')}
+                      color={product.availibility === 'M' ? 'error' : 'success'}
+                      size="small"
+                      sx={{ fontWeight: 'bold' }}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       </Container>
-
     </>
   );
 };

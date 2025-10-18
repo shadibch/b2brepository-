@@ -1,25 +1,76 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Badge,
+  Alert,
+  Box,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Avatar,
+  InputAdornment,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Home as HomeIcon,
+  Phone as PhoneIcon,
+  Language as LanguageIcon,
+  Person as PersonIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountCircleIcon,
+} from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 import axiosInstance from "./axiosInstance";
 import { useHeaderContext } from "./HeaderContext";
-
 import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
-import { Alert } from "react-bootstrap";
+import createEmotionCache from './createEmotionCache';
 const Header = ({ setProducts }) => {
   const [user, setUser] = useState(null);
   const [branches, setBranches] = useState([]);
+  const [userMenuAnchor, setUserMenuAnchor] = useState(null);
+  const [languageMenuAnchor, setLanguageMenuAnchor] = useState(null);
+  const direction = isRTL() ? 'rtl' : 'ltr';
 
-  const { itemscount ,setitemscount} = useHeaderContext();
-  const { setSelectedBranchId} = useHeaderContext();
+  const { itemscount, setitemscount } = useHeaderContext();
+  const { setSelectedBranchId } = useHeaderContext();
   const [query, setQuery] = useState(''); // Store the input value
-  const[links,setLinks] = useState([]);
-  const[message,setMessage]= useState(null);
+  const [links, setLinks] = useState([]);
+  const [message, setMessage] = useState(null);
+  const [cache, setCache] = useState(null);
   const navigate = useNavigate(); // Handle navigation
   const location = useLocation(); // Check the current location
   const token = localStorage.getItem("authToken"); // Retrieve token
   const expiry_order = localStorage.getItem("expiry_order");
   const handleChange = (e) => {
     setSelectedBranchId(e.target.value);
+  };
+
+  const handleUserMenuOpen = (event) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
+  };
+
+  const handleLanguageMenuOpen = (event) => {
+    setLanguageMenuAnchor(event.currentTarget);
+  };
+
+  const handleLanguageMenuClose = () => {
+    setLanguageMenuAnchor(null);
   };
   const handleSearch = async () => {
     try {
@@ -103,139 +154,192 @@ const Header = ({ setProducts }) => {
     setitemscount(response.data.cart_items_count);
   }
   useEffect(() => {
-    if (isRTL()) {
-      import("./Header_rtl.css");
-    } else {
-      import("./Header.css");
+    async function setupCache() {
+      const newCache = await createEmotionCache(direction);
+      setCache(newCache);
+      document.body.dir = direction; // update DOM direction (affects layout)
     }
+    setupCache();
+  
     if (!token) {
-      setUser(null); // If token is removed, reset user state
+      setUser(null);
       return;
     }
-
-
+  
     fetchActiveCart();
-
     fetchUserData();
     fetchBranches();
     fetchLinks();
-    if(expiry_order != "undefined" &&
-      expiry_order &&expiry_order.length >1 && !message) {
-      console.log(expiry_order);
+  
+    if (expiry_order && expiry_order !== "undefined" && expiry_order.length > 1 && !message) {
       const exp = expiry_order.split(",");
-      const expiryDate = isRTL() ? 
-      formatHijriDate(new Date(exp[0])) :
-      exp[0];
-    const orderId = exp[1];
-    setMessage(t('order_expiry_message', { orderId, expiryDate }));
-    
+      const expiryDate = isRTL() ? formatHijriDate(new Date(exp[0])) : exp[0];
+      const orderId = exp[1];
+      setMessage(t('order_expiry_message', { orderId, expiryDate }));
     }
-
-  }, [token,itemscount]); // ✅ Adding token as a dependency
+  
+  }, [token, itemscount, direction]);
+   // ✅ Adding token as a dependency
 
   return (
-    <header className="header">
-      <div className="header-left">
-        <h1 className="logo">B2B</h1>
-      </div>
-      {message && <Alert variant="success">{message}</Alert>}
+    <>
+      {message && (
+        <Alert severity="success" sx={{ mb: 1 }}>
+          {message}
+        </Alert>
+      )}
+      
+      <AppBar position="static" color="primary">
+        <Toolbar>
+          {/* Logo */}
+          <Typography variant="h6" component="div" sx={{ flexGrow: 0, mr: 2 }}>
+            B2B
+          </Typography>
 
-      <div className="header-middle">
-        <input
-          type="text"
-          placeholder={`${t('search')}...`} // ✅ Use template literal for translation
-          className="search-input"
-          onChange={(e) => setQuery(e.target.value)}
-        />
+          {/* Search Bar */}
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', maxWidth: 600, mx: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder={`${t('search')}...`}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleSearch} edge="end">
+                      <SearchIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
 
-        <button className="search-button" onClick={handleSearch}>  {t('search')}</button>
-      </div>
+          {/* Right side icons */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Home */}
+            <IconButton color="inherit" component={RouterLink} to="/">
+              <HomeIcon />
+            </IconButton>
 
-      <div className="header-right">
-        {/* User Menu - Always Exists */}
-        <div className="user-menu">
-          <span className="user-icon">👤</span>
-          <div className="dropdown">
-            <p
-              className="dropdown-item user-name"
-              onClick={() => navigate(user ? "/account_settings" : "/login")}
+            {/* Cart */}
+            <IconButton color="inherit" component={RouterLink} to="/cartdetails">
+              <Badge badgeContent={itemscount} color="secondary">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+
+            {/* Support */}
+            <IconButton color="inherit" component={RouterLink} to="/support">
+              <PhoneIcon />
+            </IconButton>
+
+            {/* User Menu */}
+            <IconButton
+              color="inherit"
+              onClick={handleUserMenuOpen}
+              aria-controls={userMenuAnchor ? 'user-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={userMenuAnchor ? 'true' : undefined}
             >
-              {user
-                ? `${user.first_name} ${user.last_name}`
-                : `${t('login')} / ${t('signup')}`}
-            </p>
-
-            <hr />
-            {user && (
-              <>
-                {links.map((link) => (
-                  <Link key={link.url} className="dropdown-item" to={link.url}>{t(link.name)}</Link>
-                ))}
-           
-               
-                                <hr />
-                {branches.length > 0 && (
-                  <>
-                    <label className="dropdown-label">{t('switchbranch')}:</label>
-                    <select className="dropdown-select" onChange={handleChange}>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>{branch.name}</option>
-                      ))}
-                    </select>
-                  </>
-                )}
-                <Link
-                  className="dropdown-item"
-                  onClick={() => {
+              <PersonIcon />
+            </IconButton>
+            <Menu
+              id="user-menu"
+              anchorEl={userMenuAnchor}
+              open={Boolean(userMenuAnchor)}
+              onClose={handleUserMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'user-button',
+              }}
+            >
+              <MenuItem onClick={() => { navigate(user ? "/account_settings" : "/login"); handleUserMenuClose(); }}>
+                <ListItemIcon>
+                  <AccountCircleIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>
+                  {user ? `${user.first_name} ${user.last_name}` : `${t('login')} / ${t('signup')}`}
+                </ListItemText>
+              </MenuItem>
+              
+              {user && (
+                <>
+                  <Divider />
+                  {links.map((link) => (
+                    <MenuItem key={link.url} component={RouterLink} to={link.url} onClick={handleUserMenuClose}>
+                      <ListItemText>{t(link.name)}</ListItemText>
+                    </MenuItem>
+                  ))}
+                  
+                  {branches.length > 0 && (
+                    <>
+                      <Divider />
+                      <MenuItem>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>{t('switchbranch')}</InputLabel>
+                          <Select
+                            value={branches[0]?.id || ''}
+                            onChange={handleChange}
+                            label={t('switchbranch')}
+                          >
+                            {branches.map((branch) => (
+                              <MenuItem key={branch.id} value={branch.id}>
+                                {branch.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </MenuItem>
+                    </>
+                  )}
+                  
+                  <Divider />
+                  <MenuItem onClick={() => {
                     localStorage.removeItem("authToken");
                     localStorage.removeItem("main_url");
-
                     setUser(null);
                     navigate("/");
-                    window.location.reload(); // ✅ Forces a full page refresh
-                  }}
-                >
+                    window.location.reload();
+                    handleUserMenuClose();
+                  }}>
+                    <ListItemIcon>
+                      <LogoutIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>{t('logout')}</ListItemText>
+                  </MenuItem>
+                </>
+              )}
+            </Menu>
 
-                  {t('logout')}
-                </Link>
-
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="cart-wrapper">
-          {itemscount > 0 && (
-            <div className="cart-items-count">{itemscount}</div>
-          )}
-          <Link to="/cartdetails" className="cart-icon">🛒</Link>
-        </div>
-
-          <Link to="/" className="home">🏠</Link>
-        {/* Customer Service */}
-        <Link to="/support" className="support-icon">📞</Link>
-
-        {/* World Menu */}
-        <div className="world-menu">
-          <span className="world-icon">🌍</span>
-          <div className="dropdown">
-
-            <label className="dropdown-label">{t('language')}:</label>
-            <select
-              className="dropdown-select"
-              onChange={(e) => changeLanguage(e.target.value)} // ✅ Call switchLanguage with the selected value
-              // ✅ Ensure the dropdown reflects the current language
-              value={getCurrentLanguage()}
+            {/* Language Menu */}
+            <IconButton
+              color="inherit"
+              onClick={handleLanguageMenuOpen}
+              aria-controls={languageMenuAnchor ? 'language-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={languageMenuAnchor ? 'true' : undefined}
             >
-              <option value='ar-SA' >{t('arabic')}</option>
-              <option value='en-US'>{t('english')}</option>
-
-            </select>
-
-          </div>
-        </div>
-      </div>
-    </header>
+              <LanguageIcon />
+            </IconButton>
+            <Menu
+              id="language-menu"
+              anchorEl={languageMenuAnchor}
+              open={Boolean(languageMenuAnchor)}
+              onClose={handleLanguageMenuClose}
+            >
+              <MenuItem onClick={() => { changeLanguage('ar-SA'); handleLanguageMenuClose(); }}>
+                {t('arabic')}
+              </MenuItem>
+              <MenuItem onClick={() => { changeLanguage('en-US'); handleLanguageMenuClose(); }}>
+                {t('english')}
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Toolbar>
+      </AppBar>
+    </>
   );
 };
 
