@@ -23,8 +23,9 @@ def addItem(request, branchid):
     # 2. Get product info from request
     product_id = request.data.get('product')
     quantity = request.data.get('quantity', 1)
-
+    print(str(request.data))
     if not product_id:
+        print("Poduct Id is required")
         return Response({"error": "Product ID is required."}, status=status.HTTP_400_BAD_REQUEST)
 
     product = get_object_or_404(Product, id=product_id)  # Fetch the product by its ID

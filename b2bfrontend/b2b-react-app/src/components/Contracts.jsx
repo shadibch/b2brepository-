@@ -1,113 +1,224 @@
-// CreateDetails.tsx
 import React, { useEffect, useState } from "react";
 import axiosInstance from "./axiosInstance";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Alert, Modal } from "react-bootstrap";
-import { setitemscount, useHeaderContext } from "./HeaderContext";
-import { t, switchLanguage, isRTL, getCurrentLanguage, formatNumber, formatLocal } from '../utils/translator';
-import { API_BASE_URL, DEFAULT_IMAGE } from '../utils/settings'
-
-// Handle navigation
-import "./CreateDetails.css"; // Default (LTR)
-import "./CreateDetails.rtl.css"; // RTL
-
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Grid,
+  Typography,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+  Card,
+  CardContent,
+  CardActions,
+  CardMedia,
+  CircularProgress,
+} from "@mui/material";
+import { useHeaderContext } from "./HeaderContext";
+import { t, isRTL, formatNumber } from "../utils/translator";
+import { API_BASE_URL, DEFAULT_IMAGE } from "../utils/settings";
 
 export default function Contracts() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const [contracts, setContracts] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const {  selectedBranchId } = useHeaderContext();  
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [message,setMessage] = useState("");  
+  const [loading, setLoading] = useState(true);
+  const { selectedBranchId } = useHeaderContext();
   const navigate = useNavigate();
+
   useEffect(() => {
-    axiosInstance.get("/api/contract/").then((response) => {
-      const contract = response.data;
-      const items = contract.items;
-      for(const item in items) {
-        items[item]["quantity"] = 0;
+    const fetchContracts = async () => {
+      try {
+        const response = await axiosInstance.get("/api/contract/");
+        const contract = response.data;
+        const items = contract.items.map((item) => ({
+          ...item,
+          quantity: 0,
+        }));
+        setContracts({ ...contract, items });
+      } catch (err) {
+        console.error("Error fetching contracts:", err);
+        setError(t("Error loading contracts"));
+      } finally {
+        setLoading(false);
       }
-      setContracts(contract);
-    });
+    };
 
-    // Dynamically add RTL or LTR class to body
+    fetchContracts();
     document.body.classList.toggle("rtl", isRTL());
-  }, [isRTL()]);
-  const confirmDelete = (item) => {
-    setDeleteItem(item);
-    setShowModal(true);
+  }, [i18n.language]);
+
+  const handleQuantityChange = (productId, newQuantity) => {
+    setContracts((prev) => {
+      const updatedItems = prev.items.map((item) =>
+        item.product.id === productId
+          ? { ...item, quantity: newQuantity }
+          : item
+      );
+      return { ...prev, items: updatedItems };
+    });
   };
-
-  const handleAddedItem = async (item) => {
-    axiosInstance.post(`/api/add-item/${selectedBranchId}/`,{
-      
-      "product": item.id,
-      "quantity": item.quantity
-  }
-  )
-  .then(response => {
-    const searchEvent = new CustomEvent('updateCart');
-    window.dispatchEvent(searchEvent);
-    setMessage(`${t("Item has added to the shopping cart")} ${item.name}`  );
-  })
-  .catch(error => console.error("Error fetching product:", error));
-  };
-
-const handleQuantityChange = (id, newQuantity) => {
-  setContracts((prevContracts) => {
-    const updatedItems = prevContracts.items.map((item) =>
-      item.id === id ? { ...item, quantity: newQuantity } : item
-    );
-    return { ...prevContracts, items: updatedItems };
-  });
-};
-
   
 
+  const handleAddedItem = async (item) => {
+
+    try {
+      await axiosInstance.post(`/api/add-item/${selectedBranchId}/`, {
+        product: item.product.id,
+        quantity: item.quantity,
+      });
+      window.dispatchEvent(new CustomEvent("updateCart"));
+      setMessage(`${t("Item has added to the shopping cart")} ${item.product.name}`);
+    } catch (err) {
+      console.error("Error adding item:", err);
+      setError(t("Failed to add item to cart"));
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <div className="main-cart-container">
+    <Box
+      sx={{
+        p: 3,
+        direction: isRTL() ? "rtl" : "ltr",
+        maxWidth: 900,
+        mx: "auto",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        {t("Contracts")}
+      </Typography>
 
-      <div className={`cart-container ${isRTL() ? "rtl" : "ltr"}`}>
-        {message && <Alert variant="success">{message}</Alert>}
-        <h1 className="cart-title">{t("Contracts")}</h1>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      {message &&(
+        <Alert
+          onClose={() => setMessage("")}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      )}
+   
+      {contracts?.items?.length > 0 ? (
+        <Grid container spacing={2}>
+          {contracts.items.map((item) => (
+            <Grid item xs={12} sm={6} md={4} key={item.id}>
+                <Card
+              variant="outlined"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                p: 2,
+                flexWrap: "wrap",
+              }}
+            >
 
-        {contracts?.items.map((item) => (
-          <div key={item.product.id} className="cart-item">
-            <img
-              src={item.product.image_path ? `${API_BASE_URL}${item.product.image_path}` : DEFAULT_IMAGE}
-              alt={item.product.project_name}
-              className="cart-item-image"
-            />
-
-
-
-            <div className="cart-item-info">
-              
+<CardMedia
+                component="img"
+                image={
+                  item.product.image_path
+                  ? `${API_BASE_URL}${item.product.image_path}`
+                  : DEFAULT_IMAGE
+                }
+                alt={item.project_name}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 2,
+                  mr: 2,
+                  objectFit: "cover",
+                }}
+              />
              
-              <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}>{item.product.name}</h2>
-              <div className="cart-item-controls">
 
-                <input
-                  type="number"
-                  value={(item.quantity)}
-                  min={1}
-                  onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
-                             />
-               
-              </div>
-            </div>
 
-            <div className="cart-item-price" >
-              {formatNumber(item.price, item.currency)}
-            </div>
-            <Button variant="primary" className="w-100"  onClick={()=> handleAddedItem(item)} >{t('add_to_cart')}</Button>
-          </div>
-        ))}
+              <CardContent sx={{ flex: 1, minWidth: 220 }}>
+                  <Typography
+                    variant="h6"
+                    onClick={() => navigate(`/productitem/${item.part_id}`)}
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                  >
+                    {item.product.name}
+                  </Typography>
+                
+                  <Typography variant="body2" color="text.secondary">
+                    {formatNumber(item.price, item.currency)}
+                  </Typography>
+                  <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mt: 1,
+                    gap: 1,
+                  }}
+                >
+                  <TextField
+                    type="number"
+                    label={t("Quantity")}
+                    size="small"
+                    fullWidth
+                    value={item.quantity}
+                    inputProps={{ min: 1 }}
+                    sx={{ width: 100 }}
+                    onChange={(e) =>
+                      handleQuantityChange(item.product.id, parseInt(e.target.value))
+                    }
+                    
+                  />
+                  </Box>
+                </CardContent>
 
-        {/* Delete Confirmation Modal */}
-       
-      </div>
-    </div>
+                <CardActions>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={() => handleAddedItem(item)}
+                  >
+                    {t("add_to_cart")}
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Typography variant="body1">{t("No contracts available")}</Typography>
+      )}
+
+      {/* Snackbar Notifications */}
+      <Snackbar
+        open={Boolean(message)}
+        autoHideDuration={3000}
+        onClose={() => setMessage("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+     
+      </Snackbar>
+    </Box>
   );
 }
