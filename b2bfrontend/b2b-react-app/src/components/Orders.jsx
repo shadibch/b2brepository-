@@ -1,216 +1,353 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "./axiosInstance"; // Ensure this is correctly configured
-import ReactPaginate from "react-paginate"; // For pagination
-import "./OrdersPage.css"; // Add your custom styles
-import "./OrdersPage.rtl.css";
-
+import {
+  Box,
+  TextField ,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  Button,
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Card,
+  CardMedia,
+  CardContent,
+  CircularProgress,
+  Grid,
+  Backdrop
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "./axiosInstance";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  t,
+  isRTL,
+  formatNumber,
+  formatDate,
+  formatLocal,
+} from "../utils/translator";
 import { API_BASE_URL, DEFAULT_IMAGE } from "../utils/settings";
-import { t ,switchLanguage,isRTL,getCurrentLanguage,formatNumber,formatDate,formatLocal} from '../utils/translator';
-import { useNavigate, useLocation } from "react-router-dom";
-import Button from './ui/Button'; // Import the reusable Button
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [showItems, setShowItems] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const itemsPerPage = 10; // Number of rows per page
+  const [loading, setLoading] = useState(true);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingOrder, setLoadingOrder] = useState(false);
+
   const navigate = useNavigate();
+
+  const itemsPerPage = 10;
+
   useEffect(() => {
-        document.body.classList.toggle("rtl", isRTL());
-     
-    fetchOrders(currentPage + 1); // Fetch orders on component mount and page change
-  },isRTL());
+    document.body.classList.toggle("rtl", isRTL());
+    fetchOrders(currentPage);
+  }, [currentPage]);
 
   const fetchOrders = async (page) => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(`/api/orders/?page=${page}`);
-      console.log(response.data.results);
-      setOrders(response.data.results); // Set the orders data
-      setTotalPages(Math.ceil(response.data.count / itemsPerPage)); // Calculate total pages
+      setOrders(response.data.results);
+      setTotalPages(Math.ceil(response.data.count / itemsPerPage));
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePageChange = (selectedPage) => {
-    setCurrentPage(selectedPage.selected); // Update current page on pagination
+  const handlePageChange = (_, value) => {
+    setCurrentPage(value);
   };
 
   const handleSelectedOrder = async (order) => {
-    
-   const order_id = order.id;
-    const response = await axiosInstance.get(`/api/order/details/${order_id}/`);
-    setSelectedOrder(response.data);
-    setShowItems(true);
+    setLoadingOrder(true);           // Start loading
+    setSelectedOrder(null);          // Clear previous order (if any)
+  
+    try {
+      const response = await axiosInstance.get(`/api/order/details/${order.id}/`);
+      setSelectedOrder(response.data);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+    } finally {
+      setLoadingOrder(false);        // Stop loading
+    }
   };
+  
 
   const handleReorder = async (order) => {
-    const response = await axiosInstance.post(`api/reorder/${order.id}/`);
-    navigate('/cartdetails');
+    await axiosInstance.post(`api/reorder/${order.id}/`);
+    navigate("/cartdetails");
   };
-  const getRowClass = (status) => {
+
+  const getRowColor = (status) => {
     switch (status) {
       case "PND":
-        return "row-pending"; // Yellow row
+        return "#FFF8E1"; // Yellow
       case "RJC":
-        return "row-rejected"; // Red row
+        return "#FFEBEE"; // Red
       case "ACC":
-        return "row-accepted"; // Green ro
+        return "#E8F5E9"; // Green
       case "PRJ":
-        return "row-partially-rejected";
+        return "#FFF3E0"; // Orange
       default:
-        return "";
+        return "inherit";
     }
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
+    <Box
+      sx={{
+        p: 3,
+        direction: isRTL() ? "rtl" : "ltr",
+        maxWidth: 1200,
+        mx: "auto",
+      }}
+    >
+      <Typography variant="h4" gutterBottom>
+        {t("orders")}
+      </Typography>
 
-    <div   className={`orders-page ${ 
-      isRTL() ? "shrink-rtl" : "shrink"} }`}>
-         {showItems && selectedOrder && (
-        <div className="order-details mb-4">
-          {selectedOrder.items.map((item) => (
-            <div key={item.id} className="cart-item flex items-center border-b py-2">
-              <img
-                src={item.image_path ? `${API_BASE_URL}${item.image_path}` : DEFAULT_IMAGE}
-                alt={item.project_name}
-                className="cart-item-image"
-              />
-              <div className="cart-item-info">
-                <h2 className="cart-item-title">{item.branch_name}</h2>
-                
-                
-                <h2 className="cart-item-title" onClick={() => navigate(`/productitem/${item.part_id}`)}
-                    style={{ 
-                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
-                    }}>
-                  
-                  
-                  {item.project_name}</h2>
-                  {(item.status == 'RJC') &&(
-                        <h2 className="cart-item-title"  
-                        style={{ 
-                          textDecoration:  'line-through' ,
-                          color:  '#8B0000' 
-                        }}>
-                        {item.rejection_reason}
-                      </h2>
-    
+      <TableContainer component={Paper} sx={{ mb: 4 }}>
+        <Table>
+          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+            <TableRow>
+              <TableCell>{t("id_order")}</TableCell>
+              <TableCell>{t("status")}</TableCell>
+              <TableCell>{t("purchase_date")}</TableCell>
+              <TableCell>{t("rejection_reason")}</TableCell>
+              <TableCell>{t("total_price")}</TableCell>
+              <TableCell>{t("Order Status")}</TableCell>
+              <TableCell align="center">{t("Invoice")}</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow
+                key={order.id}
+                sx={{ backgroundColor: getRowColor(order.status) }}
+              >
+                <TableCell>{formatLocal(order.id)}</TableCell>
+                <TableCell>{t(order.status)}</TableCell>
+                <TableCell>{formatDate(new Date(order.purchaseDate))}</TableCell>
+                <TableCell>{order.rejection_reason || "-"}</TableCell>
+                <TableCell>
+                  {order.total_price
+                    ? formatNumber(order.total_price, order.currency)
+                    : "-"}
+                </TableCell>
+                <TableCell>{t(order.order_status)}</TableCell>
+                <TableCell align="center">
+                  <Grid container spacing={1} direction="column">
+                    <Grid item>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleSelectedOrder(order)}
+                      >
+                        {t("View")}
+                      </Button>
+                    </Grid>
+                    {(order.status === "ACC" || order.status === "PRJ") && (
+                      <Grid item>
+                        <Button
+                          variant="text"
+                          size="small"
+                          component="a"
+                          href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t("Download Invoice")}
+                        </Button>
+                      </Grid>
                     )}
-                <div className="cart-item-controls">
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    min={1}
-                    disabled
-                    style={{ 
-                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleReorder(order)}
+                      >
+                        {t("Reorder")}
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+        <Pagination
+          count={totalPages}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+          shape="rounded"
+        />
+      </Box>
+      <Backdrop
+  sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+  open={loadingOrder}
+>
+  <CircularProgress color="inherit" />
+</Backdrop>
+
+      {/* Order Details Dialog */}
+      <Dialog
+        open={Boolean(selectedOrder)}
+        onClose={() => setSelectedOrder(null)}
+        maxWidth="md"
+        fullWidth
+      >
+         <DialogTitle
+    sx={{
+      m: 0,
+      p: 2,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+    }}
+  >
+    <Typography variant="h6">{t("order_details")}</Typography>
+    <IconButton
+      aria-label="close"
+      onClick={() => setSelectedOrder(null)}
+      sx={{
+        color: (theme) => theme.palette.grey[500],
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+  </DialogTitle>
+        <DialogContent dividers>
+          {loadingDetails ? (
+            <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            selectedOrder && (
+              <>
+                {selectedOrder.items.map((item) => (
+                  <Card
+                    key={item.id}
+                    variant="outlined"
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      mb: 2,
+                      backgroundColor:
+                        item.status === "RJC" ? "#FFEBEE" : "inherit",
                     }}
-                  />
-                </div>
-              </div>
-              <div className="cart-item-price"
-              style={{ 
-                textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                color: item.status === 'RJC' ? '#8B0000' : 'inherit'
-              }}>
-                {formatNumber(item.price, item.currency)}
-              </div>
-            </div>
-          ))}
-          <div className="cart-subtotal">
-            <span className="label">{t("subtotal")}</span>
-            <span className="value">
-              {formatNumber(selectedOrder?.total_price, selectedOrder?.currency)}
-            </span>
-          </div>
-
-          
-
-          
-        </div>
-      )}
-
-      <h1>{t('orders')}</h1>
-      <table className="orders-table">
-        <thead>
-          <tr>
-            <th>{t('id_order')}</th>
-            <th>{t('status')}</th>
-            <th>{t('purchase_date')}</th>
-            <th>{t('rejection_reason')}</th>
-            <th>{t('total_price')}</th>
-            <th>{t('Order Status')}</th>
-            <th>{t('Invoice')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <tr key={order.id} 
-            className={getRowClass(order.status)}
-            
-            >
-              <td>{formatLocal(order.id)}</td>
-              <td>{t(order.status)}</td>
-              <td>{formatDate( new Date(order.purchaseDate))}</td>
-              <td>{order.rejection_reason || "-"}</td>
-              <td>
-                {order.total_price
-                  ? formatNumber(order.total_price, order.currency)
-                  : "-"}
-              </td>
-              <td className="py-2 px-4">{t(order.order_status)}</td>
-              <td className="py-2 px-4">
-                <div className="flex flex-col gap-2 items-stretch">
-                  <Button
-                
-                    className="custom-view-btn"
-                    onClick={() => handleSelectedOrder(order)}
                   >
-                    {t('View')}
-                  </Button>
-                  {(order.status === "ACC" || order.status === "PRJ") && (
-                    <a
-                      href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-center px-2 py-1 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 text-xs font-semibold"
+                    <CardMedia
+                      component="img"
+                      image={
+                        item.image_path
+                          ? `${API_BASE_URL}${item.image_path}`
+                          : DEFAULT_IMAGE
+                      }
+                      alt={item.project_name}
+                      sx={{ width: 100, height: 100, objectFit: "cover", p: 1 }}
+                    />
+                    <CardContent sx={{ flex: 1 }}>
+                      <Typography variant="h6">{item.branch_name}</Typography>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{
+                          textDecoration:
+                            item.status === "RJC" ? "line-through" : "none",
+                          color:
+                            item.status === "RJC" ? "#8B0000" : "inherit",
+                          cursor: "pointer",
+                        }}
+                        onClick={() =>
+                          navigate(`/productitem/${item.part_id}`)
+                        }
+                      >
+                        {item.project_name}
+                      </Typography>
+
+                      {item.status === "RJC" && (
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#8B0000", mt: 1 }}
+                        >
+                          {item.rejection_reason}
+                        </Typography>
+                      )}
+
+                      <TextField
+                        type="number"
+                        value={item.quantity}
+                        disabled
+                        size="small"
+                        sx={{
+                          width: 100,
+                          mt: 1,
+                          textDecoration:
+                            item.status === "RJC" ? "line-through" : "none",
+                          "& .MuiInputBase-input.Mui-disabled": {
+                            color:
+                              item.status === "RJC" ? "#8B0000" : "inherit",
+                          },
+                        }}
+                      />
+                    </CardContent>
+
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        px: 2,
+                        color: item.status === "RJC" ? "#8B0000" : "inherit",
+                        textDecoration:
+                          item.status === "RJC" ? "line-through" : "none",
+                      }}
                     >
-                      {t('Download Invoice')}
-                    </a>
-                  )}
-                  <Button
-                    variant="info"
-                    className="custom-reorder-btn"
-                    onClick={() => handleReorder(order)}
-                  >
-                    {t('Reorder')}
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                      {formatNumber(item.price, item.currency)}
+                    </Typography>
+                  </Card>
+                ))}
 
-      <ReactPaginate
-        previousLabel={`→ ${t("prev")}`}
-
-        nextLabel={`${t("next")} ←`}
-        breakLabel={"..."}
-        pageCount={totalPages}
-        marginPagesDisplayed={2}
-        pageRangeDisplayed={3}
-        onPageChange={handlePageChange}
-        containerClassName={"pagination"}
-        activeClassName={"active"}
-        pageLabelBuilder={(page) => formatLocal(page)}
-      />
-    </div>
+                <Box sx={{ textAlign: "right", mt: 2 }}>
+                  <Typography variant="h6">
+                    {t("subtotal")}:{" "}
+                    <strong>
+                      {formatNumber(
+                        selectedOrder?.total_price,
+                        selectedOrder?.currency
+                      )}
+                    </strong>
+                  </Typography>
+                </Box>
+              </>
+            )
+          )}
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 };
 

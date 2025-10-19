@@ -121,5 +121,9 @@
   "ok": "Ok",
   "cancel": "Cancel"
 },
+"UPD":"Unpaid",
+   "PRC":"Under Processing",
+   "UDL":"Undelivered",
+   "DLV":"Delivered",
  "PURCHASE_DATETIME_EXCEED":"You have exceeded your old waiting period. Please pay to complete a new purchase."
 }
