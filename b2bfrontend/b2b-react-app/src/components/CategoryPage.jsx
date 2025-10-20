@@ -11,9 +11,11 @@ import {
   Box,
   Chip,
   Paper,
-  Breadcrumbs,
-  Link
+  Breadcrumbs
+  
 } from '@mui/material';
+import { Link } from 'react-router-dom'; // ✅ Use this Link instead of MUI’s
+
 import { AddShoppingCart, Home } from '@mui/icons-material';
 import axiosInstance from "./axiosInstance";
 import GroupSlide from "./GroupSlide";
