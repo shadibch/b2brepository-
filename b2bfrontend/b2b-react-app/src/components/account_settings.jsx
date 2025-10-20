@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-
+import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";
 import Branches from "./Branches";
 import UserManagement from "./UserManagement";
-import "./IndexPage.css";
 import OrdersPage from "./Orders";
+import { useTheme } from "@mui/material/styles";
 
 const AccountSettings = () => {
-  const [activePage, setActivePage] = useState(null); // ✅ Fix: Define activePage state
+  const [activePage, setActivePage] = useState("users"); 
+  const theme = useTheme();
 
   const renderContent = () => {
     switch (activePage) {
@@ -16,21 +17,35 @@ const AccountSettings = () => {
       case "branches":
         return <Branches />;
       case "orders":
-        return <OrdersPage/>;
-        
+        return <OrdersPage />;
       default:
         return <UserManagement />;
     }
   };
 
   return (
-    <div className="page-wrapper">
-      <Sidebar setActivePage={setActivePage} /> {/* ✅ Fix: Pass state updater to Sidebar */}
-      
-      <main className="content">
-        {renderContent()} {/* ✅ Call function to render page content */}
-      </main>
-    </div>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        bgcolor: theme.palette.background.default,
+        color: theme.palette.text.primary,
+      }}
+    >
+      <Sidebar setActivePage={setActivePage} />
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          transition: "margin 0.3s",
+          bgcolor: "inherit", // uses same bg as Box parent
+        }}
+      >
+        {renderContent()}
+      </Box>
+    </Box>
   );
 };
 

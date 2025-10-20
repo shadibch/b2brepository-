@@ -68,11 +68,7 @@ const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
     // Load correct CSS based on language direction
-    if (isRTL()) {
-      import("./IndexPage_rtl.css");
-    } else {
-      import("./IndexPage.css");
-    }
+
   
     // Fetch categories initially
     fetchCategories();
