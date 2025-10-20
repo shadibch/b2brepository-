@@ -16,6 +16,7 @@ import { Drawer,
   AccordionDetails ,
   useTheme,
   Toolbar,
+  Button,
   Box, } from "@mui/material";
   import MenuIcon from "@mui/icons-material/Menu";
   import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -210,6 +211,23 @@ sx={{
 
 
 )}
+  <Box
+  sx={{
+    mt: 3,
+    display: "flex",
+    justifyContent: "center", // ✅ Centers horizontally
+    alignItems: "center",      // ✅ Centers vertically (optional)
+  }}
+>
+  <Button 
+    variant="contained"
+    size="large"
+    onClick={clearFilters}
+  >
+    {t("reset")}
+  </Button>
+</Box>
+
 </List>
 
     </Drawer>
@@ -227,6 +245,7 @@ sx={{
     >
       {/* Your page content goes here */}
     </Box>
+
   </Box>
 
    
