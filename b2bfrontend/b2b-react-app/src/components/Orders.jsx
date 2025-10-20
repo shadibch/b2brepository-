@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  useTheme,
   Typography,
   Button,
   Pagination,
@@ -47,7 +48,7 @@ const OrdersPage = () => {
   const navigate = useNavigate();
 
   const itemsPerPage = 10;
-
+  const theme = useTheme();
   useEffect(() => {
     document.body.classList.toggle("rtl", isRTL());
     fetchOrders(currentPage);
@@ -128,8 +129,17 @@ const OrdersPage = () => {
 
       <TableContainer component={Paper} sx={{ mb: 4 }}>
         <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableRow>
+          <TableHead>
+          <TableRow
+        sx={{
+          backgroundColor: "#1976d2", // Header background color
+          "& th": {
+            color: "#fff", // Header text color
+            fontWeight: "bold",
+            textAlign: "left",
+          },
+        }}
+      >
               <TableCell>{t("id_order")}</TableCell>
               <TableCell>{t("status")}</TableCell>
               <TableCell>{t("purchase_date")}</TableCell>
@@ -220,16 +230,29 @@ const OrdersPage = () => {
         open={Boolean(selectedOrder)}
         onClose={() => setSelectedOrder(null)}
         maxWidth="md"
+        
         fullWidth
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 3,
+              bgcolor: theme.palette.background.default,
+              boxShadow: 8,
+            },
+          },
+        }}
       >
          <DialogTitle
-    sx={{
-      m: 0,
-      p: 2,
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}
+   sx={{
+    background: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    fontWeight: "bold",
+    m: 0,
+    p: 2,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }}
   >
     <Typography variant="h6">{t("order_details")}</Typography>
     <IconButton
@@ -242,7 +265,10 @@ const OrdersPage = () => {
       <CloseIcon />
     </IconButton>
   </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers  sx={{
+          bgcolor: theme.palette.grey[50],
+          p: 3,
+        }}>
           {loadingDetails ? (
             <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
               <CircularProgress />
@@ -258,8 +284,18 @@ const OrdersPage = () => {
                       display: "flex",
                       alignItems: "center",
                       mb: 2,
+                      px: 1,
+                      borderRadius: 2,
                       backgroundColor:
-                        item.status === "RJC" ? "#FFEBEE" : "inherit",
+                        item.status === "RJC"
+                          ? theme.palette.error.light + "33"
+                          : theme.palette.background.paper,
+                      boxShadow: theme.shadows[1],
+                      transition: "0.2s",
+                      "&:hover": {
+                        boxShadow: theme.shadows[4],
+                        transform: "translateY(-2px)",
+                      },
                     }}
                   >
                     <CardMedia
@@ -273,15 +309,22 @@ const OrdersPage = () => {
                       sx={{ width: 100, height: 100, objectFit: "cover", p: 1 }}
                     />
                     <CardContent sx={{ flex: 1 }}>
-                      <Typography variant="h6">{item.branch_name}</Typography>
+                      <Typography variant="h6"   sx={{ fontWeight: 600 }}>{item.branch_name}</Typography>
                       <Typography
                         variant="subtitle1"
                         sx={{
+                          fontWeight: 600,
+                          color:
+                            item.status === "RJC"
+                              ? theme.palette.error.main
+                              : theme.palette.text.primary,
                           textDecoration:
                             item.status === "RJC" ? "line-through" : "none",
-                          color:
-                            item.status === "RJC" ? "#8B0000" : "inherit",
                           cursor: "pointer",
+                          "&:hover": {
+                            textDecoration:
+                              item.status === "RJC" ? "line-through" : "underline",
+                          },
                         }}
                         onClick={() =>
                           navigate(`/productitem/${item.part_id}`)
@@ -293,7 +336,11 @@ const OrdersPage = () => {
                       {item.status === "RJC" && (
                         <Typography
                           variant="body2"
-                          sx={{ color: "#8B0000", mt: 1 }}
+                          sx={{
+                            color: theme.palette.error.dark,
+                            mt: 0.5,
+                            fontStyle: "italic",
+                          }}
                         >
                           {item.rejection_reason}
                         </Typography>
