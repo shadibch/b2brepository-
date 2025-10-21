@@ -54,7 +54,7 @@ const ProductItem = () => {
 // Removed custom Modal component - using Material-UI Dialog instead
 
   useEffect(() => {
-    import("./ProductItem.css");
+   
     
     axiosInstance.get(`/api/product/${partId}/`)
       .then(response => {
@@ -84,7 +84,16 @@ const ProductItem = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container
+    maxWidth={false}
+    sx={{
+      mt: 4,
+      mb: 4,
+      maxWidth: "1300px", // ✅ prevent overly wide layout
+      mx: "auto",          // ✅ center content
+    }}
+  >
+  
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -106,7 +115,7 @@ const ProductItem = () => {
 
       <Grid container spacing={4}>
         {/* Left: Image Gallery */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={5}>
           <Paper elevation={2} sx={{ p: 2 }}>
             {/* Thumbnail Bar */}
             <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
@@ -173,7 +182,7 @@ const ProductItem = () => {
         </Grid>
 
         {/* Right: Product Info */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={5}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h4" component="h1" gutterBottom>
               {product.name}

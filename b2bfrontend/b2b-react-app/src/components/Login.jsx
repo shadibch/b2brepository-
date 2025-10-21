@@ -49,13 +49,7 @@ const Login = () => {
             setError(`${t('invalid_username_password')} `);
         }
     };
-    useEffect(() => {
-        if (isRTL()) {
-            import("./Login_rtl.css");
-        } else {
-            import("./Login.css");
-        }
-    });
+
     return (
         <Container maxWidth="sm" sx={{ mt: 8, mb: 4 }}>
             <Paper elevation={3} sx={{ p: 4 }}>
