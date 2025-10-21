@@ -36,7 +36,9 @@ export default function CreateDetails() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  const allZeroQuantities =
+  cartDetails?.instances?.length > 0 &&
+  cartDetails.instances.every((item) => Number(item.quantity) === 0);
   useEffect(() => {
     const fetchCart = async () => {
       try {
@@ -210,6 +212,7 @@ export default function CreateDetails() {
         <Button
           variant="contained"
           color="primary"
+          disabled={allZeroQuantities}
           sx={{ mt: 2 }}
           fullWidth
           onClick={handlePurchaseRequest}
