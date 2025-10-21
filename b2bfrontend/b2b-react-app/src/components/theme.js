@@ -25,7 +25,7 @@ export const appTheme = (mode = "light") =>
       },
     },
     typography: {
-      fontFamily: `'Roboto', 'Cairo', 'Noto Sans Arabic', sans-serif`,
+      fontFamily: `'Somar Sans', 'Cairo', 'Noto Sans Arabic', sans-serif`,
       h6: { fontWeight: 600 },
       button: { textTransform: "none", fontWeight: 600 },
     },
@@ -34,7 +34,11 @@ export const appTheme = (mode = "light") =>
       MuiButton: {
         styleOverrides: {
           root: { borderRadius: 8 },
+          body :{
+            fontFamily: "'Somar Sans', 'Roboto', 'Arial', sans-serif;"
+          }
         },
+        
       },
       MuiCard: {
         styleOverrides: {

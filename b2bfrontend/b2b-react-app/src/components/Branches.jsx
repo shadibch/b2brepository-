@@ -1,16 +1,32 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "./axiosInstance"; // Ensure this is correctly configured
-import { Table, Form, Button, Alert, Modal } from "react-bootstrap";
-import { Link } from "react-router-dom"; // Ensure routing support
-import "./Branches.css";
+import axiosInstance from "./axiosInstance";
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Typography,
+  Box,
+  Paper,
+} from "@mui/material";
 import { t } from "../utils/translator";
 
 const Branches = () => {
   const [branches, setBranches] = useState([]);
   const [formData, setFormData] = useState({ name: "", phone: "", address: "" });
-  const [branchId, setBranchId] = useState(null); // ✅ Track branch ID for updates
+  const [branchId, setBranchId] = useState(null);
   const [message, setMessage] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [deleteBranch, setDeleteBranch] = useState(null);
 
   useEffect(() => {
@@ -27,139 +43,230 @@ const Branches = () => {
   };
 
   const handleRowClick = (branch) => {
-    setFormData({ name: branch.name, phone: branch.phone, address: branch.address });
-    setBranchId(branch.id); // ✅ Store branch ID for updates
-    setMessage(null); // Clear any previous messages
+    setFormData({
+      name: branch.name,
+      phone: branch.phone,
+      address: branch.address,
+    });
+    setBranchId(branch.id);
+    setMessage(null);
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setMessage(null); // Clear messages on input change
+    setMessage(null);
   };
 
   const handleSave = async () => {
     if (!formData.name || !formData.phone || !formData.address) {
-      setMessage({ type: "danger", text: t('All fields are required.') });
+      setMessage({ type: "error", text: t("All fields are required.") });
       return;
     }
 
     const phoneRegex = /^\+?[1-9][0-9]{7,14}$/;
     if (!phoneRegex.test(formData.phone)) {
-      setMessage({ type: "danger", text: t('Invalid phone number format.') });
+      setMessage({ type: "error", text: t("Invalid phone number format.") });
       return;
     }
 
     try {
-      const endpoint = branchId ? `/branches/update/${branchId}/` : "/branches/create/";
+      const endpoint = branchId
+        ? `/branches/update/${branchId}/`
+        : "/branches/create/";
       const response = await axiosInstance.post(endpoint, formData);
 
-      if (response.status === 200 || response.status === 201) { // ✅ Success handling
-        setMessage({ type: "success", text: `Branch ${branchId ? "updated" : "created"} successfully!` });
-        fetchBranches(); // ✅ Refresh table
+      if (response.status === 200 || response.status === 201) {
+        setMessage({
+          type: "success",
+          text: `Branch ${branchId ? "updated" : "created"} successfully!`,
+        });
+        fetchBranches();
 
-        if (!branchId) setBranchId(response.data.id); // ✅ Store branch ID after creation
+        if (!branchId) setBranchId(response.data.id);
       } else {
         throw new Error("Unexpected server response");
       }
     } catch (error) {
       console.error("Error saving branch:", error);
-      setMessage({ type: "danger", text: "Error saving branch." });
+      setMessage({ type: "error", text: "Error saving branch." });
     }
   };
 
   const handleClear = () => {
     setFormData({ name: "", phone: "", address: "" });
-    setBranchId(null); // ✅ Reset branch ID
-    setMessage(null);  // ✅ Clear messages
+    setBranchId(null);
+    setMessage(null);
   };
 
   const confirmDelete = (branch) => {
     setDeleteBranch(branch);
-    setShowModal(true);
+    setShowDialog(true);
   };
 
   const handleDelete = async () => {
     try {
       await axiosInstance.delete(`/branches/delete/${deleteBranch.id}/`);
-      setMessage({ type: "success", text: `Branch "${deleteBranch.name}" deleted successfully.` });
-
-      fetchBranches(); // ✅ Refresh table
+      setMessage({
+        type: "success",
+        text: `Branch "${deleteBranch.name}" deleted successfully.`,
+      });
+      fetchBranches();
     } catch (error) {
-      setMessage({ type: "danger", text: "Error deleting branch." });
+      setMessage({ type: "error", text: "Error deleting branch." });
     }
-    setShowModal(false);
+    setShowDialog(false);
   };
 
   return (
-    <div className="branches-container">
-      <h3>{t('manage_branches')}</h3>
-      {message && <Alert variant={message.type}>{message.text}</Alert>}
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>
+        {t("manage_branches")}
+      </Typography>
+
+      {/* Snackbar for messages */}
+      <Snackbar
+        open={!!message}
+        autoHideDuration={4000}
+        onClose={() => setMessage(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        {message && (
+          <Alert
+            onClose={() => setMessage(null)}
+            severity={message.type}
+            sx={{ width: "100%" }}
+          >
+            {message.text}
+          </Alert>
+        )}
+      </Snackbar>
 
       {/* Branch Form */}
-      <div className="branch-form">
-        <Form>
-          <Form.Group>
-            <Form.Label>{t('branch_name')}</Form.Label>
-            <Form.Control type="text" name="name" value={formData.name} onChange={handleChange} required />
-          </Form.Group>
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Box
+          component="form"
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 2,
+          }}
+        >
+          <TextField
+            label={t("branch_name")}
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+          <TextField
+            label={t("phone")}
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+          <TextField
+            label={t("address")}
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+        </Box>
 
-          <Form.Group>
-            <Form.Label>{t('phone')}</Form.Label>
-            <Form.Control type="text" name="phone" value={formData.phone} onChange={handleChange} required />
-          </Form.Group>
+        <Box
+          sx={{
+            mt: 3,
+            display: "flex",
+            justifyContent: "center",
+            gap: 2,
+          }}
+        >
+          <Button variant="outlined" color="secondary" onClick={handleClear}>
+            {t("Clear")}
+          </Button>
+          <Button variant="contained" color="primary" onClick={handleSave}>
+            {t("Save Branch")}
+          </Button>
+        </Box>
+      </Paper>
 
-          <Form.Group>
-            <Form.Label>{t('address')}</Form.Label>
-            <Form.Control type="text" name="address" value={formData.address} onChange={handleChange} required />
-          </Form.Group>
+      {/* Branch List */}
+      <Paper sx={{ p: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow
+            
+            sx={{
+              backgroundColor: "#1976d2", // Header background color
+              "& th": {
+                color: "#fff", // Header text color
+                fontWeight: "bold",
+                textAlign: "left",
+              },
+            }}>
+              <TableCell>{t("branch_name")}</TableCell>
+              <TableCell>{t("address")}</TableCell>
+              <TableCell>{t("phone")}</TableCell>
+              <TableCell align="center">{t("actions")}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {branches.map((branch,index) => (
+              <TableRow
+                key={branch.id}
+                hover
+                sx={{
+                  cursor: "pointer",
+                  backgroundColor:
+                    index % 2 === 0 ? "#f9f9f9" : "#e3f2fd", // Alternate row colors
+                  "&:hover": {
+                    backgroundColor: "#bbdefb", // Row hover color
+                  },
+                }}
+                onClick={() => handleRowClick(branch)}
+              >
+                <TableCell>{branch.name}</TableCell>
+                <TableCell>{branch.address}</TableCell>
+                <TableCell>{branch.phone}</TableCell>
+                <TableCell align="center">
+                  <Button
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDelete(branch);
+                    }}
+                  >
+                    🗑
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
 
-          <div className="button-group">
-            <Button variant="secondary" onClick={handleClear}>{t('Clear')}</Button> {/* ✅ New "Clear" Button */}
-            <Button variant="success" onClick={handleSave}>{t('Save Branch')}</Button>
-          </div>
-        </Form>
-      </div>
-
-      {/* Branch List - Clicking a row populates the form */}
-      <Table striped bordered hover className="branch-table">
-        <thead>
-          <tr>
-            <th>{t('branch_name')}</th>
-            <th>{t('address')}</th>
-            <th>{t('phone')}</th>
-            <th> </th>
-          </tr>
-        </thead>
-        <tbody>
-          {branches.map((branch) => (
-            <tr key={branch.id} onClick={() => handleRowClick(branch)} className="clickable-row">
-              <td>{branch.name}</td>
-              <td>{branch.address}</td>
-              <td>{branch.phone}</td>
-              <td>
-                <Link to="#" onClick={(e) => { e.stopPropagation(); confirmDelete(branch); }} className="delete-icon">
-                  🗑
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      {/* Delete Confirmation Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('confirm_deletion')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('confirm_mesages')} "{deleteBranch?.name}"?
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
-          <Button variant="danger" onClick={handleDelete}>{t('delete')}</Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
+        <DialogTitle>{t("confirm_deletion")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("confirm_mesages")} "{deleteBranch?.name}"?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDialog(false)} color="secondary">
+            {t("cancel")}
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            {t("delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

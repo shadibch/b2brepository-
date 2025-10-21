@@ -20,11 +20,13 @@ import Branches from "./components/Branches";
 import UserManagement from "./components/UserManagement";
 import Contracts from "./components/Contracts";
 import { ThemeProvider, CssBaseline } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { IconButton } from "@mui/material";
 import { Brightness4, Brightness7 } from "@mui/icons-material";
 import { appTheme } from "./components/theme";
+import "./assets/fonts/fonts.css";
+
 function App() {
   const token = localStorage.getItem("authToken");
   const [products, setProducts] = useState([]);
@@ -35,6 +37,8 @@ function App() {
   const theme = useMemo(() => appTheme(mode), [mode]);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
+
+
 
   return (
     // ✅ Apply theme globally
