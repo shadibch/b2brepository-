@@ -310,5 +310,7 @@
     "Add Company Item" : "إضافة عنصر إلى الشركة",
     "User Details": "تفاصيل المستخدم",
     "User Menu":"قائمة المستخدم",
-    "Group Filters" : "مرشحات المجموعة"
+    "Group Filters" : "مرشحات المجموعة",
+    "Filter": "تصفية ",
+    "Order Details" : "تفاصيل الطلب"
 }

@@ -1,137 +1,282 @@
 import React, { useEffect, useState } from "react";
-import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
-import { Link } from "react-router-dom";
-import { Accordion } from "react-bootstrap";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItemButton,
+  ListItemText,
+  Select,
+  MenuItem,
+  Typography,
+  Box,
+  useMediaQuery,
+  Drawer,
+  useTheme,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  t,
+  switchLanguage,
+  isRTL,
+  getCurrentLanguage,
+} from "../utils/translator";
 
-import "./AdminSidebar.css";
+const AdminSidebar = ({ setActivePage }) => {
+  const [open, setOpen] = useState(true);
+  const navigate = useNavigate();
+  const drawerWidth = 260;
+  const theme = useTheme();
+  const isMobile = useMediaQuery("(max-width:900px)");
 
-const AdminSidebar = ({ setActivePage   }) => {
-  const [isOpen, setIsOpen] = useState(true);
- // initially set to the first item
   const handleToggle = () => {
-    setIsOpen(!isOpen);
-    const searchEvent = new CustomEvent('toggled', { detail: { open: isOpen } });
+    setOpen(!open);
+    const searchEvent = new CustomEvent("toggled", { detail: { open } });
     window.dispatchEvent(searchEvent);
   };
 
   useEffect(() => {
-    document.body.classList.toggle("rtl", isRTL());
+    document.body.dir = isRTL() ? "rtl" : "ltr";
   }, [getCurrentLanguage()]);
 
   const changeLanguage = (lang) => {
     switchLanguage(lang);
     window.location.reload();
   };
- const pathToKey = {
+
+  const pathToKey = {
     "/admin/user-management": "0",
     "/admin/order-management": "1",
     "/admin/category-management": "2",
     "/admin/item-management": "2",
-    "/admin/group-management":"2",
-    "/admin/paid-orders":"1",
-    "/admin/processing-orders":"1",
-    "/admin/undelivered-orders":"1",
-    "/admin/order_report":"5",
-    "/admin/company-admin" : "6",
-    "/admin/report-management": "5"
-    // Language and logout not route-based
+    "/admin/group-management": "2",
+    "/admin/paid-orders": "1",
+    "/admin/processing-orders": "1",
+    "/admin/undelivered-orders": "1",
+    "/admin/order_report": "5",
+    "/admin/company-admin": "6",
+    "/admin/report-management": "5",
   };
 
-  const activeKey = pathToKey[location.pathname] || "";
+  const activeKey = pathToKey[window.location.pathname] || "";
+
+  // Common accordion style
+  const accordionSx = {
+    mb: 0.5,
+    bgcolor: theme.palette.sidebar.bg,
+    color: theme.palette.sidebar.text,
+    borderRadius: 2,
+    boxShadow: "none",
+    "&:before": { display: "none" },
+    "& .MuiAccordionSummary-root": {
+      bgcolor: theme.palette.sidebar.bg,
+      "& .MuiAccordionSummary-expandIconWrapper": {
+        color: theme.palette.sidebar.text,
+      },
+      "& .MuiTypography-root": {
+        fontWeight: 600,
+        fontSize: "0.95rem",
+        width: "100%",
+        textAlign: isRTL() ? "right" : "left",
+      },
+      "&:hover": { bgcolor: theme.palette.sidebar.hover },
+    },
+    "&.Mui-expanded": {
+      bgcolor: theme.palette.sidebar.active,
+      "& .MuiAccordionSummary-root": {
+        bgcolor: theme.palette.sidebar.active,
+      },
+    },
+    "& .MuiAccordionDetails-root": {
+      bgcolor: theme.palette.background.paper,
+      color: theme.palette.text.primary,
+      textAlign: isRTL() ? "right" : "left",
+      "& .MuiListItemButton-root": {
+        justifyContent: isRTL() ? "flex-end" : "flex-start",
+      },
+      "& .MuiListItemText-root": {
+        textAlign: isRTL() ? "right" : "left",
+      },
+      "& .MuiSelect-select": {
+        textAlign: isRTL() ? "right" : "left",
+      },
+      "& .MuiMenuItem-root": {
+        justifyContent: isRTL() ? "flex-end" : "flex-start",
+        textAlign: isRTL() ? "right" : "left",
+      },
+    },
+  };
+
   return (
-    <div className={`admin-sidebar open  ${isRTL() ? "rtl" : ""}`}>
+    <Box
+      sx={{
+        display: "flex",
+        direction: isRTL() ? "rtl" : "ltr",
+      }}
+    >
+      <Drawer
+        anchor={isRTL() ? "right" : "left"} // ✅ Drawer stays on correct side
+        variant={isMobile ? "temporary" : "persistent"}
+        open={open}
+        onClose={handleToggle}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: drawerWidth,
+            boxSizing: "border-box",
+            bgcolor: theme.palette.background.default,
+            color: theme.palette.text.primary,
+            p: 1,
+            direction: isRTL() ? "rtl" : "ltr",
+          },
+        }}
+      >
+        <List
+          sx={{
+            textAlign: isRTL() ? "right" : "left",
+            "& .MuiListItemButton-root": {
+              justifyContent: isRTL() ? "flex-end" : "flex-start",
+              borderRadius: 1,
+              px: 2,
+              "&:hover": {
+                bgcolor: theme.palette.sidebar.hover,
+                color: theme.palette.sidebar.text,
+              },
+            },
+          }}
+        >
+          {/* === USERS === */}
+          <Accordion disableGutters defaultExpanded={activeKey === "0"} sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("users")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ListItemButton
+                component={Link}
+                to="/admin/user-management"
+                onClick={() => setActivePage("/admin/user-management")}
+              >
+                <ListItemText primary={t("Manage Users")} />
+              </ListItemButton>
+            </AccordionDetails>
+          </Accordion>
 
+          {/* === ORDERS === */}
+          <Accordion disableGutters defaultExpanded={activeKey === "1"} sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("Orders")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                <ListItemButton component={Link} to="/admin/order-management" onClick={() => setActivePage("/admin/order-management")}>
+                  <ListItemText primary={t("Order Management")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/paid-orders" onClick={() => setActivePage("/admin/paid-orders")}>
+                  <ListItemText primary={t("Unpaid Orders")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/processing-orders" onClick={() => setActivePage("/admin/processing-orders")}>
+                  <ListItemText primary={t("Processing Orders")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/undelivered-orders" onClick={() => setActivePage("/admin/undelivered-orders")}>
+                  <ListItemText primary={t("Undelivered Orders")} />
+                </ListItemButton>
+              </List>
+            </AccordionDetails>
+          </Accordion>
 
-      <Accordion  defaultActiveKey={activeKey} >
-        <Accordion.Item eventKey="0">
-          <Accordion.Header>{t("users")}</Accordion.Header>
-          <Accordion.Body>
-            <Link to="/admin/user-management" className="sidebar-item" onClick={() => setActivePage("/admin/user-management")}>
-              {t("Manage Users")}
-            </Link>
-          </Accordion.Body>
-        </Accordion.Item>
+          {/* === PRODUCTS === */}
+          <Accordion disableGutters defaultExpanded={activeKey === "2"} sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("Products")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                <ListItemButton component={Link} to="/admin/group-management" onClick={() => setActivePage("/admin/group-management")}>
+                  <ListItemText primary={t("Groups")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/category-management" onClick={() => setActivePage("/admin/category-management")}>
+                  <ListItemText primary={t("categories")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/item-management" onClick={() => setActivePage("/admin/item-management")}>
+                  <ListItemText primary={t("Products Management")} />
+                </ListItemButton>
+              </List>
+            </AccordionDetails>
+          </Accordion>
 
-        <Accordion.Item eventKey="1">
-          <Accordion.Header>{t("Orders")}</Accordion.Header>
-          <Accordion.Body>
-            <Link to="/admin/order-management" className="sidebar-item" onClick={() => setActivePage("/admin/order-management")}>
-              {t("Order Management")}
-            </Link>
-            <Link to="/admin/paid-orders" className="sidebar-item" onClick={() => setActivePage("/admin/paid-orders")}>
-              {t("Unpaid Orders")}
-            </Link>
-            <Link to="/admin/processing-orders" className="sidebar-item" onClick={() => setActivePage("/admin/processing-orders")}>
-              {t("Processing Orders")}
-            </Link>
-            <Link to="/admin/undelivered-orders" className="sidebar-item" onClick={() => setActivePage("/admin/undelivered-orders")}>
-              {t("Undelivered Orders")}
-            </Link>
-          </Accordion.Body>
-        </Accordion.Item>
+          {/* === COMPANIES === */}
+          <Accordion disableGutters defaultExpanded={activeKey === "6"} sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("Companies Management")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ListItemButton
+                component={Link}
+                to="/admin/company-admin"
+                onClick={() => setActivePage("/admin/company-admin")}
+              >
+                <ListItemText primary={t("Companies Management")} />
+              </ListItemButton>
+            </AccordionDetails>
+          </Accordion>
 
-        <Accordion.Item eventKey="2">
-          <Accordion.Header>{t("Products")}</Accordion.Header>
-          <Accordion.Body>
-          <Link to="/admin/group-management" className="sidebar-item" onClick={() => setActivePage("/admin/group-management")}>{t("Groups")} </Link>
-            <Link to="/admin/category-management" className="sidebar-item" onClick={() => setActivePage("/admin/category-management")}>{t("categories")} </Link>
-            <Link to="/admin/item-management" className="sidebar-item" onClick={() => setActivePage("/admin/item-management")}>
-              {t("Products Management")}
-            </Link>
-          </Accordion.Body>
-        </Accordion.Item>
-        <Accordion.Item eventKey="6">
-          <Accordion.Header>{t("Companies Management")}</Accordion.Header>
-          <Accordion.Body>
-          <Link to="/admin/company-admin" className="sidebar-item" onClick={() => setActivePage("/admin/company-admin")}>{t("Companies Management")} </Link>
-           
-          </Accordion.Body>
-        </Accordion.Item>
-        <Accordion.Item eventKey="5">
-          <Accordion.Header>{t("Reports")}</Accordion.Header>
-          <Accordion.Body>
-            <Link to="/admin/order_report" className="sidebar-item" onClick={() => setActivePage("/admin/order_report")}>
-              {t("Order Report")}
-            </Link>
-            <Link to="/admin/report-management" className="sidebar-item" onClick={() => setActivePage("/admin/report-management")}>
-              {t("Requests Report")}
-            </Link>
-          </Accordion.Body>
-        </Accordion.Item>
-        <Accordion.Item eventKey="3">
-          <Accordion.Header>{t("language")}</Accordion.Header>
-          <Accordion.Body>
-            <select
-              className="sidebar-item dropdown"
-              onChange={(e) => changeLanguage(e.target.value)}
-              value={getCurrentLanguage()}
-            >
-              <option value="ar-SA">{t("arabic")}</option>
-              <option value="en-US">{t("english")}</option>
-            </select>
-          </Accordion.Body>
-        </Accordion.Item>
+          {/* === REPORTS === */}
+          <Accordion disableGutters defaultExpanded={activeKey === "5"} sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("Reports")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <List>
+                <ListItemButton component={Link} to="/admin/order_report" onClick={() => setActivePage("/admin/order_report")}>
+                  <ListItemText primary={t("Order Report")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/report-management" onClick={() => setActivePage("/admin/report-management")}>
+                  <ListItemText primary={t("Requests Report")} />
+                </ListItemButton>
+              </List>
+            </AccordionDetails>
+          </Accordion>
 
-        <Accordion.Item eventKey="4">
-          <Accordion.Header>{t("logout")}</Accordion.Header>
-          <Accordion.Body>
-            <Link
-              to="/"
-              className="sidebar-item"
-              onClick={() => {
-                localStorage.removeItem("authToken");
-                localStorage.removeItem("main_url");
-                    navigate("/");
-          
-              }}
-            >
-              {t("logout")}
-            </Link>
-          </Accordion.Body>
-        </Accordion.Item>
-       
-      </Accordion>
-    </div>
+          {/* === LANGUAGE === */}
+          <Accordion disableGutters sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("language")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Select
+                fullWidth
+                value={getCurrentLanguage()}
+                onChange={(e) => changeLanguage(e.target.value)}
+                size="small"
+              >
+                <MenuItem value="ar-SA">{t("arabic")}</MenuItem>
+                <MenuItem value="en-US">{t("english")}</MenuItem>
+              </Select>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* === LOGOUT === */}
+          <Accordion disableGutters sx={accordionSx}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{t("logout")}</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ListItemButton
+                onClick={() => {
+                  localStorage.removeItem("authToken");
+                  localStorage.removeItem("main_url");
+                  navigate("/");
+                }}
+              >
+                <ListItemText primary={t("logout")} />
+              </ListItemButton>
+            </AccordionDetails>
+          </Accordion>
+        </List>
+      </Drawer>
+    </Box>
   );
 };
 

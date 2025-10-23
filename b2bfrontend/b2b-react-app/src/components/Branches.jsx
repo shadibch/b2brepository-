@@ -211,7 +211,7 @@ const Branches = () => {
               <TableCell>{t("branch_name")}</TableCell>
               <TableCell>{t("address")}</TableCell>
               <TableCell>{t("phone")}</TableCell>
-              <TableCell align="center">{t("actions")}</TableCell>
+              <TableCell align="center">{t("Actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

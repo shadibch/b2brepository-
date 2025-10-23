@@ -1,46 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Form, Alert, Modal, Pagination } from 'react-bootstrap';
-import axiosInstance from '../axiosInstance';
-import { t, formatNumber } from '../../utils/translator';
-import { useNavigate } from 'react-router-dom';
-import { API_BASE_URL, DEFAULT_IMAGE } from '../../utils/settings';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Pagination,
+  Grid,
+  CircularProgress,
+  useTheme,
+} from "@mui/material";
+import axiosInstance from "../axiosInstance";
+import { t, formatNumber, isRTL } from "../../utils/translator";
+import { API_BASE_URL, DEFAULT_IMAGE } from "../../utils/settings";
 
 export default function ProcessingOrders() {
-  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [message, setMessage] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showItems, setShowItems] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const handleViewItem = (item) => {
-    
-    const url = `/admin/item-management/?product_id=${item.product_id}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
+  const theme = useTheme();
   useEffect(() => {
     fetchOrders();
   }, [currentPage]);
 
   const fetchOrders = async () => {
     try {
-      const response = await axiosInstance.get(`/api/admin/processing-orders/?page=${currentPage}&q=${searchQuery}`);
+      const response = await axiosInstance.get(
+        `/api/admin/processing-orders/?page=${currentPage}&q=${searchQuery}`
+      );
       setOrders(response.data.results);
       setTotalPages(Math.ceil(response.data.count / response.data.page_size));
     } catch (error) {
-      setMessage({ type: 'danger', text: t('Error fetching orders') });
+      setMessage({ type: "error", text: t("Error fetching orders") });
     }
   };
 
   const handleDownload = async (order) => {
     setLoading(true);
-    setError(null);
     try {
       const response = await axiosInstance.get(
         `/api/admin/orders/items/${order.id}/`,
@@ -54,9 +70,34 @@ export default function ProcessingOrders() {
       link.click();
       link.remove();
     } catch (error) {
-      setError(t('Failed to generate report'));
+      setMessage({ type: "error", text: t("Failed to generate report") });
     }
     setLoading(false);
+  };
+
+  const handleReadyToDeliver = (order) => {
+    setSelectedOrder(order);
+    setShowConfirmModal(true);
+  };
+
+  const confirmReadyToDeliver = async () => {
+    try {
+      await axiosInstance.post(`/api/admin/ready-to-deliver/${selectedOrder.id}/`);
+      setMessage({ type: "success", text: t("Order marked as ready to deliver") });
+      setOrders((prevOrders) => prevOrders.filter((o) => o.id !== selectedOrder.id));
+      setShowConfirmModal(false);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error.response?.data?.error || t("Error updating order"),
+      });
+      setShowConfirmModal(false);
+    }
+  };
+
+  const handleSelectedOrder = (order) => {
+    setSelectedOrder(order);
+    setShowItems(true);
   };
 
   const handleSearch = () => {
@@ -64,243 +105,228 @@ export default function ProcessingOrders() {
     fetchOrders();
   };
 
-  const handleReadyToDeliver = async (order) => {
-    setSelectedOrder(order);
-    setShowConfirmModal(true);
-  };
-
-  const handleSelectedOrder = async (order) => {
-    setSelectedOrder(order);
-    setShowItems(true);
-  };
-
-  const confirmReadyToDeliver = async () => {
-    try {
-      await axiosInstance.post(`/api/admin/ready-to-deliver/${selectedOrder.id}/`);
-      setMessage({ type: 'success', text: t('Order marked as ready to deliver') });
-      fetchOrders();
-      setShowConfirmModal(false);
-    } catch (error) {
-      setShowConfirmModal(false);
-      setMessage({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error updating order') 
-      });
-    }
-  };
-
-  const handleAccept = async (message) => {
-    try {
-      await axiosInstance.post(`/api/admin/accept-order/${selectedOrder.id}/`);
-      setMessage({ type: 'success', text: message });
-      setShowItems(false);
-      fetchOrders();
-    } catch (error) {
-      setMessage({ type: 'danger', text: error.response?.data?.error || t('Error accepting order') });
-    }
-  };
-
-  const handleReject = async (message) => {
-    try {
-      await axiosInstance.post(`/api/admin/reject-order/${selectedOrder.id}/`, {
-        reason: rejectionReason
-      });
-      setMessage({ type: 'success', text: message });
-      setShowItems(false);
-      fetchOrders();
-    } catch (error) {
-      setMessage({ type: 'danger', text: error.response?.data?.error || t('Error rejecting order') });
-    }
-  };
-
   return (
-    <div className="container mt-4">
-      <h2>{t('Processing Orders')}</h2>
+    <Box
+    sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}
+    >
+      {/* HEADER */}
+      <Typography
+        variant="h4"
+        sx={{ mb: 3, fontWeight: 700, textAlign: isRTL() ? "right" : "left" }}
+      >
+        {t("Processing Orders")}
+      </Typography>
 
+      {/* ALERT MESSAGE */}
       {message && (
-        <Alert 
-          variant={message.type} 
-          onClose={() => setMessage(null)} 
-          dismissible
+        <Alert
+          severity={message.type}
+          sx={{ mb: 3 }}
+          onClose={() => setMessage(null)}
         >
           {message.text}
         </Alert>
       )}
 
-{error && (
-        <Alert 
-          variant="danger"
-          onClose={() => setError(null)} 
-          dismissible
-        >
-          {error}
-        </Alert>
-      )}
+      {/* SELECTED ORDER ITEMS */}
       {showItems && selectedOrder && (
-        <div className="order-details mb-4">
-          {selectedOrder.items.map((item) => (
-            <div key={item.id} className="cart-item flex items-center border-b py-2">
-              <img
-                src={item.image_path ? `${API_BASE_URL}${item.image_path}` : DEFAULT_IMAGE}
-                alt={item.project_name}
-                className="cart-item-image"
-              />
-              <div className="cart-item-info">
-                <h2 className="cart-item-title">{item.branch_name}</h2>
-                <h2 className="cart-item-title" onClick={() => handleViewItem(item)}
-                    style={{ 
-                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              {t("Order Details")} #{selectedOrder.id}
+            </Typography>
+
+            {selectedOrder.items.map((item) => (
+              <Grid
+                container
+                key={item.id}
+                spacing={2}
+                sx={{
+                  borderBottom: 1,
+                  borderColor: "divider",
+                  py: 1,
+                  alignItems: "center",
+                }}
+              >
+                <Grid item xs={12} sm={2}>
+                  <img
+                    src={
+                      item.image_path
+                        ? `${API_BASE_URL}${item.image_path}`
+                        : DEFAULT_IMAGE
+                    }
+                    alt={item.project_name}
+                    style={{ width: "100%", maxWidth: 80, borderRadius: 4 }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Typography>{item.branch_name}</Typography>
+                  <Typography
+                    sx={{
+                      textDecoration:
+                        item.status === "RJC" ? "line-through" : "none",
+                      color: item.status === "RJC" ? "#8B0000" : "inherit",
+                      cursor: "pointer",
                     }}
-                  >{item.project_name}</h2>
-                  {(item.status == 'RJC') &&(
-                        <h2 className="cart-item-title"  
-                        style={{ 
-                          textDecoration:  'line-through' ,
-                          color:  '#8B0000' 
-                        }}>
-                        {item.rejection_reason}
-                      </h2>
-    
-                    )}
+                    onClick={() =>
+                      window.open(
+                        `/admin/item-management/?product_id=${item.product_id}`,
+                        "_blank"
+                      )
+                    }
+                  >
+                    {item.project_name}
+                  </Typography>
+                  {item.status === "RJC" && (
+                    <Typography sx={{ color: "#8B0000" }}>
+                      {item.rejection_reason}
+                    </Typography>
+                  )}
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <Typography>{item.quantity}</Typography>
+                </Grid>
+                <Grid item xs={6} sm={2}>
+                  <Typography>
+                    {formatNumber(item.price, item.currency)}
+                  </Typography>
+                </Grid>
+              </Grid>
+            ))}
 
-                <div className="cart-item-controls">
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    min={1}
-                    disabled
-                    style={{ 
-                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
-                    }} />
-                </div>
-              </div>
-              <div className="cart-item-price"   style={{ 
-                      textDecoration: item.status === 'RJC' ? 'line-through' : 'none',
-                      color: item.status === 'RJC' ? '#8B0000' : 'inherit'
-                    }}>
-                {formatNumber(item.price, item.currency)}
-              </div>
-            </div>
-          ))}
-          <div className="cart-subtotal">
-            <span className="label">{t("subtotal")}</span>
-            <span className="value">
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                mt: 2,
+                fontWeight: 600,
+              }}
+            >
+              {t("subtotal")}:{" "}
               {formatNumber(selectedOrder?.total_price, selectedOrder?.currency)}
-            </span>
-          </div>
-
-          
-
-          
-        </div>
+            </Box>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="d-flex mb-3">
-        <Form.Control
-          type="text"
-          placeholder={t('Search by company name')}
+      {/* SEARCH BAR */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <TextField
+          fullWidth
+          placeholder={t("Search by company name")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="me-2"
         />
-        <Button onClick={handleSearch}>{t('search')}</Button>
-      </div>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={()=>handleSearch()}
+          sx={{ whiteSpace: "nowrap" }}
+        >
+          {t("search")}
+        </Button>
+      </Box>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>{t('Order ID')}</th>
-            <th>{t('Company')}</th>
-            <th>{t('total_price')}</th>
-            <th>{t('currency')}</th>
-            <th>{t('company_credit')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map((order) => (
-            <tr key={order.id}>
-              <td>{order.id}</td>
-              <td>{order.company_name}</td>
-              <td>{formatNumber(order.total_price)}</td>
-              <td>{order.currency}</td>
-              <td>{formatNumber(order.company_credit)}</td>
-              <td>
-              <Button
-                 
-                  size="sm"
-                  onClick={() => handleSelectedOrder(order)}
-                >
-                  {t('View')}
-                </Button>
+      {/* ORDERS TABLE */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "primary.light" }}>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("Order ID")}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("Company")}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("total_price")}</TableCell>
 
-
-                <Button
-                 
-                  size="sm"
-                  onClick={() => handleDownload(order)}
-                  disabled={loading}
-                >
-                  {t('Download')}
-                </Button>
-
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={() => handleReadyToDeliver(order)}
-                >
-                  {t('Ready to Deliver')}
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="d-flex justify-content-center">
-          <Pagination>
-            <Pagination.First onClick={() => setCurrentPage(1)} />
-            <Pagination.Prev 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            />
-            {[...Array(totalPages)].map((_, idx) => (
-              <Pagination.Item
-                key={idx + 1}
-                active={idx + 1 === currentPage}
-                onClick={() => setCurrentPage(idx + 1)}
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("company_credit")}</TableCell>
+              <TableCell align="center"  sx={{ color: "white", fontWeight: 600 }}>{t("Actions")}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {orders.map((order, index) => (
+              <TableRow
+                key={order.id}
+                sx={{
+                  backgroundColor:
+                    index % 2 === 0 ? "background.paper" : "action.hover",
+                }}
               >
-                {idx + 1}
-              </Pagination.Item>
+                <TableCell>{order.id}</TableCell>
+                <TableCell>{order.company_name}</TableCell>
+                <TableCell>{formatNumber(order.total_price,order.currency)}</TableCell>
+      
+                <TableCell>{formatNumber(order.company_credit,order.currency)}</TableCell>
+                <TableCell align="center">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ mr: 1 }}
+                    onClick={() => handleSelectedOrder(order)}
+                  >
+                    {t("View")}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ mr: 1 }}
+                    onClick={() => handleDownload(order)}
+                    disabled={loading}
+                    startIcon={
+                      loading ? <CircularProgress size={14} color="inherit" /> : null
+                    }
+                  >
+                    {t("Download")}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="small"
+                    onClick={() => handleReadyToDeliver(order)}
+                  >
+                    {t("Ready to Deliver")}
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-            <Pagination.Next 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            />
-            <Pagination.Last onClick={() => setCurrentPage(totalPages)} />
-          </Pagination>
-        </div>
-      )}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Confirm Ready to Deliver')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('Are you sure this order is ready to be delivered?')}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
-            {t('Cancel')}
+      {/* PAGINATION */}
+      <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
+        <Pagination
+          count={totalPages}
+          page={currentPage}
+          onChange={(e, page) => setCurrentPage(page)}
+          color="primary"
+        />
+      </Box>
+
+      {/* CONFIRM DIALOG */}
+      <Dialog open={showConfirmModal} onClose={() => setShowConfirmModal(false)}>
+        <DialogTitle>{t("Confirm Ready to Deliver")}</DialogTitle>
+        <DialogContent>{t("Are you sure this order is ready to be delivered?")}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmModal(false)}>{t("Cancel")}</Button>
+          <Button variant="contained" color="success" onClick={()=>WconfirmReadyToDeliver}>
+            {t("Confirm")}
           </Button>
-          <Button variant="success" onClick={confirmReadyToDeliver}>
-            {t('Confirm')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-} 
+}
