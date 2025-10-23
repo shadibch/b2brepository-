@@ -286,6 +286,7 @@ export default function OrderManagement() {
           color="primary"
           onClick={() =>fetchOrders(search)}
           sx={{ whiteSpace: "nowrap" }}
+          endIcon={<SearchIcon />}
         >
           {t("search")}
         </Button>

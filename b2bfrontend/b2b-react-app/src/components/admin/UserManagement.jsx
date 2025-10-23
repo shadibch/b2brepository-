@@ -146,15 +146,16 @@ const ManagedUsersPage = () => {
 
   return (
     <Box
-      sx={{
-        width: "100%",
-        minHeight: "100vh",
-        backgroundColor: theme.palette.mode === "dark" ? "#121212" : "#f0f2f5",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "stretch",
-        p: 3,
-      }}
+    sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}
     >
     
 <Box
@@ -237,39 +238,49 @@ const ManagedUsersPage = () => {
       )}
 
       {/* Search & Filter */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={3}>
-            <FormControl fullWidth>
-              <InputLabel>{t("Filter")}</InputLabel>
-              <Select
-                value={filterActive}
-                label={t("Filter")}
-                onChange={(e) => setFilterActive(e.target.value)}
-              >
-                <MenuItem value="true">{t("Active")}</MenuItem>
-                <MenuItem value="false">{t("Inactive")}</MenuItem>
-                <MenuItem value="all">{t("All")}</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={7}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              size="small"
-              label={t("search")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={2}>
-            <Button fullWidth variant="contained" startIcon={<SearchIcon />} onClick={handleSearch}>
-              {t("search")}
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+   
+      <Box
+  sx={{
+    display: "flex",
+    flexDirection: { xs: "column", sm: "row" },
+    gap: 2,
+    mb: 3,
+  }}
+>
+  <FormControl sx={{ minWidth: 150, flex: 1 }}>
+    <InputLabel>{t("Filter")}</InputLabel>
+    <Select
+      value={filterActive}
+      label={t("Filter")}
+      onChange={(e) => setFilterActive(e.target.value)}
+    >
+      <MenuItem value="true">{t("Active")}</MenuItem>
+      <MenuItem value="false">{t("Inactive")}</MenuItem>
+      <MenuItem value="all">{t("All")}</MenuItem>
+    </Select>
+  </FormControl>
+
+  <TextField
+    fullWidth
+  
+    label={t("search")}
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+  />
+
+  <Button
+    color="primary"
+    variant="contained"
+    sx={{ whiteSpace: "nowrap" }}
+   
+    endIcon={<SearchIcon />}
+    onClick={() => handleSearch()}
+  >
+    {t("search")}
+  </Button>
+</Box>
+
+     
 
       {/* Table */}
       {loading ? (
@@ -336,7 +347,7 @@ const ManagedUsersPage = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={8} align="center">
-                    {t("no_results_found")}
+                    {t("No results found")}
                   </TableCell>
                 </TableRow>
               )}

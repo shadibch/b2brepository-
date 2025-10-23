@@ -24,6 +24,7 @@ import {
   useTheme,
 } from "@mui/material";
 import axiosInstance from "../axiosInstance";
+import SearchIcon from "@mui/icons-material/Search";
 import { t, formatNumber, isRTL } from "../../utils/translator";
 import { API_BASE_URL, DEFAULT_IMAGE } from "../../utils/settings";
 
@@ -232,12 +233,14 @@ export default function ProcessingOrders() {
           placeholder={t("Search by company name")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+         
         />
         <Button
           variant="contained"
           color="primary"
           onClick={()=>handleSearch()}
           sx={{ whiteSpace: "nowrap" }}
+          endIcon={<SearchIcon />}
         >
           {t("search")}
         </Button>

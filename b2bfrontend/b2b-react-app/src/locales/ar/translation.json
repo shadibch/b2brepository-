@@ -312,5 +312,6 @@
     "User Menu":"قائمة المستخدم",
     "Group Filters" : "مرشحات المجموعة",
     "Filter": "تصفية ",
-    "Order Details" : "تفاصيل الطلب"
+    "Order Details" : "تفاصيل الطلب",
+    "No results found" : "لم يتم العثور على نتائج"
 }

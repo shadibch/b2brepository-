@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { t, isRTL, formatNumber } from "../../utils/translator";
 import axiosInstance from "../axiosInstance";
-
+import SearchIcon from "@mui/icons-material/Search";
 export default function PaidOrders() {
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +134,7 @@ export default function PaidOrders() {
           color="primary"
           onClick={() =>handleSearch()}
           sx={{ whiteSpace: "nowrap" }}
+          endIcon={<SearchIcon />}
         >
           {t("search")}
         </Button>
