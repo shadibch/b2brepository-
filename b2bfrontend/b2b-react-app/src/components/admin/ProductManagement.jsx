@@ -1,12 +1,66 @@
+// ProductManagement.mui.jsx
 import React, { useEffect, useState, useRef } from "react";
-import { Form, Button, Card, Tabs, Tab, Alert, Table, Pagination, Modal, InputGroup } from "react-bootstrap";
-import axiosInstance from "../axiosInstance";
-import {API_BASE_URL,DEFAULT_IMAGE} from '../../utils/settings';
-import "./styles.css";
-import "./shared.css";
-import { useLocation } from 'react-router-dom';
-import BranchContractManagement from './BranchAdminContractManagement';
+import {$getRoot, $getSelection} from 'lexical';
+import {
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Tabs,
+  Tab,
+  Stack,
+  Divider,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  Avatar,
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  InputAdornment,
+  Tooltip,
+  Chip,
+  Menu,
+  List,
+  ListItem,
+  ListItemText,
+  Collapse,
+} from "@mui/material";
 
+import {
+  Search as SearchIcon,
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon,
+  MoreVert as MoreVertIcon,
+  ExpandLess,
+  ExpandMore,
+  FormatBold,
+  FormatItalic,
+  FormatUnderlined,
+  FormatListBulleted,
+  FormatListNumbered,
+  ColorLens,
+  Title as TitleIcon,
+} from "@mui/icons-material";
+import RichTextEditor from "./Editor";
+import axiosInstance from "../axiosInstance";
+import { API_BASE_URL, DEFAULT_IMAGE } from "../../utils/settings";
 import {
   t,
   switchLanguage,
@@ -14,739 +68,307 @@ import {
   getCurrentLanguage,
   formatNumber,
 } from "../../utils/translator";
-import AsyncSelect from 'react-select/async';
-const useQuery = () => {
-  return new URLSearchParams(useLocation().search);
-};
+import CategoryTree from "./Categories";
 
-const RichTextEditor = ({ value, onChange, dir, placeholder }) => {
-  const [showColorPicker, setShowColorPicker] = useState(false);
+import AsyncSelect from "react-select/async";
+import BranchContractManagement from "./BranchAdminContractManagement";
 
-  const fonts = [
-    { name: 'Default', value: '' },
-    { name: 'Arial', value: 'Arial, sans-serif' },
-    { name: 'Times New Roman', value: 'Times New Roman, serif' },
-    { name: 'Courier New', value: 'Courier New, monospace' },
-    { name: 'Georgia', value: 'Georgia, serif' },
-    { name: 'Verdana', value: 'Verdana, sans-serif' },
-    { name: 'Tahoma', value: 'Tahoma, sans-serif' }
-  ];
 
-   
-  const handleBold = () => {
-    document.execCommand('bold', false, null);
-  };
+/* --------------------------
+   MUI RichTextEditor (contentEditable)
+   -------------------------- */
 
-  const handleItalic = () => {
-    document.execCommand('italic', false, null);
-  };
 
-  const handleUnderline = () => {
-    document.execCommand('underline', false, null);
-  };
-
-  const handleList = () => {
-    document.execCommand('insertUnorderedList', false, null);
-  };
-
-  const handleOrderedList = () => {
-    document.execCommand('insertOrderedList', false, null);
-  };
-
-  const handleHeader = (level) => {
-    document.execCommand('formatBlock', false, `h${level}`);
-  };
-
-  const handleColor = (color) => {
-    document.execCommand('foreColor', false, color);
-    setShowColorPicker(false);
-  };
-
-  const handleFont = (fontFamily) => {
-    document.execCommand('fontName', false, fontFamily);
-  };
-
-  const handleContentChange = (e) => {
-    onChange(e.target.innerHTML);
-  };
-
-  const colors = [
-    '#000000', '#FF0000', '#00FF00', '#0000FF', 
-    '#FF00FF', '#00FFFF', '#FFFF00', '#808080'
-  ];
-
-  return (
-    <div className="rich-text-container">
-      <div className="rich-text-toolbar">
-        <div className="toolbar-group">
-          <select 
-            onChange={(e) => handleFont(e.target.value)}
-            className="toolbar-select font-select"
-            title={t('Font Family')}
-          >
-            {fonts.map(font => (
-              <option 
-                key={font.value} 
-                value={font.value}
-                style={{ fontFamily: font.value || 'inherit' }}
-              >
-                {font.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="toolbar-group">
-          <select 
-            onChange={(e) => handleHeader(e.target.value)}
-            className="toolbar-select"
-            title={t('Header Style')}
-          >
-            <option value="">{t('Normal')}</option>
-            <option value="1">{t('Header')} 1</option>
-            <option value="2">{t('Header')} 2</option>
-            <option value="3">{t('Header')} 3</option>
-            <option value="4">{t('Header')} 4</option>
-          </select>
-        </div>
-
-        <div className="toolbar-group">
-          <button type="button" onClick={handleBold} className="toolbar-button" title={t('Bold')}>
-            <strong>B</strong>
-          </button>
-          <button type="button" onClick={handleItalic} className="toolbar-button" title={t('Italic')}>
-            <em>I</em>
-          </button>
-          <button type="button" onClick={handleUnderline} className="toolbar-button" title={t('Underline')}>
-            <u>U</u>
-          </button>
-        </div>
-
-        <div className="toolbar-group">
-          <button type="button" onClick={handleList} className="toolbar-button" title={t('Bullet List')}>
-            • List
-          </button>
-          <button type="button" onClick={handleOrderedList} className="toolbar-button" title={t('Numbered List')}>
-            1. List
-          </button>
-        </div>
-
-        <div className="toolbar-group color-picker-container">
-          <button 
-            type="button" 
-            className="toolbar-button"
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            title={t('Text Color')}
-          >
-            Color
-          </button>
-          {showColorPicker && (
-            <div className="color-picker">
-              {colors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className="color-option"
-                  style={{ backgroundColor: color }}
-                  onClick={() => handleColor(color)}
-                  title={color}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      <div
-        className="rich-text-editor"
-        contentEditable
-        dangerouslySetInnerHTML={{ __html: value }}
-        onInput={handleContentChange}
-        dir={dir}
-        data-placeholder={placeholder}
-        style={{ minHeight: '150px' }}
-      />
-    </div>
-  );
-};
-
+/* --------------------------
+   TranslationFields
+   -------------------------- */
 const TranslationFields = ({ translations, setTranslations }) => {
   return (
-    <div>
+    <Box>
       {["en", "ar"].map((lang) => (
-        <div key={lang} className="mb-4">
-          <Form.Group className="mb-3">
-            <Form.Label>{t('Product Name')} ({lang.toUpperCase()})</Form.Label>
-            <Form.Control
-              value={translations[lang]?.name || ""}
-              onChange={(e) =>
-                setTranslations((prev) => ({
-                  ...prev,
-                  [lang]: { ...prev[lang], name: e.target.value }
-                }))
-              }
-              placeholder={t('Product Name')}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>{t('Description')} ({lang.toUpperCase()})</Form.Label>
-            <RichTextEditor
-              value={translations[lang]?.description || ""}
-              onChange={(content) =>
-                setTranslations((prev) => ({
-                  ...prev,
-                  [lang]: { ...prev[lang], description: content }
-                }))
-              }
-              dir={lang === 'ar' ? 'rtl' : 'ltr'}
-              placeholder={t('Product Description')}
-            />
-          </Form.Group>
-        </div>
+        <Box key={lang} sx={{ mb: 3 }}>
+          <TextField
+            label={`${t("Product Name")} (${lang.toUpperCase()})`}
+            fullWidth
+            value={translations[lang]?.name || ""}
+            onChange={(e) =>
+              setTranslations((prev) => ({ ...prev, [lang]: { ...prev[lang], name: e.target.value } }))
+            }
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            {t("Description")} ({lang.toUpperCase()} ) 
+          </Typography>
+        <RichTextEditor />
+          
+        </Box>
       ))}
-    </div>
+    </Box>
   );
 };
 
-const CategoryTree = ({ categories, 
-  selectedCategory, onSelect, 
-  expandedCategories, setExpandedCategories}) => {
-  
+/* --------------------------
+   CategoryTree (simple nested)
+   -------------------------- */
 
-  const toggleExpand = (id) => {
-    setExpandedCategories(prev => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(id)) {
-        newExpanded.delete(id);
-      } else {
-        newExpanded.add(id);
-      }
-      return newExpanded;
-    });
-  };
-  
-
-  const renderCategories = (cats, depth = 0) => {
-    return cats.map((cat) => {
-      const buttonWidth = 2.5;
-      const hasChildren = cat.children?.length > 0;
-      const de = depth * 0.5 + (!hasChildren ? buttonWidth : 0);
-      const isExpanded = expandedCategories.has(cat.id);
-
-      return (
-        <div key={cat.id} className={`${isRTL() ? "rtl-tree" : "ltr-tree"}`}>
-          <div className="tree-node">
-            <span
-              onClick={() => onSelect({
-                id: cat.id,
-                label: cat.label || cat.name
-              })}
-              style={{
-                cursor: "pointer",
-                fontWeight: selectedCategory?.id === cat.id ? "bold" : "normal",
-                marginRight: isRTL() ? `${de}rem` : "0",
-                marginLeft: isRTL() ? "0" : `${de}rem`
-              }}
-            >
-              📁 {cat.label || cat.name}
-            </span>
-
-            {hasChildren && (
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => toggleExpand(cat.id)}
-                style={{
-                  order: isRTL() ? -1 : 1
-                }}
-              >
-                {isExpanded ? "▾" : "▸"}
-              </Button>
-            )}
-          </div>
-
-          {isExpanded && hasChildren && (
-            <div className="tree-children">
-              {renderCategories(cat.children, depth + 1)}
-            </div>
-          )}
-        </div>
-      );
-    });
-  };
-
-  return (
-    <div className="category-tree">
-      {renderCategories(categories)}
-    </div>
-  );
-};
-
+/* --------------------------
+   GroupSelector
+   -------------------------- */
 const GroupSelector = ({ groups, selectedGroups, onGroupSelect, selectedSubgroups, onSubgroupSelect }) => {
-  const [expandedGroups, setExpandedGroups] = useState({});
+  const [expanded, setExpanded] = useState({});
 
-  const toggleExpand = (groupId) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
+  const toggle = (id) => setExpanded((s) => ({ ...s, [id]: !s[id] }));
 
   return (
-    <div className="groups-selector">
-      {groups.map((group) => (
-        <div key={group.id} className="group-item">
-          <div className="d-flex align-items-center mb-2">
-            <span className="group-name">{group.name}</span>
-            {group.subgroups?.length > 0 && (
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => toggleExpand(group.id)}
-                className="ms-2"
-              >
-                {expandedGroups[group.id] ? '−' : '+'}
-              </Button>
+    <Box>
+      {groups.map((g) => (
+        <Paper key={g.id} variant="outlined" sx={{ mb: 1, p: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Typography>{g.name}</Typography>
+            {g.subgroups?.length > 0 && (
+              <IconButton size="small" onClick={() => toggle(g.id)}>
+                {expanded[g.id] ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
             )}
-          </div>
-          {expandedGroups[group.id] && group.subgroups?.length > 0 && (
-            <div className="subgroups-container ms-4">
-              {group.subgroups.map((subgroup) => (
-                <Form.Check
-                  key={subgroup.id}
-                  type="radio"
-                  name={`group-${group.id}`}
-                  label={<span style={{ color: 'black' }}>{subgroup.name}</span>}
-                  checked={selectedSubgroups.includes(subgroup.id)}
-                  onChange={() => onSubgroupSelect(subgroup.id, group.id)}
-                />
+          </Box>
+          <Collapse in={expanded[g.id]}>
+            <Box sx={{ mt: 1 }}>
+              {g.subgroups?.map((s) => (
+                <Box key={s.id} sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <input
+                    type="radio"
+                    name={`group-${g.id}`}
+                    checked={selectedSubgroups.includes(s.id)}
+                    onChange={() => onSubgroupSelect(s.id, g.id)}
+                  />
+                  <Typography sx={{ ml: 1 }}>{s.name}</Typography>
+                </Box>
               ))}
-            </div>
-          )}
-        </div>
+            </Box>
+          </Collapse>
+        </Paper>
       ))}
-    </div>
+    </Box>
   );
 };
 
+/* --------------------------
+   ProductPrices (MUI)
+   -------------------------- */
 const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [isPercentage, setIsPercentage] = useState(true);
-  const [discountValue, setDiscountValue] = useState('');
+  const [discountValue, setDiscountValue] = useState("");
   const [prices, setPrices] = useState([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [priceToDelete, setPriceToDelete] = useState(null);
   const [message, setMessage] = useState(null);
   const [editingPrice, setEditingPrice] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [toDelete, setToDelete] = useState(null);
 
   useEffect(() => {
-    if (product?.id) {
-      loadPrices();
-    }
+    if (product?.id) loadPrices();
   }, [product]);
 
   const loadPrices = async () => {
     try {
-      const response = await axiosInstance.get(`/api/admin/products/${product.id}/prices/`);
-      setPrices(response.data);
-    } catch (error) {
-      setMessage({ type: 'danger', text: t('Error loading prices') });
+      const res = await axiosInstance.get(`/api/admin/products/${product.id}/prices/`);
+      setPrices(res.data);
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error loading prices") });
     }
   };
 
   const loadCompanyOptions = async (inputValue) => {
     try {
-      const response = await axiosInstance.get(`/filter-companies/?q=${inputValue}`);
-      return response.data.map(company => ({
-        value: company.id,
-        label: `${company.name} (${company.register_number})`
-      }));
-    } catch (error) {
-      console.error('Error loading companies:', error);
+      const res = await axiosInstance.get(`/filter-companies/?q=${inputValue}`);
+      return res.data.map((c) => ({ value: c.id, label: `${c.name} (${c.register_number})` }));
+    } catch (err) {
       return [];
     }
   };
 
-  const handleAddPrice = async () => {
+  const handleAddOrUpdate = async () => {
     try {
-      if (!selectedCompany) {
-        setMessage({ type: 'danger', text: t('Please select a company') });
-        return;
-      }
+      if (!selectedCompany) return setMessage({ type: "error", text: t("Please select a company") });
+      if (!discountValue) return setMessage({ type: "error", text: t("Please enter a discount value") });
 
-      if (!discountValue) {
-        setMessage({ type: 'danger', text: t('Please enter a discount value') });
-        return;
-      }
-
-      const response = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, {
+      const payload = {
         purchaser: selectedCompany.value,
         is_percentage: isPercentage,
- 
-        discount_value: parseFloat(discountValue)
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        discount_value: parseFloat(discountValue),
+      };
+
+      const res = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, payload, {
+        headers: { "Content-Type": "application/json" },
       });
 
+      setMessage({ type: "success", text: editingPrice ? t("Price updated successfully") : t("Price added successfully") });
+      setSelectedCompany(null);
+      setDiscountValue("");
+      setIsPercentage(true);
+      setEditingPrice(null);
       await loadPrices();
-      setMessage({ type: 'success', text: editingPrice ? t('Price updated successfully') : t('Price added successfully') });
-      resetForm();
-
-      if (onPriceAdded) {
-        onPriceAdded(response.data);
-      }
-    } catch (error) {
-      setMessage({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error adding price') 
-      });
+      if (onPriceAdded) onPriceAdded(res.data);
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || t("Error adding price") });
     }
   };
 
-  const handleDeleteClick = (price) => {
-    setPriceToDelete(price);
-    setShowDeleteModal(true);
+  const handleEdit = (p) => {
+    setEditingPrice(p);
+    setSelectedCompany({ value: p.purchaser, label: p.company_name });
+    setIsPercentage(p.percentage_discount !== null);
+    setDiscountValue(p.percentage_discount !== null ? p.percentage_discount : p.flat_discount);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleDelete = (p) => {
+    setToDelete(p);
+    setShowConfirm(true);
+  };
+
+  const confirmDelete = async () => {
     try {
-      await axiosInstance.delete(`/api/admin/products/${product.id}/delete_price/?price_id=${priceToDelete.id}`);
+      await axiosInstance.delete(`/api/admin/products/${product.id}/delete_price/?price_id=${toDelete.id}`);
+      setMessage({ type: "success", text: t("Price deleted successfully") });
       await loadPrices();
-      setMessage({ type: 'success', text: t('Price deleted successfully') });
-      
-      if (onPriceDeleted) {
-        onPriceDeleted(priceToDelete.id);
-      }
-    } catch (error) {
-      setMessage({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error deleting price') 
-      });
+      if (onPriceDeleted) onPriceDeleted(toDelete.id);
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || t("Error deleting price") });
     } finally {
-      setShowDeleteModal(false);
-      setPriceToDelete(null);
+      setShowConfirm(false);
+      setToDelete(null);
     }
-  };
-
-  const handleEditClick = (price) => {
-    setEditingPrice(price);
-    setSelectedCompany({
-      value: price.purchaser,
-      label: price.company_name
-    });
-    setIsPercentage(price.percentage_discount !== null);
-    setDiscountValue(price.percentage_discount !== null ? price.percentage_discount : price.flat_discount);
-  };
-
-  const resetForm = () => {
-    setSelectedCompany(null);
-    setIsPercentage(true);
-    setDiscountValue('');
-    setEditingPrice(null);
   };
 
   return (
-    <div>
+    <Box>
       {message && (
-        <Alert 
-          variant={message.type} 
-          onClose={() => setMessage(null)} 
-          dismissible
-        >
+        <Alert severity={message.type === "error" ? "error" : "success"} onClose={() => setMessage(null)}>
           {message.text}
         </Alert>
       )}
 
-      <Form className="mb-4">
-        <Form.Group className="mb-3">
-          <Form.Label>{t('Company')}</Form.Label>
+      <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
+        <Box>
+          <Typography variant="subtitle2">{t("Company")}</Typography>
           <AsyncSelect
             cacheOptions
             defaultOptions
             value={selectedCompany}
             onChange={setSelectedCompany}
             loadOptions={loadCompanyOptions}
-            placeholder={t('Search for a company...')}
+            placeholder={t("Search for a company...")}
             isClearable
           />
-        </Form.Group>
+        </Box>
 
-        <Form.Group className="mb-3">
-          <Form.Check
-            type="checkbox"
-            label={t('Percentage Discount')}
-            checked={isPercentage}
-            onChange={(e) => setIsPercentage(e.target.checked)}
-          />
-        </Form.Group>
+        <Box>
+          <label>
+            <input
+              type="checkbox"
+              checked={isPercentage}
+              onChange={(e) => setIsPercentage(e.target.checked)}
+            />{" "}
+            {t("Percentage Discount")}
+          </label>
+        </Box>
 
-        <Form.Group className="mb-3">
-          <Form.Label>
-            {isPercentage ? t('Percentage Discount') : t('Flat Discount')}
-          </Form.Label>
-          <InputGroup>
-            <Form.Control
-              type="number"
-              step="0.01"
-              value={discountValue}
-              onChange={(e) => setDiscountValue(e.target.value)}
-              placeholder={isPercentage ? t('Enter percentage') : t('Enter amount')}
-            />
-            {isPercentage && <InputGroup.Text>%</InputGroup.Text>}
-          </InputGroup>
-        </Form.Group>
+        <TextField
+          label={isPercentage ? t("Percentage Discount") : t("Flat Discount")}
+          type="number"
+          value={discountValue}
+          onChange={(e) => setDiscountValue(e.target.value)}
+          InputProps={{
+            endAdornment: isPercentage ? <InputAdornment position="end">%</InputAdornment> : null,
+          }}
+        />
 
-        <div className="d-flex gap-2">
-          <Button variant="primary" onClick={handleAddPrice}>
-            {editingPrice ? t('Update Price') : t('Add Price')}
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button variant="contained" onClick={handleAddOrUpdate}>
+            {editingPrice ? t("Update Price") : t("Add Price")}
           </Button>
-          {editingPrice && (
-            <Button variant="secondary" onClick={resetForm}>
-              {t('Cancel')}
-            </Button>
-          )}
-        </div>
-      </Form>
+          {editingPrice && <Button onClick={() => { setEditingPrice(null); setSelectedCompany(null); setDiscountValue(""); }}> {t("Cancel")}</Button>}
+        </Box>
+      </Stack>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>{t('Company')}</th>
-            <th>{t('Discount Type')}</th>
-            <th>{t('Discount Value')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {prices.map((price) => (
-            <tr key={price.id}>
-              <td>{price.company_name}</td>
-              <td>
-                {price.percentage_discount !== null ? t('Percentage') : t('Flat')}
-              </td>
-              <td>
-                {price.percentage_discount !== null 
-                  ? `${price.percentage_discount}%`
-                  : formatNumber(price.flat_discount)}
-              </td>
-              <td>
-                <div className="d-flex gap-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleEditClick(price)}
-                  >
-                    <i className="fas fa-edit"></i>
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteClick(price)}
-                  >
-                    <i className="fas fa-trash"></i>
-                  </Button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>{t("Company")}</TableCell>
+              <TableCell>{t("Discount Type")}</TableCell>
+              <TableCell>{t("Discount Value")}</TableCell>
+              <TableCell align="right"></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {prices.map((p) => (
+              <TableRow key={p.id}>
+                <TableCell>{p.company_name}</TableCell>
+                <TableCell>{p.percentage_discount !== null ? t("Percentage") : t("Flat")}</TableCell>
+                <TableCell>
+                  {p.percentage_discount !== null ? `${p.percentage_discount}%` : formatNumber(p.flat_discount)}
+                </TableCell>
+                <TableCell align="right">
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <IconButton size="small" onClick={() => handleEdit(p)}><EditIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(p)}><DeleteIcon fontSize="small" /></IconButton>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Confirm Delete')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('Are you sure you want to delete this price?')}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            {t('Cancel')}
-          </Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>
-            {t('Delete')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+      <Dialog open={showConfirm} onClose={() => setShowConfirm(false)}>
+        <DialogTitle>{t("Confirm Delete")}</DialogTitle>
+        <DialogContent>{t("Are you sure you want to delete this price?")}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirm(false)}>{t("Cancel")}</Button>
+          <Button color="error" onClick={confirmDelete}>{t("Delete")}</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
-
-
-
-const ProductContractPrices = ({ product,  onPriceAdded, onPriceDeleted }) => {
+/* --------------------------
+   ProductContractPrices (rough parity)
+   -------------------------- */
+const ProductContractPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [isPercentage, setIsPercentage] = useState(true);
-  const [discountValue, setDiscountValue] = useState('');
-  const [prices, setPrices] = useState([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [priceToDelete, setPriceToDelete] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [editingPrice, setEditingPrice] = useState(null);
-  const [selectedBranch,setSelectedBranch]  = useState(null);
-  useEffect(() => {
-    
-  }, [product]);
-
-  const loadPrices = async () => {
-    try {
-      const response = await axiosInstance.get(`/api/admin/products/${product.id}/contractprices/${selectedBranch}/`);
-      setPrices(response.data);
-    } catch (error) {
-      setMessage({ type: 'danger', text: t('Error loading prices') });
-    }
-  };
 
   const loadCompanyOptions = async (inputValue) => {
     try {
-      const response = await axiosInstance.get(`/filter-companies/?q=${inputValue}`);
-      return response.data.map(company => ({
-        value: company.id,
-        label: `${company.name} (${company.register_number})`
-      }));
-    } catch (error) {
-      console.error('Error loading companies:', error);
+      const res = await axiosInstance.get(`/filter-companies/?q=${inputValue}`);
+      return res.data.map((c) => ({ value: c.id, label: `${c.name} (${c.register_number})` }));
+    } catch (err) {
       return [];
     }
-
-
-    
-  };
-
-  const handleAddPrice = async () => {
-    try {
-      if (!selectedCompany) {
-        setMessage({ type: 'danger', text: t('Please select a company') });
-        return;
-      }
-
-      if (!discountValue) {
-        setMessage({ type: 'danger', text: t('Please enter a discount value') });
-        return;
-      }
-
-      const response = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, {
-        purchaser: selectedCompany.value,
-        is_percentage: isPercentage,
- 
-        discount_value: parseFloat(discountValue)
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      await loadPrices();
-      setMessage({ type: 'success', text: editingPrice ? t('Price updated successfully') : t('Price added successfully') });
-      resetForm();
-
-      if (onPriceAdded) {
-        onPriceAdded(response.data);
-      }
-    } catch (error) {
-      setMessage({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error adding price') 
-      });
-    }
-  };
-
-  const handleDeleteClick = (price) => {
-    setPriceToDelete(price);
-    setShowDeleteModal(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      await axiosInstance.delete(`/api/admin/products/${product.id}/delete_price/?price_id=${priceToDelete.id}`);
-      await loadPrices();
-      setMessage({ type: 'success', text: t('Price deleted successfully') });
-      
-      if (onPriceDeleted) {
-        onPriceDeleted(priceToDelete.id);
-      }
-    } catch (error) {
-      setMessage({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error deleting price') 
-      });
-    } finally {
-      setShowDeleteModal(false);
-      setPriceToDelete(null);
-    }
-  };
-
-  const handleEditClick = (price) => {
-    setEditingPrice(price);
-    setSelectedCompany({
-      value: price.purchaser,
-      label: price.company_name
-    });
-    setIsPercentage(price.percentage_discount !== null);
-    setDiscountValue(price.percentage_discount !== null ? price.percentage_discount : price.flat_discount);
-  };
-
-  const resetForm = () => {
-    setSelectedCompany(null);
-    setIsPercentage(true);
-    setDiscountValue('');
-    setEditingPrice(null);
   };
 
   return (
-    <div>
-      {message && (
-        <Alert 
-          variant={message.type} 
-          onClose={() => setMessage(null)} 
-          dismissible
-        >
-          {message.text}
-        </Alert>
-      )}
+    <Box>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("Company")}</Typography>
+      <AsyncSelect
+        cacheOptions
+        defaultOptions
+        value={selectedCompany}
+        onChange={setSelectedCompany}
+        loadOptions={loadCompanyOptions}
+        placeholder={t("Search for a company...")}
+        isClearable
+      />
 
-      <Form className="mb-4">
-        <Form.Group className="mb-3">
-          <Form.Label>{t('Company')}</Form.Label>
-          <AsyncSelect
-            cacheOptions
-            defaultOptions
-            value={selectedCompany}
-            onChange={setSelectedCompany}
-            loadOptions={loadCompanyOptions}
-            placeholder={t('Search for a company...')}
-            isClearable
-          />
-        </Form.Group>
-
-      </Form>
-
-      
-      {}
       {selectedCompany && <BranchContractManagement company={selectedCompany} product={product} />}
-
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Confirm Delete')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('Are you sure you want to delete this price?')}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            {t('Cancel')}
-          </Button>
-          <Button variant="danger" onClick={handleConfirmDelete}>
-            {t('Delete')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+    </Box>
   );
 };
 
+/* --------------------------
+   Main ProductManagement component
+   -------------------------- */
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -755,475 +377,321 @@ export default function ProductManagement() {
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [selectedSubgroups, setSelectedSubgroups] = useState([]);
-  const [translations, setTranslations] = useState({
-    en: { name: "", description: "" },
-    ar: { name: "", description: "" }
-  });
-   
-  const [price, setPrice] = useState('');
-  const [availability, setAvailability] = useState('M');
-  const [images, setImages] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
+  const [translations, setTranslations] = useState({ en: { name: "", description: "" }, ar: { name: "", description: "" } });
+
+  const [price, setPrice] = useState("");
+  const [availability, setAvailability] = useState("M");
   const [message, setMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const fileInputRef = useRef(null);
-  const addImageInputRef = useRef(null);
-  const [partId, setPartId] = useState('');
+
   const [tempImages, setTempImages] = useState([]);
   const [tempPreviewUrls, setTempPreviewUrls] = useState([]);
-  const [stock_quantity, setStock_quantity] = useState(0);
- 
-  const query = useQuery();
-  const [productId,setProductId] = useState(query.get('product_id'));
+  const [stockQuantity, setStockQuantity] = useState(0);
+  const [partId, setPartId] = useState("");
 
+  const fileInputRef = useRef(null);
+  const addImageInputRef = useRef(null);
+
+  const [tabIndex, setTabIndex] = useState(0);
+
+  /* --- Fetching & init --- */
   useEffect(() => {
-    const fetchProductById = async () => {
-      if(productId) {
-        try {
-          const response = await axiosInstance.get(`/api/admin/product-detail/${productId}/`);
-          const product = response.data;
-          handleProductSelect(product);
-          setProductId( undefined);
-        } catch (error) {
-          console.error("Error fetching product:", error);
-          setMessage({ type: "danger", text: t("Error fetching product") });
-        }
-      }
-    };
+    fetchInitial();
+  }, [currentPage, selectedCategory]);
 
-    fetchProductById();
-    if (!searchQuery.trim()) {
-      if (selectedCategory?.id) {
-        fetchProductsByCategory(selectedCategory.id);
-      } else {
-        fetchProducts();
-      }
-    }
-    fetchCategories();
-    fetchGroups();
-  }, [currentPage, selectedCategory, productId]);
+  const fetchInitial = async () => {
+    await fetchCategories();
+    await fetchGroups();
+    if (selectedCategory?.id) await fetchProductsByCategory(selectedCategory.id);
+    else await fetchProducts();
+  };
 
   const fetchProducts = async () => {
     try {
       const res = await axiosInstance.get(`/api/products/?page=${currentPage}`);
-      setProducts(res.data.results);
-      setTotalPages(Math.ceil(res.data.count / res.data.page_size));
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setMessage({ type: "danger", text: t("Error fetching products") });
+      setProducts(res.data.results || []);
+      setTotalPages(Math.ceil(res.data.count / (res.data.page_size || 10)));
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error fetching products") });
     }
   };
 
   const fetchCategories = async () => {
     try {
       const res = await axiosInstance.get("/api/admin/categories/");
-      const dataWithRoot = [
-        { id: null, label: t("Root"), children: res.data }
-      ];
-      setCategories(dataWithRoot);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setMessage({ type: "danger", text: t("Error fetching categories") });
+      const withRoot = [{ id: null, label: t("Root"), children: res.data }];
+      setCategories(withRoot);
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error fetching categories") });
     }
   };
 
   const fetchGroups = async () => {
     try {
       const res = await axiosInstance.get("/api/admin/product-groups/");
-      setGroups(res.data.results);
-    } catch (error) {
-      console.error("Error fetching groups:", error);
-      setMessage({ type: "danger", text: t("Error fetching groups") });
+      setGroups(res.data.results || []);
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error fetching groups") });
     }
   };
 
   const fetchProductsByCategory = async (categoryId) => {
+   
+    if(categoryId == "null") {
+      fetchProducts();
+    }else {
     try {
       const res = await axiosInstance.get(`/api/products/category/${categoryId}`);
-      setProducts(res.data.results);
-      setTotalPages(Math.ceil(res.data.count / res.data.page_size));
-      
-      // Fetch product groups for this category
-      const groupsRes = await axiosInstance.get(`/api/product_groups/${categoryId}/`);
-      setGroups(groupsRes.data);
-    } catch (error) {
-      console.error("Error fetching category products:", error);
-      setMessage({ type: "danger", text: t("Error fetching category products") });
+      setProducts(res.data.results || []);
+      setTotalPages(Math.ceil(res.data.count / (res.data.page_size || 10)));
+      // Fetch groups for category if endpoint exists
+      try {
+        const groupsRes = await axiosInstance.get(`/api/product_groups/${categoryId}/`);
+        setGroups(groupsRes.data || []);
+      } catch (e) {
+        // ignore
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error fetching category products") });
     }
+  }
   };
 
   const handleSearch = async () => {
     try {
       if (searchQuery.trim()) {
-        const res = await axiosInstance.get(`/api/search_text?q=${searchQuery}`);
+        const res = await axiosInstance.get(`/api/search_text?q=${encodeURIComponent(searchQuery)}`);
         setProducts(res.data.results || []);
         setTotalPages(Math.ceil((res.data.count || 0) / 10));
         setCurrentPage(1);
       } else {
-        fetchProducts(); // If search query is empty, fetch all products
+        await fetchProducts();
       }
-    } catch (error) {
-      console.error("Error searching products:", error);
-      setMessage({ type: "danger", text: t("Error searching products") });
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error searching products") });
     }
   };
 
-  const handleSearchKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const handleThumbnailClick = (index) => {
-    setSelectedImageIndex(index);
-  };
+  /* --- Image handling --- */
+  const handleMainImageClick = () => fileInputRef.current?.click();
 
   const handleImageChange = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      if (selected?.id) {
-        // If product exists, update image on server
-        try {
-          const formData = new FormData();
-          formData.append('images', files[0]);
-          
-          await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`,
-             formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const file = files[0];
 
-          const response = await 
-          axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-          setSelected(response.data);
-        } catch (error) {
-          console.error("Error updating product images:", error);
-          setMessage({
-            type: "danger",
-            text: t("Error updating product images")
-          });
-        }
-      } else {
-        // If product doesn't exist yet, store image temporarily
-        const file = files[0];
-        const newTempImages = [...tempImages];
-        const newTempPreviewUrls = [...tempPreviewUrls];
-
-        // Replace image at selected index or add new one
-        if (selectedImageIndex < newTempImages.length) {
-          newTempImages[selectedImageIndex] = file;
-          newTempPreviewUrls[selectedImageIndex] = URL.createObjectURL(file);
-        } else {
-          newTempImages.push(file);
-          newTempPreviewUrls.push(URL.createObjectURL(file));
-        }
-
-        setTempImages(newTempImages);
-        setTempPreviewUrls(newTempPreviewUrls);
-      }
-    }
-  };
-
-  const handleMainImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleDeleteMainImage = async () => {
     if (selected?.id) {
-      // If product exists, delete from server
-      if (!selected?.media_list?.length) return;
-
       try {
-        await axiosInstance.delete(`/api/admin/products/${selected.id}/delete_media/?index=${selectedImageIndex}`);
-        const response = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-        setSelected(response.data);
-        
-        if (selectedImageIndex >= response.data.media_list.length) {
-          setSelectedImageIndex(Math.max(0, response.data.media_list.length - 1));
-        }
-      } catch (error) {
-        console.error("Error deleting product image:", error);
-        setMessage({
-          type: "danger",
-          text: t("Error deleting product image")
+        const formData = new FormData();
+        formData.append("images", file);
+        await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
+        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
+        setSelected(res.data);
+      } catch (err) {
+        setMessage({ type: "error", text: t("Error updating product images") });
       }
     } else {
-      // If product doesn't exist yet, remove from temporary storage
       const newTempImages = [...tempImages];
-      const newTempPreviewUrls = [...tempPreviewUrls];
-      
-      newTempImages.splice(selectedImageIndex, 1);
-      newTempPreviewUrls.splice(selectedImageIndex, 1);
-      
-      setTempImages(newTempImages);
-      setTempPreviewUrls(newTempPreviewUrls);
-      
-      if (selectedImageIndex >= newTempImages.length) {
-        setSelectedImageIndex(Math.max(0, newTempImages.length - 1));
+      const newTempPreviews = [...tempPreviewUrls];
+      if (selectedImageIndex < newTempImages.length) {
+        newTempImages[selectedImageIndex] = file;
+        newTempPreviews[selectedImageIndex] = URL.createObjectURL(file);
+      } else {
+        newTempImages.push(file);
+        newTempPreviews.push(URL.createObjectURL(file));
       }
+      setTempImages(newTempImages);
+      setTempPreviewUrls(newTempPreviews);
     }
   };
 
   const handleAddImage = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      if (selected?.id) {
-        // If product exists, add to server
-        try {
-          const formData = new FormData();
-          formData.append('images', files[0]);
-          
-          await axiosInstance.post(`/api/admin/products/${selected.id}/add_media/`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          });
-
-          const response = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-          setSelected(response.data);
-          setSelectedImageIndex(response.data.media_list.length - 1);
-        } catch (error) {
-          console.error("Error adding product image:", error);
-          setMessage({
-            type: "danger",
-            text: t("Error adding product image")
-          });
-        }
-      } else {
-        // If product doesn't exist yet, add to temporary storage
-        const file = files[0];
-        setTempImages([...tempImages, file]);
-        setTempPreviewUrls([...tempPreviewUrls, URL.createObjectURL(file)]);
-        setSelectedImageIndex(tempImages.length);
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const file = files[0];
+    if (selected?.id) {
+      try {
+        const formData = new FormData();
+        formData.append("images", file);
+        await axiosInstance.post(`/api/admin/products/${selected.id}/add_media/`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
+        setSelected(res.data);
+        setSelectedImageIndex(res.data.media_list.length - 1);
+      } catch (err) {
+        setMessage({ type: "error", text: t("Error adding product image") });
       }
+    } else {
+      setTempImages((s) => [...s, file]);
+      setTempPreviewUrls((s) => [...s, URL.createObjectURL(file)]);
+      setSelectedImageIndex(tempImages.length);
     }
   };
 
-  const renderImageSection = () => {
-    const mediaList = selected?.id ? (selected?.media_list || []) : tempPreviewUrls;
+  const handleDeleteMainImage = async () => {
+    if (selected?.id) {
+      if (!selected.media_list?.length) return;
+      try {
+        await axiosInstance.delete(`/api/admin/products/${selected.id}/delete_media/?index=${selectedImageIndex}`);
+        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
+        setSelected(res.data);
+        setSelectedImageIndex(Math.max(0, Math.min(selectedImageIndex, res.data.media_list.length - 1)));
+      } catch (err) {
+        setMessage({ type: "error", text: t("Error deleting product image") });
+      }
+    } else {
+      const newImages = [...tempImages];
+      const newPreviews = [...tempPreviewUrls];
+      newImages.splice(selectedImageIndex, 1);
+      newPreviews.splice(selectedImageIndex, 1);
+      setTempImages(newImages);
+      setTempPreviewUrls(newPreviews);
+      setSelectedImageIndex(Math.max(0, newImages.length - 1));
+    }
+  };
 
+  const renderImageGallery = () => {
+    const mediaList = selected?.id ? (selected?.media_list || []) : tempPreviewUrls;
     return (
-      <Form.Group className="mb-3">
-        <Form.Label>{t('Images')}</Form.Label>
-        <div className="image-gallery-container">
-          <div className="thumbnails-container">
-            {mediaList.map((url, index) => (
-              <div 
-                key={index} 
-                className={`thumbnail-wrapper ${index === selectedImageIndex ? 'selected' : ''}`}
-                onClick={() => handleThumbnailClick(index)}
+      <Box>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("Images")}</Typography>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Stack direction="row" spacing={1} sx={{ maxWidth: 160, overflowX: "auto" }}>
+            {mediaList.map((m, idx) => (
+              <Paper
+                key={idx}
+                variant={idx === selectedImageIndex ? "elevation" : "outlined"}
+                onClick={() => setSelectedImageIndex(idx)}
+                sx={{
+                  width: 80,
+                  height: 80,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
               >
                 <img
-                  src={selected?.id ? `${API_BASE_URL}${url}` : url}
-                  alt={t('Preview')}
-                  className="thumbnail-image"
+                  src={selected?.id ? `${API_BASE_URL}${m}` : m}
+                  alt="thumb"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
-              </div>
+              </Paper>
             ))}
-          </div>
-          
-          <div className="main-image-container">
+          </Stack>
+
+          <Box sx={{ flex: 1 }}>
             {mediaList.length > 0 ? (
-              <>
-                <div 
-                  className="main-image-wrapper"
+              <Box>
+                <Paper
                   onClick={handleMainImageClick}
+                  variant="outlined"
+                  sx={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative" }}
                 >
                   <img
                     src={selected?.id ? `${API_BASE_URL}${mediaList[selectedImageIndex]}` : mediaList[selectedImageIndex]}
-                    alt={t('Preview')}
-                    className="main-image"
+                    alt="main"
+                    style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                   />
-                  <div className="image-overlay">
-                    <span>{t('Click to replace')}</span>
-                  </div>
-                </div>
-                <div className="image-actions">
-                  <Button 
-                    variant="danger" 
-                    size="sm"
-                    className="delete-image-btn"
-                    onClick={handleDeleteMainImage}
-                  >
-                    <i className="fas fa-trash"></i> {t('Delete')}
-                  </Button>
-                  <Button 
-                    variant="success" 
-                    size="sm"
-                    className="add-image-btn"
-                    onClick={() => addImageInputRef.current?.click()}
-                  >
-                    <i className="fas fa-plus"></i> {t('Add Image')}
-                  </Button>
-                </div>
-              </>
+                  <Box sx={{ position: "absolute", bottom: 8, left: 8 }}>
+                    <Chip icon={<ImageIcon />} label={t("Click to replace")} />
+                  </Box>
+                </Paper>
+
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                  <Button variant="outlined" color="error" onClick={handleDeleteMainImage} startIcon={<DeleteIcon />}>{t("Delete")}</Button>
+                  <Button variant="contained" onClick={() => addImageInputRef.current?.click()} startIcon={<AddIcon />}>{t("Add Image")}</Button>
+                </Box>
+              </Box>
             ) : (
-              <div 
-                className="main-image-wrapper empty"
-                onClick={handleMainImageClick}
-              >
-                <div className="upload-placeholder">
-                  <i className="fas fa-cloud-upload-alt"></i>
-                  <span>{t('Click to upload image')}</span>
-                </div>
-              </div>
+              <Paper variant="outlined" onClick={handleMainImageClick} sx={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                <Stack alignItems="center" spacing={1}>
+                  <CloudUploadIcon />
+                  <Typography>{t("Click to upload image")}</Typography>
+                </Stack>
+              </Paper>
             )}
-          </div>
-          
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="d-none"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-          <input
-            type="file"
-            ref={addImageInputRef}
-            className="d-none"
-            accept="image/*"
-            onChange={handleAddImage}
-          />
-        </div>
-      </Form.Group>
+          </Box>
+        </Box>
+
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
+        <input ref={addImageInputRef} type="file" accept="image/*" onChange={handleAddImage} style={{ display: "none" }} />
+      </Box>
     );
   };
 
-  const handleGroupToggle = (groupId) => {
-    setSelectedGroups(prev =>
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
-  };
-
-  const handleSubgroupSelect = (subgroupId, groupId) => {
-    // First, remove any previously selected subgroups from the same group
-    const otherGroupSubgroups = selectedSubgroups.filter(id => {
-      // Find the group this subgroup belongs to
-      const belongsToOtherGroup = groups.some(g => 
-        g.id !== groupId && g.subgroups.some(s => s.id === id)
-      );
-      return belongsToOtherGroup;
-    });
-    
-    // Add the newly selected subgroup
-    setSelectedSubgroups([...otherGroupSubgroups, subgroupId]);
-  };
-
+  /* --- Form handling --- */
   const clearForm = () => {
     setSelected(null);
     setSelectedCategory(null);
     setSelectedGroups([]);
     setSelectedSubgroups([]);
-    setTranslations({
-      en: { name: "", description: "" },
-      ar: { name: "", description: "" }
-    });
+    setTranslations({ en: { name: "", description: "" }, ar: { name: "", description: "" } });
     setPrice("");
-    setImages([]);
-    setPreviewUrls([]);
-    setPartId('');
+    setPartId("");
     setTempImages([]);
     setTempPreviewUrls([]);
     setSelectedImageIndex(0);
-    setStock_quantity(0);
+    setStockQuantity(0);
+    setAvailability("M");
   };
 
   const handleSave = async () => {
     try {
-        // Parse JSON data from form fields
-        const formData = new FormData();
-        
-        // Get the first filled translated name to be the name of the product
-        const translationsArray = Object.entries(translations)
-          .filter(([_, value]) => value.name || value.description)
-          .map(([language, value]) => ({
-            language,
-            name: value.name,
-            description: value.description
-          }));
+      const fd = new FormData();
 
-        // Find the first filled name to use as the product name
-        const firstFilledName = translationsArray.find(trans => trans.name)?.name || '';
-        
-        formData.append('translations', JSON.stringify(translationsArray));
+      const translationsArray = Object.entries(translations)
+        .filter(([_, v]) => v.name || v.description)
+        .map(([language, v]) => ({ language, name: v.name, description: v.description }));
 
-        // Add other fields
-        if (selected?.id) {
-          formData.append('id', selected.id);
-        } else if (partId) {
-          formData.append('part_id', partId);
-        }
+      const firstFilledName = translationsArray.find((t) => t.name)?.name || "";
 
-        // Properly handle category ID
-        if (selectedCategory?.id) {
-          formData.append('closest_category', selectedCategory.id);
-        } else {
-          return setMessage({ 
-            type: "danger", 
-            text: t("Please select a category") 
-          });
-        }
+      fd.append("translations", JSON.stringify(translationsArray));
 
-        formData.append('base_price', price);
-        formData.append('availibility', availability);
-        formData.append('subgroups', JSON.stringify(selectedSubgroups));
-        formData.append('name', firstFilledName);
-        formData.append('stock_quantity', stock_quantity);
-        const obj = Object.fromEntries(formData.entries());
-const json = JSON.stringify(obj);
+      if (selected?.id) fd.append("id", selected.id);
+      else if (partId) fd.append("part_id", partId);
 
-console.log(json); 
-       
-        // Add temporary images if creating new product
-        if (!selected?.id) {
-          tempImages.forEach(image => {
-            formData.append('images', image);
-          });
-        }
+      if (selectedCategory?.id) fd.append("closest_category", selectedCategory.id);
+      else return setMessage({ type: "error", text: t("Please select a category") });
 
-        const url = selected?.id 
-          ? `/api/admin/products/${selected.id}/`
-          : '/api/admin/products/';
-        
-        const method = selected?.id ? 'put' : 'post';
+      fd.append("base_price", price);
+      fd.append("availibility", availability);
+      fd.append("subgroups", JSON.stringify(selectedSubgroups));
+      fd.append("name", firstFilledName);
+      fd.append("stock_quantity", stockQuantity);
 
-        const response = await axiosInstance[method](url, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+      if (!selected?.id) {
+        tempImages.forEach((img) => fd.append("images", img));
+      }
 
-        setMessage({ 
-          type: "success", 
-          text: t(selected?.id ? "Product updated successfully" : "Product created successfully") 
-        });
+      const url = selected?.id ? `/api/admin/products/${selected.id}/` : "/api/admin/products/";
+      const method = selected?.id ? "put" : "post";
 
-        // Reset form and refresh products
-        clearForm();
-        await fetchProducts();
-
-    } catch (error) {
-      console.error("Save error:", error);
-      setMessage({ 
-        type: "danger", 
-        text: error.response?.data?.error || t("Error saving product") 
+      const res = await axiosInstance[method](url, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
+      setMessage({ type: "success", text: t(selected?.id ? "Product updated successfully" : "Product created successfully") });
+      clearForm();
+      await fetchProducts();
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || t("Error saving product") });
     }
   };
 
-  const handleDelete = async (productId) => {
-    setProductToDelete(productId);
-    setShowDeleteModal(true);
+  const handleDelete = (id) => {
+    setProductToDelete(id);
+    setShowDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
@@ -1232,421 +700,302 @@ console.log(json);
       setMessage({ type: "success", text: t("Product deleted successfully") });
       await fetchProducts();
       clearForm();
-    } catch (error) {
-      console.error("Delete error:", error);
-      setMessage({ 
-        type: "danger", 
-        text: error.response?.data?.error || t("Error deleting product") 
-      });
+    } catch (err) {
+      setMessage({ type: "error", text: err.response?.data?.error || t("Error deleting product") });
     } finally {
-      setShowDeleteModal(false);
+      setShowDeleteDialog(false);
       setProductToDelete(null);
     }
   };
 
-  const getProductImage = (product) => {
-    if (product.media_list && product.media_list.length > 0) {
-      return `${API_BASE_URL}${product.media_list[0]}`;
-    }
-    return  `${DEFAULT_IMAGE}`; // Default image path
-  };
-
-  const findCategoryNodeById = (nodes, id) => {
-    for (const node of nodes) {
-      if (node.id === id) {
-        return node;
-      }
-      return null;
-    }
-  };
-
-  const handleCategorySelect = async (category) => {
-    setSelectedCategory(category);
-    setCurrentPage(1); // Reset to first page when changing category
-    
-    if (category?.id) {
-      await fetchProductsByCategory(category.id);
-    } else {
-      await fetchProducts();
-      await fetchGroups();
-    }
-  };
-
-
   const handleProductSelect = async (product) => {
     try {
-      // Get detailed product information
-      const response = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
-      const detailedProduct = response.data;
-      console.log(detailedProduct);
+      const res = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
+      const dp = res.data;
+      setSelected(dp);
 
-      // Set selected product
-      setSelected(detailedProduct);
+      let productTranslations = dp.translations || {};
 
-      // Handle translations
-      let productTranslations = detailedProduct.translations || {};
-      
-      // If there's a name or description but no translations, create translations with the existing values
-      if ((detailedProduct.name || detailedProduct.description) && 
-          (!productTranslations.en && !productTranslations.ar)) {
+      if ((dp.name || dp.description) && (!productTranslations.en && !productTranslations.ar)) {
         productTranslations = {
-          en: { 
-            name: detailedProduct.name || '', 
-            description: detailedProduct.description || '' 
-          },
-          ar: { 
-            name: detailedProduct.name || '', 
-            description: detailedProduct.description || '' 
-          }
+          en: { name: dp.name || "", description: dp.description || "" },
+          ar: { name: dp.name || "", description: dp.description || "" },
         };
       } else {
-        // If translations exist but some fields are missing, ensure they have the base values
         if (productTranslations.en) {
-          if (!productTranslations.en.name && detailedProduct.name) {
-            productTranslations.en.name = detailedProduct.name;
-          }
-          if (!productTranslations.en.description && detailedProduct.description) {
-            productTranslations.en.description = detailedProduct.description;
-          }
+          if (!productTranslations.en.name && dp.name) productTranslations.en.name = dp.name;
+          if (!productTranslations.en.description && dp.description) productTranslations.en.description = dp.description;
         }
         if (productTranslations.ar) {
-          if (!productTranslations.ar.name && detailedProduct.name) {
-            productTranslations.ar.name = detailedProduct.name;
-          }
-          if (!productTranslations.ar.description && detailedProduct.description) {
-            productTranslations.ar.description = detailedProduct.description;
-          }
+          if (!productTranslations.ar.name && dp.name) productTranslations.ar.name = dp.name;
+          if (!productTranslations.ar.description && dp.description) productTranslations.ar.description = dp.description;
         }
       }
-      
+
       setTranslations(productTranslations);
+      setPrice(dp.base_price || "");
+      setAvailability(dp.availibility);
+      setStockQuantity(dp.stock_quantity || 0);
+      setSelectedGroups(dp.groups || []);
+      setSelectedSubgroups(dp.subgroups || []);
 
-      // Set price
-      setPrice(detailedProduct.base_price || '');
-      setAvailability(detailedProduct.availibility);
-      setStock_quantity(detailedProduct.stock_quantity);
-      // Set groups and subgroups
-      setSelectedGroups(detailedProduct.groups);
-      setSelectedSubgroups(detailedProduct.subgroups);
-
-      // Handle category tree expansion
-      if (detailedProduct.category_hierarchy && detailedProduct.category_hierarchy.length > 0) {
-        // For each category in the hierarchy
-        for (const category of detailedProduct.category_hierarchy) {
-          const categoryIds = new Set(detailedProduct.category_hierarchy.map(cat => cat.id));
-          categoryIds.add(null);
-          setExpandedCategories(categoryIds);
-        }
-
-        // Set the final category as selected
-        const finalCategory = detailedProduct.category_hierarchy[detailedProduct.category_hierarchy.length - 1];
-        setSelectedCategory({ 
-          id: finalCategory.id, 
-          label: finalCategory.name 
-        });
+      if (dp.category_hierarchy && dp.category_hierarchy.length > 0) {
+        const ids = new Set(dp.category_hierarchy.map((c) => c.id));
+        ids.add(null);
+        setExpandedCategories(ids);
+        const finalCategory = dp.category_hierarchy[dp.category_hierarchy.length - 1];
+        setSelectedCategory({ id: finalCategory.id, label: finalCategory.name });
       }
 
-      // Switch to details tab
-      document.querySelector('button[data-rb-event-key="details"]')?.click();
-
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      setMessage({
-        type: "danger",
-        text: t("Error fetching product details")
-      });
+      // switch to details tab
+      setTabIndex(0);
+    } catch (err) {
+      setMessage({ type: "error", text: t("Error fetching product details") });
     }
   };
 
+  const getProductImage = (product) => {
+    if (product.media_list && product.media_list.length > 0) return `${API_BASE_URL}${product.media_list[0]}`;
+    return `${DEFAULT_IMAGE}`;
+  };
+
+  /* --------------------------
+     UI Render
+     -------------------------- */
   return (
-    <div className="admin-container" dir={isRTL() ? "rtl" : "ltr"}>
-      <div className="row">
-        <div className="col-md-3">
-          <Card>
-            <Card.Body>
-              <CategoryTree
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelect={handleCategorySelect}
-                expandedCategories={expandedCategories}
-                setExpandedCategories={setExpandedCategories}
-              />
-            </Card.Body>
-          </Card>
-        </div>
-        <div className="col-md-9">
-          <Card>
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <div className="d-flex align-items-center" style={{ width: "60%" }}>
-                  <Form.Control
-                    type="text"
-                    placeholder={`${t('search')}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    
-                    className="me-2"
-                  />
-                  <Button variant="primary" onClick={handleSearch}>
-                    {t("search")}
-                  </Button>
-                </div>
-                <Button variant="success" onClick={clearForm}>
-                  {t("New Product")}
-                </Button>
-              </div>
-              {message && (
-                <Alert 
-                  variant={message.type}
-                  onClose={() => setMessage(null)}
-                  dismissible
-                >
-                  {message.text}
-                </Alert>
-              )}
+    <Box sx={{ p: 2 }} dir={isRTL() ? "rtl" : "ltr"}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={3}>
+          <Paper variant="outlined"  sx={{
+      p: 1,
+      height: "100%",
+      maxHeight: 600, // or a responsive height, e.g. 'calc(100vh - 200px)'
+      overflowY: "auto",
+      overflowX: "hidden",
+    }}>
+            <CategoryTree
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelect={async (cat) => {
+                setSelectedCategory(cat);
+                setCurrentPage(1);
+                if (cat?.id) await fetchProductsByCategory(cat.id);
+                else await fetchProducts();
+              }}
+              expandedCategories={expandedCategories}
+              setExpandedCategories={setExpandedCategories}
+            />
+          </Paper>
+        </Grid>
 
-              <div className="d-flex gap-4">
-                {/* Products List */}
-                <Card className="admin-card" style={{ width: "40%" }}>
-                  <div className="admin-form">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h2 className="admin-form-title mb-0">{t('Products')}</h2>
-                      <Button 
-                        variant="outline-primary" 
-                        onClick={clearForm}
-                      >
-                        {t('New Product')}
-                      </Button>
-                    </div>
-                    <div className="table-responsive">
-                      <Table className="admin-table">
-                        <thead>
-                          <tr>
-                            <th>{t('Image')}</th>
-                            <th>{t('Product Name')}</th>
-                            <th>{t('Part ID')}</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products.map((product) => (
-                            <tr 
-                              key={product.id}
-                              onClick={() => handleProductSelect(product)}
-                              className={selected?.id === product.id ? 'selected' : ''}
-                              style={{ cursor: 'pointer' }}
-                            >
-                              <td style={{ width: '80px' }}>
-                                <img
-                                  src={getProductImage(product)}
-                                  alt={product.name}
-                                  style={{
-                                    width: '60px',
-                                    height: '60px',
-                                    objectFit: 'cover',
-                                    borderRadius: '4px'
-                                  }}
-                                />
-                              </td>
-                              <td>{product.name}</td>
-                              <td>{product.part_id}</td>
-                              <td>
-                                <Button
-                                  variant="danger"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(product.id);
-                                  }}
-                                >
-                                  ×
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </div>
-                    {totalPages > 1 && (
-                      <div className="d-flex justify-content-center mt-3">
-                        <Pagination>
-                          <Pagination.First 
-                            onClick={() => setCurrentPage(1)} 
-                            disabled={currentPage === 1}
-                          />
-                          <Pagination.Prev 
-                            onClick={() => setCurrentPage(prev => prev - 1)}
-                            disabled={currentPage === 1}
-                          />
-                          {[...Array(totalPages)].map((_, idx) => (
-                            <Pagination.Item
-                              key={idx + 1}
-                              active={idx + 1 === currentPage}
-                              onClick={() => setCurrentPage(idx + 1)}
-                            >
-                              {idx + 1}
-                            </Pagination.Item>
-                          ))}
-                          <Pagination.Next 
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                            disabled={currentPage === totalPages}
-                          />
-                          <Pagination.Last 
-                            onClick={() => setCurrentPage(totalPages)}
-                            disabled={currentPage === totalPages}
-                          />
-                        </Pagination>
-                      </div>
-                    )}
-                  </div>
-                </Card>
+        
 
-                {/* Product Form */}
-                <Card className="admin-card" style={{ flex: 1 }}>
-                  <div className="admin-form">
-                    <h2 className="admin-form-title">{t('Product Details')}</h2>
+        <Grid item xs={12} md={9}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "center", width: "60%" }}>
+                <TextField
+                  fullWidth
+                  placeholder={`${t("search")}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Button variant="contained" onClick={handleSearch}>{t("search")}</Button>
+              </Box>
 
-                    <Tabs defaultActiveKey="details" className="mb-3">
-                      <Tab eventKey="details" title={t('Details')}>
-                        <TranslationFields 
-                          translations={translations}
-                          setTranslations={setTranslations}
-                        />
+              <Button variant="contained" color="success" onClick={clearForm} startIcon={<AddIcon />}>
+                {t("New Product")}
+              </Button>
+            </Box>
 
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('Part ID')}</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={selected ? selected.part_id :
-                               (partId || '')}
-                            onChange={(e) =>  setPartId(e.target.value)}
-                            disabled={!!selected}
-                            placeholder={t('Enter Part ID')}
-                          />
-                        </Form.Group>
+            {message && (
+              <Alert severity={message.type === "error" ? "error" : "success"} onClose={() => setMessage(null)} sx={{ mb: 2 }}>
+                {message.text}
+              </Alert>
+            )}
 
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('Stock Quantity')}</Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={stock_quantity}
-                            onChange={(e) =>
-                              setStock_quantity(parseInt(e.target.value) || 0)}
-                            placeholder={t('Enter Stock Quantity')}
-                          />
-                        </Form.Group>
+            <Grid container spacing={2}>
+              {/* Left: Products List */}
+              <Grid item xs={12} md={5}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
+                    <Typography variant="h6">{t("Products")}</Typography>
+                    <Button variant="outlined" onClick={clearForm}>{t("New Product")}</Button>
+                  </Box>
 
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('Price')}</Form.Label>
-                          <Form.Control
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            placeholder={t('Enter price')}
-                          />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                          <Form.Label>{t('Availability')}</Form.Label>
-                          <Form.Select
-                            value={availability}
-                            onChange={(e) => setAvailability(e.target.value)}
-                            className="form-control"
+                  <TableContainer sx={{ maxHeight: 420 }}>
+                    <Table size="small" stickyHeader>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>{t("Image")}</TableCell>
+                          <TableCell>{t("Product Name")}</TableCell>
+                          <TableCell>{t("Part ID")}</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {products.map((p) => (
+                          <TableRow
+                            key={p.id}
+                            hover
+                            selected={selected?.id === p.id}
+                            onClick={() => handleProductSelect(p)}
+                            sx={{ cursor: "pointer" }}
                           >
-                            <option value="M">{t('Market')}</option>
-                            <option value="S">{t('Stock')}</option>
-                          </Form.Select>
-                        </Form.Group>
+                            <TableCell sx={{ width: 80 }}>
+                              <Avatar src={getProductImage(p)} variant="rounded" sx={{ width: 60, height: 60 }} />
+                            </TableCell>
+                            <TableCell>{p.name}</TableCell>
+                            <TableCell>{p.part_id}</TableCell>
+                            <TableCell>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(p.id);
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
 
-                        {renderImageSection()}
-                      </Tab>
+                  {totalPages > 1 && (
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+                      <Pagination count={totalPages} page={currentPage} onChange={(e, p) => setCurrentPage(p)} />
+                    </Box>
+                  )}
+                </Paper>
+              </Grid>
 
-                      
-                      <Tab eventKey="groups" title={t('Groups')}>
-                        <GroupSelector
-                          groups={groups}
-                          selectedGroups={selectedGroups}
-                          onGroupSelect={handleGroupToggle}
-                          selectedSubgroups={selectedSubgroups}
-                          onSubgroupSelect={handleSubgroupSelect}
-                        />
-                      </Tab>
+              {/* Right: Form */}
+              <Grid item xs={12} md={7}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>{t("Product Details")}</Typography>
 
-                      {selected && (
-                        <Tab eventKey="prices" title={t('Prices')}>
-                          <ProductPrices 
-                            product={selected} 
-                            onPriceAdded={() => {
-                              // Refresh product details if needed
-                              if (selected) {
-                                handleProductSelect(selected);
-                              }
-                            }}
-                            onPriceDeleted={() => {
-                              // Refresh product details if needed
-                              if (selected) {
-                                handleProductSelect(selected);
-                              }
-                            }}
-                          />
-                        </Tab>
-                      )}
+                  <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} sx={{ mb: 2 }}>
+                    <Tab label={t("Details")} />
+                    <Tab label={t("Groups")} />
+                    {selected && <Tab label={t("Prices")} />}
+                    {selected && <Tab label={t("Contracts")} />}
+                  </Tabs>
 
+                  {tabIndex === 0 && (
+                    <Box>
+                      <TranslationFields translations={translations} setTranslations={setTranslations} />
 
-{selected && (
-                        <Tab eventKey="contracts" title={t('Contracts')}>
-                          <ProductContractPrices 
-                            product={selected} 
-                            onPriceAdded={() => {
-                              // Refresh product details if needed
-                              if (selected) {
-                                handleProductSelect(selected);
-                              }
-                            }}
-                            onPriceDeleted={() => {
-                              // Refresh product details if needed
-                              if (selected) {
-                                handleProductSelect(selected);
-                              }
-                            }}
-                          />
-                        </Tab>
-                      )}
-                    </Tabs>
+                      <TextField
+                        label={t("Part ID")}
+                        fullWidth
+                        value={selected ? selected.part_id : partId}
+                        onChange={(e) => setPartId(e.target.value)}
+                        disabled={!!selected}
+                        sx={{ my: 1 }}
+                      />
 
-                    <div className="mt-4">
-                      <Button
-                        variant="primary"
-                        onClick={handleSave}
-                        disabled={!translations.en && !translations.ar}
-                      >
-                        {selected ? t('Update') : t('Create')}
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </Card.Body>
-          </Card>
-        </div>
-      </div>
+                      <TextField
+                        label={t("Stock Quantity")}
+                        type="number"
+                        fullWidth
+                        value={stockQuantity}
+                        onChange={(e) => setStockQuantity(parseInt(e.target.value || "0", 10))}
+                        sx={{ my: 1 }}
+                      />
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{t('Confirm Delete')}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {t('Are you sure you want to delete this product?')}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            {t('Cancel')}
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            {t('Delete')}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+                      <TextField
+                        label={t("Price")}
+                        type="number"
+                        fullWidth
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        sx={{ my: 1 }}
+                      />
+
+                      <FormControl fullWidth sx={{ my: 1 }}>
+                        <InputLabel>{t("Availability")}</InputLabel>
+                        <Select value={availability} label={t("Availability")} onChange={(e) => setAvailability(e.target.value)}>
+                          <MenuItem value="M">{t("Market")}</MenuItem>
+                          <MenuItem value="S">{t("Stock")}</MenuItem>
+                        </Select>
+                      </FormControl>
+
+                      {renderImageGallery()}
+                    </Box>
+                  )}
+
+                  {tabIndex === 1 && (
+                    <Box>
+                      <GroupSelector
+                        groups={groups}
+                        selectedGroups={selectedGroups}
+                        onGroupSelect={(id) => {
+                          setSelectedGroups((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+                        }}
+                        selectedSubgroups={selectedSubgroups}
+                        onSubgroupSelect={(subId, groupId) => {
+                          const otherGroupSubgroups = selectedSubgroups.filter((id) => {
+                            const belongsToOtherGroup = groups.some((g) => g.id !== groupId && g.subgroups?.some((s) => s.id === id));
+                            return belongsToOtherGroup;
+                          });
+                          setSelectedSubgroups([...otherGroupSubgroups, subId]);
+                        }}
+                      />
+                    </Box>
+                  )}
+
+                  {tabIndex === 2 && selected && (
+                    <Box>
+                      <ProductPrices
+                        product={selected}
+                        onPriceAdded={() => handleProductSelect(selected)}
+                        onPriceDeleted={() => handleProductSelect(selected)}
+                      />
+                    </Box>
+                  )}
+
+                  {tabIndex === 3 && selected && (
+                    <Box>
+                      <ProductContractPrices
+                        product={selected}
+                        onPriceAdded={() => handleProductSelect(selected)}
+                        onPriceDeleted={() => handleProductSelect(selected)}
+                      />
+                    </Box>
+                  )}
+
+                  <Box sx={{ mt: 2 }}>
+                    <Button variant="contained" onClick={handleSave} disabled={!translations.en && !translations.ar}>
+                      {selected ? t("Update") : t("Create")}
+                    </Button>
+                  </Box>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Delete Dialog */}
+      <Dialog open={showDeleteDialog} onClose={() => setShowDeleteDialog(false)}>
+        <DialogTitle>{t("Confirm Delete")}</DialogTitle>
+        <DialogContent>{t("Are you sure you want to delete this product?")}</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowDeleteDialog(false)}>{t("Cancel")}</Button>
+          <Button color="error" onClick={confirmDelete}>{t("Delete")}</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
-} 
+}
