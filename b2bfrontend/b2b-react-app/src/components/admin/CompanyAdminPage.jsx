@@ -1,92 +1,124 @@
 import React, { useState, useEffect } from 'react';
-
 import {
-  Tabs,
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Alert,
-  Space,
+  Box,
   Typography,
-  Popconfirm,
-  message
-} from 'antd';
-import { EditOutlined } from '@ant-design/icons';
-import { formatPercentage, formatNumber, t } from "../../utils/translator";
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  IconButton,
+  Collapse,
+  Tabs,
+  Tab,
+  Stack,
+  Alert,
+  Snackbar,
+  CircularProgress,
+  Paper,
+  useTheme,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+
+import { formatPercentage, formatNumber, t, isRTL } from "../../utils/translator";
 import axiosInstance from '../axiosInstance';
 import Products from './Products';
-import { DeleteOutlined } from "@ant-design/icons";
-
-
-const { Title } = Typography;
 
 const CompanyAdminPage = () => {
   const [companies, setCompanies] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [form] = Form.useForm();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(false);
-  const [messageState, setMessageState] = useState({ type: '', content: '' });
-  const [selectedProducts, setSelectedProducts] = useState([]);
-  const [companyItems,setCompanyItems] = useState([]);
-  // Store branch data keyed by companyId
-  const [branches, setBranches] = useState({});
-  const [branchLoading, setBranchLoading] = useState({}); 
+  const [messageState, setMessageState] = useState({ open: false, severity: 'info', content: '' });
 
-  // Store contract items data keyed by branchId
-  const [contractItems, setContractItems] = useState({});
+  const [expandedCompanies, setExpandedCompanies] = useState({}); // { [companyId]: true }
+  const [branches, setBranches] = useState({}); // { [companyId]: [] }
+  const [branchLoading, setBranchLoading] = useState({});
+
+  const [contractItems, setContractItems] = useState({}); // { [branchId]: [] }
   const [contractItemsLoading, setContractItemsLoading] = useState({});
+
+  const [companyItems, setCompanyItems] = useState({}); // { [companyId]: [] }
   const [companyItemsLoading, setCompanyItemsLoading] = useState({});
 
-  const fetchCompanies = async () => {
-    try {
-      const response = await axiosInstance.get('/api/admin/companies/');
-      setCompanies(response.data.results);
-    } catch (error) {
-      setMessageState({ type: 'error', content: t('Failed to fetch companies') });
-    }
-  };
-  const renderOrderPageMessage = () => {
-    const rawHtml = t('ORDER_PAGE').replace('{id}', id || '');
-    return { __html: rawHtml };
-};
+  const [editingPrice, setEditingPrice] = useState({}); // { [productId]: true }
+  const [editingCompanyPrice, setEditingCompanyPrice] = useState({}); // by record.id
+  const [editingCompanyPriceFlat, setEditingCompanyPriceFlat] = useState({});
+
+  // Add product dialogs
+  const [addContractOpen, setAddContractOpen] = useState(false);
+  const [addCompanyOpen, setAddCompanyOpen] = useState(false);
+  const [currentBranchId, setCurrentBranchId] = useState(null);
+  const [currentCompanyId, setCurrentCompanyId] = useState(null);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  const handleEdit = (record) => {
-    setSelectedCompany(record);
-    form.setFieldsValue({
-      id: record.id,
-      name: record.name,
-      register_number: record.register_number,
-      credit: record.credit,
-      period: record.period,
-      address: record.address,
-    });
-    setIsModalVisible(true);
-  };
-
-  const handleModalOk = async () => {
+  const fetchCompanies = async () => {
     try {
-      const values = await form.validateFields();
       setLoading(true);
-      
-      await axiosInstance.patch(`/api/companies/${selectedCompany.id}/`, {
-        credit: values.credit,
-        period: values.period,
-      });
-      
-      setMessageState({ type: 'success', content: t('Company updated successfully') });
-      setIsModalVisible(false);
-      fetchCompanies();
+      const response = await axiosInstance.get('/api/admin/companies/');
+      setCompanies(response.data.results || []);
     } catch (error) {
-      setMessageState({ type: 'error', content: t('Failed to update company') });
+      showMessage('error', t('Failed to fetch companies'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const showMessage = (severity, content) => {
+    setMessageState({ open: true, severity, content });
+  };
+
+  const handleEdit = (company) => {
+    setSelectedCompany(company);
+    setEditForm({
+      id: company.id,
+      name: company.name,
+      register_number: company.register_number,
+      credit: company.credit,
+      period: company.period,
+      address: company.address,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    try {
+      setLoading(true);
+      await axiosInstance.patch(`/api/companies/${selectedCompany.id}/`, {
+        credit: editForm.credit,
+        period: editForm.period,
+      });
+      showMessage('success', t('Company updated successfully'));
+      setEditDialogOpen(false);
+      fetchCompanies();
+    } catch (error) {
+      showMessage('error', t('Failed to update company'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleExpandCompany = (companyId) => {
+    setExpandedCompanies(prev => ({ ...prev, [companyId]: !prev[companyId] }));
+    if (!branches[companyId]) {
+      fetchBranches(companyId);
+    }
+    if (!companyItems[companyId]) {
+      fetchCompanyItems(companyId);
     }
   };
 
@@ -96,7 +128,7 @@ const CompanyAdminPage = () => {
       const response = await axiosInstance.get(`/api/companies/${companyId}/branches/`);
       setBranches(prev => ({ ...prev, [companyId]: response.data }));
     } catch (error) {
-      setMessageState({ type: 'error', content: t('Failed to fetch branches') });
+      showMessage('error', t('Failed to fetch branches'));
     } finally {
       setBranchLoading(prev => ({ ...prev, [companyId]: false }));
     }
@@ -106,668 +138,531 @@ const CompanyAdminPage = () => {
     try {
       setContractItemsLoading(prev => ({ ...prev, [branchId]: true }));
       const response = await axiosInstance.get(`/api/branches/${branchId}/contract/items/`);
-      
-      // Attach branchId to each contract item
-      const itemsWithBranchId = response.data.map(item => ({
-        ...item,
-        branch_id: branchId,
-      }));
-  
+      const itemsWithBranchId = (response.data || []).map(item => ({ ...item, branch_id: branchId }));
       setContractItems(prev => ({ ...prev, [branchId]: itemsWithBranchId }));
     } catch (error) {
-      setMessageState({ type: 'error', content: t('Failed to fetch contract items') });
+      showMessage('error', t('Failed to fetch contract items'));
     } finally {
       setContractItemsLoading(prev => ({ ...prev, [branchId]: false }));
     }
   };
 
-  
   const fetchCompanyItems = async (companyId) => {
     try {
       setCompanyItemsLoading(prev => ({ ...prev, [companyId]: true }));
       const response = await axiosInstance.get(`/api/companies/products/${companyId}`);
-      
-      // Attach branchId to each contract item
-      const itemsWithCompanyId = response.data.results.map(item => ({
-        ...item,
-        company_id: companyId,
-      }));
-  
+      const itemsWithCompanyId = (response.data.results || []).map(item => ({ ...item, company_id: companyId }));
       setCompanyItems(prev => ({ ...prev, [companyId]: itemsWithCompanyId }));
     } catch (error) {
-      setMessageState({ type: 'error', content: t('Failed to fetch contract items') });
+      showMessage('error', t('Failed to fetch contract items'));
     } finally {
       setCompanyItemsLoading(prev => ({ ...prev, [companyId]: false }));
     }
   };
+
   const handleConfirmDelete = async (record) => {
     try {
+      const ok = window.confirm(t('Are you sure you want to delete this item ?'));
+      if (!ok) return;
       await axiosInstance.delete(`/api/admin/products/${record.product_id}/delete_price/?price_id=${record.id}`);
       setCompanyItems(prev => ({
         ...prev,
         [record.company_id]: prev[record.company_id].filter(item => item.product_id !== record.product_id)
       }));
-  
-      message.success('Product removed successfully');
+      showMessage('success', 'Product removed successfully');
     } catch (error) {
-      setMessageState({ 
-        type: 'danger', 
-        text: error.response?.data?.error || t('Error deleting price') 
-      });
-    } 
+      showMessage('error', error.response?.data?.error || t('Error deleting price'));
+    }
   };
-  
+
   const handleDeleteContractItem = async (record) => {
-    axiosInstance.delete(`/api/branches/${record.branch_id}/contract/items/${record.product_id}/`);
-    setContractItems(prev => ({
-      ...prev,
-      [record.branch_id]: prev[record.branch_id].filter(item => item.product_id !== record.product_id)
-    }));
-
-    message.success('Product removed successfully');
-  }  
-
-  const columns = [
-    {
-      title: t('companyname'),
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: t('companyregisternumber'),
-      dataIndex: 'register_number',
-      key: 'register_number',
-    },
-    {
-      title: t('company_credit'),
-      dataIndex: 'credit',
-      key: 'credit',
-    },
-    {
-      title: t('company_period'),
-      dataIndex: 'period',
-      key: 'period',
-    },
-    {
-      title: t('address'),
-      dataIndex: 'address',
-      key: 'address',
-    },
-    {
-      title: t('Actions'),
-      key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            {t('Edit')}
-          </Button>
-        </Space>
-      ),
-    },
-  ];
-
-  // Subtable columns for branches
-  const branchColumns = [
-    {
-      title: t('branch_name'),
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: t('address'),
-      dataIndex: 'address',
-      key: 'address',
-    },
-  ];
-
-  // Subtable columns for contract items
-// Track which cell is being edited
-const [editingPrice, setEditingPrice] = useState({}); // { [productId]: true/false }
-const [editingCompanyPrice, setEditingCompanyPrice] = useState({}); 
-const [editingCompanyPrice_discount, setEditingCompanyPrice_discount] = useState({}); 
-const handlePriceCompanyPriceChange = async (companyId,record, newPrice,percentage) => {
-  try {
-    // update client-side state first (optimistic update)
-
-    
-    
-if(percentage) {
-  setCompanyItems(prev => ({
-    ...prev,
-    [companyId]: prev[companyId].map(item =>
-      item.product_id === record.product_id ? { ...item, percentage_discount: newPrice ,
-        price:(100 -newPrice)*record.base_price/100 ,flat_discount:null} : item
-    ),
-  }));
-    // send update request to backend
-    const response =     await axiosInstance.post(`/api/admin/products/${record.product_id}/add_price/`, 
-        {
-        purchaser: companyId,
-        is_percentage: true,
-        discount_value: newPrice,
-        
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-    }
-    else {
-      setCompanyItems(prev => ({
+    try {
+      const ok = window.confirm(t('Are you sure you want to delete this item ?'));
+      if (!ok) return;
+      await axiosInstance.delete(`/api/branches/${record.branch_id}/contract/items/${record.product_id}/`);
+      setContractItems(prev => ({
         ...prev,
-        [companyId]: prev[companyId].map(item =>
-          item.product_id === record.product_id ? { ...item, percentage_discount: null ,
-            price:newPrice,flat_discount:newPrice } : item
-        ),
+        [record.branch_id]: prev[record.branch_id].filter(item => item.product_id !== record.product_id)
       }));
-      const response =     await axiosInstance.post(`/api/admin/products/${record.product_id}/add_price/`, 
-        {
-        purchaser: companyId,
-        is_percentage: false,
-        discount_value: newPrice,
-        
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
+      showMessage('success', 'Product removed successfully');
+    } catch (error) {
+      showMessage('error', t('Error deleting price'));
     }
-     
-    setMessageState({ type: 'success', content: t('Price updated successfully') });
-  } catch (error) {
-    setMessageState({ type: 'error', content: t('Failed to update price') });
-  } finally {
-    if(percentage) {
-    setEditingCompanyPrice(prev => ({ ...prev, [record.id]: false }));
-    }else {
-      setEditingCompanyPrice_discount(prev => ({ ...prev, [record.id]: false }));
-    }
-  }
-};
-const handlePriceChange = async (branchId, productId, newPrice) => {
-  try {
-    // update client-side state first (optimistic update)
-    setContractItems(prev => ({
-      ...prev,
-      [branchId]: prev[branchId].map(item =>
-        item.product_id === productId ? { ...item, price: newPrice } : item
-      ),
-    }));
-    
+  };
 
-    // send update request to backend
-    await axiosInstance.post(`/api/product/${productId}/branches/${branchId}/`, {
-      body: {
-        price: newPrice
+  const handlePriceCompanyPriceChange = async (companyId, record, newPrice, percentage) => {
+    try {
+      // optimistic update
+      if (percentage) {
+        setCompanyItems(prev => ({
+          ...prev,
+          [companyId]: prev[companyId].map(item =>
+            item.product_id === record.product_id ? { ...item, percentage_discount: newPrice, price: (100 - newPrice) * record.base_price / 100, flat_discount: null } : item
+          ),
+        }));
+        await axiosInstance.post(`/api/admin/products/${record.product_id}/add_price/`, {
+          purchaser: companyId,
+          is_percentage: true,
+          discount_value: newPrice,
+        }, { headers: { 'Content-Type': 'application/json' } });
+      } else {
+        setCompanyItems(prev => ({
+          ...prev,
+          [companyId]: prev[companyId].map(item =>
+            item.product_id === record.product_id ? { ...item, percentage_discount: null, price: newPrice, flat_discount: newPrice } : item
+          ),
+        }));
+        await axiosInstance.post(`/api/admin/products/${record.product_id}/add_price/`, {
+          purchaser: companyId,
+          is_percentage: false,
+          discount_value: newPrice,
+        }, { headers: { 'Content-Type': 'application/json' } });
       }
+      showMessage('success', t('Price updated successfully'));
+    } catch (error) {
+      showMessage('error', t('Failed to update price'));
+    } finally {
+      if (percentage) setEditingCompanyPrice(prev => ({ ...prev, [record.id]: false }));
+      else setEditingCompanyPriceFlat(prev => ({ ...prev, [record.id]: false }));
+    }
+  };
 
-    });
-
-    setMessageState({ type: 'success', content: t('Price updated successfully') });
-  } catch (error) {
-    setMessageState({ type: 'error', content: t('Failed to update price') });
-  } finally {
-    setEditingPrice(prev => ({ ...prev, [productId]: false }));
-  }
-};
-const productColumns =[  {
-  title: t('Product Name'),
-  dataIndex: 'product_name',
-  key: 'product_name',
-},
-{
-  title: t('Part ID'),
-  dataIndex: 'product_part_id',
-  key: 'product_part_id',
-},
-{
-  title: t('Percentage'),
-  dataIndex: 'percentage_discount',
-  key: 'percentage_discount',
-  render: (text, record) => {
-    const isEditing = editingCompanyPrice[record.id];
-
-    return isEditing ? (
-      <InputNumber
-        autoFocus
-        defaultValue={record.percentage_discount}
-        onPressEnter={(e) =>
-          handlePriceCompanyPriceChange(record.company_id, record,  e.target.value,true)
-        }
-        onBlur={(e) =>
-          handlePriceCompanyPriceChange(record.company_id, record,  e.target.value,true)
-        }
-        style={{ width: '100%' }}
-      />
-    ) : (
-      <div
-        style={{ cursor: 'pointer', color: '#1890ff' }}
-        onClick={() =>
-          setEditingCompanyPrice(prev => ({ ...prev, [record.id]: true }))
-        }
-      >
-      {formatPercentage(record.percentage_discount ? ( record.percentage_discount/100) : 0)}
-
-      </div>
-    );
-  },
-},
-{
-  title: t('Flat'),
-  dataIndex: 'flat_discount',
-  key: 'flat_discount',
-  render: (text, record) => {
-    const isEditing = editingCompanyPrice_discount[record.id];
-
-    return isEditing ? (
-      <InputNumber
-        autoFocus
-        defaultValue={record.flat_discount ? record.flat_discount : record.price}
-        onPressEnter={(e) =>
-         // handlePriceCompanyPriceChange(record.company_id, record,  e.target.value)
-         handlePriceCompanyPriceChange(record.company_id, record,  e.target.value,false)
-        }
-        onBlur={(e) =>
-          handlePriceCompanyPriceChange(record.company_id, record,  e.target.value,false)
-        }
-        style={{ width: '100%' }}
-      />
-    ) : (
-      <div
-        style={{ cursor: 'pointer', color: '#1890ff' }}
-        onClick={() =>
-          setEditingCompanyPrice_discount(prev => ({ ...prev, [record.id]: true }))
-        }
-      >
-      { record.flat_discount ? formatNumber(record.flat_discount,record.currency): "0.0"}
-
-      </div>
-    );
-  },
-
-},
-{
-  title: t('Price'),
-  dataIndex: 'price',
-  key: 'price',
-  render: (text, record) => {
-  return <div>{formatNumber(record.price,record.currency)}</div>
-  }
-},
-{
-  title: t('Actions'),
-  key: 'actions',
-  render: (_, record) => (
-    <Popconfirm
-      title={t('Are you sure you want to delete this item ?')}
-      okText={t("common.ok")}
-      cancelText={t('Cancel')}
-      onConfirm={() => handleConfirmDelete(record)}
-    >
-      <Button danger icon={<DeleteOutlined />} />
-    </Popconfirm>
-  ),
-},]
-const contractItemsColumns = [
-  {
-    title: t('Product Name'),
-    dataIndex: 'product_name',
-    key: 'product_name',
-  },
-  {
-    title: t('Part ID'),
-    dataIndex: 'product_part_id',
-    key: 'product_part_id',
-  },
-  {
-    title: t('Price'),
-    dataIndex: 'price',
-    key: 'price',
-    render: (text, record) => {
-      const isEditing = editingPrice[record.product_id];
-
-      return isEditing ? (
-        <InputNumber
-          autoFocus
-          defaultValue={record.price}
-          onPressEnter={(e) =>
-            handlePriceChange(record.branch_id, record.product_id, e.target.value)
-          }
-          onBlur={(e) =>
-            handlePriceChange(record.branch_id, record.product_id, e.target.value)
-          }
-          style={{ width: '100%' }}
-        />
-      ) : (
-        <div
-          style={{ cursor: 'pointer', color: '#1890ff' }}
-          onClick={() =>
-            setEditingPrice(prev => ({ ...prev, [record.product_id]: true }))
-          }
-        >
-          {formatNumber(record.price,record.currency)}
-        </div>
-      );
-    },
-  },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    render: (_, record) => (
-      <Popconfirm
-        title={t('Are you sure you want to delete this item ?')}
-        okText={t("common.ok")}
-        cancelText={t('Cancel')}
-        onConfirm={() => handleDeleteContractItem(record)}
-      >
-        <Button danger icon={<DeleteOutlined />} />
-      </Popconfirm>
-    ),
-  },
-];
-
-const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-const [isAddForCOmpanyModalVisible, setIsAddForCOmpanyModalVisible] = useState(false);
-const [currentBranchId, setCurrentBranchId] = useState(null);
-const [currentCompanyhId, setCurrentCompanyhId] = useState(null);
-
-const [addForm] = Form.useForm();
-
-const handleAddContract = (branchId) => {
-  setCurrentBranchId(branchId);
-
-  setIsAddModalVisible(true);
-};
-
-const handleAddProductToCOmpany = (companyId) => {
-  setCurrentCompanyhId(companyId);
-  setIsAddForCOmpanyModalVisible(true);
-}
-
-const handleAddContractSubmit = async () => {
-  try {
-    const values = await addForm.validateFields();
-    selectedProducts.forEach(async (product) => {
-      const response =     await axiosInstance.post(`/api/product/${product.id}/branches/${currentBranchId}/`, {
-        body: {
-          price: product.price
-        }
-  
+  const handlePriceChange = async (branchId, productId, newPrice) => {
+    try {
+      setContractItems(prev => ({
+        ...prev,
+        [branchId]: prev[branchId].map(item => item.product_id === productId ? { ...item, price: newPrice } : item)
+      }));
+      await axiosInstance.post(`/api/product/${productId}/branches/${branchId}/`, {
+        body: { price: newPrice }
       });
-      console.log(response);
-       // optimistic UI update
-    setContractItems(prev => ({
-      ...prev,
-      [currentBranchId]: [
-        ...(prev[currentBranchId] || []),
-        { product_id:product.id,product_name:product.name,part_id:product.part_id,price:product.price },
-      ],
-    }));
-    });
+      showMessage('success', t('Price updated successfully'));
+    } catch (error) {
+      showMessage('error', t('Failed to update price'));
+    } finally {
+      setEditingPrice(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+  const theme = useTheme();
+  const handleAddContract = (branchId) => {
+    setCurrentBranchId(branchId);
+    setAddContractOpen(true);
+  };
 
+  const handleAddProductToCompany = (companyId) => {
+    setCurrentCompanyId(companyId);
+    setAddCompanyOpen(true);
+  };
+  const align = isRTL ? 'right' : 'left';
 
+  const handleAddContractSubmit = async () => {
+    try {
+      // For each selected product, post and optimistically update
+      await Promise.all(selectedProducts.map(async (product) => {
+        const response = await axiosInstance.post(`/api/product/${product.id}/branches/${currentBranchId}/`, {
+          body: { price: product.price }
+        });
+        setContractItems(prev => ({
+          ...prev,
+          [currentBranchId]: [ ...(prev[currentBranchId] || []), { product_id: product.id, product_name: product.name, product_part_id: product.part_id, price: product.price } ]
+        }));
+        return response;
+      }));
+      showMessage('success', t('Contract item added successfully'));
+      setAddContractOpen(false);
+      setSelectedProducts([]);
+    } catch (error) {
+      showMessage('error', t('Failed to add contract item'));
+    }
+  };
 
-   
-
-    setMessageState({ type: 'success', content: t('Contract item added successfully') });
-    setIsAddModalVisible(false);
-  } catch (error) {
-    setMessageState({ type: 'error', content: t('Failed to add contract item') });
-  }
-};
-
-
-
-const handleAddCompanyProductSubmit = async () => {
-  try {
-    const values = await addForm.validateFields();
-    selectedProducts.forEach(async (product) => {
-      const response =     await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, 
-        {
-        purchaser: currentCompanyhId,
-        is_percentage: true,
-        discount_value: 25,
-        
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-     
-       // optimistic UI update
-    setCompanyItems(prev => ({
-      ...prev,
-      [currentCompanyhId]: [
-        ...(prev[currentCompanyhId] || []),
-        { product_id:product.id,
-          product_name:product.name,
-          product_part_id:product.part_id,
-          percentage_discount:25.00,
-          id:response.data.id,
-          price:response.data.price,
-          discount_value:0.0, },
-      ],
-    }));
-    });
-
-
-
-   
-
-    setMessageState({ type: 'success', content: t('Contract item added successfully') });
-    setIsAddForCOmpanyModalVisible(false);
-  } catch (error) {
-    setMessageState({ type: 'error', content: t('Failed to add contract item') });
-  }
-};
+  const handleAddCompanyProductSubmit = async () => {
+    try {
+      await Promise.all(selectedProducts.map(async (product) => {
+        const response = await axiosInstance.post(`/api/admin/products/${product.id}/add_price/`, {
+          purchaser: currentCompanyId,
+          is_percentage: true,
+          discount_value: 25,
+        }, { headers: { 'Content-Type': 'application/json' } });
+        setCompanyItems(prev => ({
+          ...prev,
+          [currentCompanyId]: [ ...(prev[currentCompanyId] || []), { product_id: product.id, product_name: product.name, product_part_id: product.part_id, percentage_discount: 25.00, id: response.data.id, price: response.data.price, discount_value: 0.0 } ]
+        }));
+        return response;
+      }));
+      showMessage('success', t('Contract item added successfully'));
+      setAddCompanyOpen(false);
+      setSelectedProducts([]);
+    } catch (error) {
+      showMessage('error', t('Failed to add contract item'));
+    }
+  };
 
   return (
-    <div style={{ padding: '24px' }}>
-      <Title level={2}>{t("Companies Management")}</Title>
-      
-      {messageState.content && (
-        <Alert
-          message={messageState.content}
-          type={messageState.type}
-          showIcon
-          style={{ marginBottom: '16px' }}
-          closable
-          onClose={() => setMessageState({ type: '', content: '' })}
-        />
+    <Box  sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}>
+      <Typography  variant="h4"
+        sx={{
+          mb: 3,
+          fontWeight: 700,
+          textAlign: isRTL() ? "right" : "left",
+          color: theme.palette.text.primary,
+        }} >{t('Companies Management')}</Typography>
+
+      {messageState.open && (
+        <Snackbar
+          open={messageState.open}
+          autoHideDuration={5000}
+          onClose={() => setMessageState(prev => ({ ...prev, open: false }))}
+        >
+          <Alert severity={messageState.severity} onClose={() => setMessageState(prev => ({ ...prev, open: false }))}>{messageState.content}</Alert>
+        </Snackbar>
       )}
 
-<Table
-      columns={columns}
-      dataSource={companies}
-      rowKey="id"
-      loading={loading}
-      expandable={{
-        expandedRowRender: (record) => (
-          <div style={{ padding: "12px 24px" }}>
-            <Tabs
+      <Paper elevation={2} sx={{ p: 2 }}>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "primary.light" }}>
+                <TableCell  align={align} />
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('companyname')}</TableCell>
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('companyregisternumber')}</TableCell>
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('company_credit')}</TableCell>
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('company_period')}</TableCell>
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('address')}</TableCell>
+                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Actions')}</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {companies.map((company,index) => (
+                <React.Fragment key={company.id}>
+                  <TableRow  sx={{
+                    cursor: "pointer",
+                    backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                  }}>
+                    <TableCell sx={{ width: 48 }}>
+                      <IconButton size="small" onClick={() => toggleExpandCompany(company.id)}>
+                        {expandedCompanies[company.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </IconButton>
+                    </TableCell>
+                    <TableCell align={align}>{company.name}</TableCell>
+                    <TableCell align={align}>{company.register_number}</TableCell>
+                    <TableCell align={align}>{formatNumber( company.credit,'SAR')}</TableCell>
+                    <TableCell align={align}>{formatNumber( company.period,null)}</TableCell>
+                    <TableCell align={align}>{company.address}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1}>
+                        <Button variant="contained" startIcon={<EditIcon />} onClick={() => handleEdit(company)}>{t('Edit')}</Button>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                      <Collapse in={!!expandedCompanies[company.id]} timeout="auto" unmountOnExit>
+                        <Box sx={{ py: 2 }}>
+{/* --- Tabs for Branches and Products --- */}
+<Box sx={{ mt: 1 }}>
+  <Tabs
+    value={expandedCompanies[company.id]?.tab || 0}
+    onChange={(e, newValue) =>
+      setExpandedCompanies(prev => ({
+        ...prev,
+        [company.id]: { ...(prev[company.id] || {}), tab: newValue }
+      }))
+    }
+    aria-label="company tabs"
+  >
+    <Tab label={t('Branches')} />
+    <Tab label={t('Products')} />
+  </Tabs>
+
+  {/* --- Branches Tab --- */}
+  {((expandedCompanies[company.id]?.tab || 0) === 0) && (
+    <Box sx={{ mt: 2 }}>
+      {branchLoading[company.id] ? (
+        <CircularProgress />
+      ) : (
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "primary.light" }}>
+            <TableCell />
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('branch_name')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('address')}</TableCell>
             
-              items={[
-                {
-                  key: "branches",
-                  label: t("Branches"),
-                  children: (
-                    <Table
-                      columns={branchColumns}
-                      dataSource={branches[record.id] || []}
-                      rowKey="id"
-                      loading={branchLoading[record.id]}
-                      pagination={false}
-                      size="small"
-                      expandable={{
-                        expandedRowRender: (branchRecord) => (
-                          <div>
-                         
-                            <Table
-                              columns={contractItemsColumns}
-                              dataSource={contractItems[branchRecord.id] || []}
-                              rowKey="product_id"
-                              loading={contractItemsLoading[branchRecord.id]}
-                              pagination={false}
-                              size="small"
-                            />
-               
-               <div style={{ textAlign: "center", marginTop: 20 }}>
-          <Button
-            style={{
-              backgroundColor: "#1890ff",  // Ant Design default blue
-              color: "#fff",
-              border: "none",
-              marginTop: 20,
-            }}
-            onClick={() => handleAddContract(branchRecord.id)}
-          >
-             {t("Add Contract Item")}
-          </Button>
-        </div>
-        
-                                 </div>
-                        ),
-                
-                        onExpand: (expanded, branchRecord) => {
-                          console.log(branchRecord.id);
-                          if (expanded && !contractItems[branchRecord.id]) {
-                            fetchContractItems(branchRecord.id);
-                          }
-                        },
-                      }}
-                    />
-                  ),
-                },
-                {
-                  key: "products",
-                  label: t("Products"),
-                  children: (
-                    <>
-                      <Table
-                        columns={productColumns}
-                       dataSource={companyItems[record.id] || []}
-                        rowKey="id"
-                        loading={companyItemsLoading[record.id]}
-                        pagination={false}
-                        size="small"
-                      />
-                      <div style={{ textAlign: "center", marginTop: 20 }}>
-                        <Button
-                          type="primary"
-                          onClick={() => handleAddProductToCOmpany(record.id)}
-                        >
-                          {t("Add Product")}
-                        </Button>
-                      </div>
-                    </>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        ),
-        onExpand: (expanded, record) => {
-          // Default fetch for first tab when expanded
-          if (expanded && !branches[record.id]) {
-            fetchBranches(record.id);
-          }
-          if(expanded && !companyItems[record.id]) {
-            fetchCompanyItems(record.id);
-          }
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(branches[company.id] || []).map((branch, index) => (
+              <React.Fragment key={branch.id}>
+                <TableRow
+                  sx={{
+                    cursor: "pointer",
+                    backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                  }}
+                >
+                    <TableCell>
+  <IconButton
+    size="small"
+    onClick={() => {
+      setExpandedCompanies(prev => ({
+        ...prev,
+        [company.id]: {
+          ...(prev[company.id] || {}),
+          expandedBranchId:
+            prev[company.id]?.expandedBranchId === branch.id ? null : branch.id,
         },
-        
-      }}
-    />
-  
-      
-   
+      }));
+      if (!contractItems[branch.id]) fetchContractItems(branch.id);
+    }}
+  >
+    {expandedCompanies[company.id]?.expandedBranchId === branch.id ? (
+      <ExpandLessIcon />
+    ) : (
+      <ExpandMoreIcon />
+    )}
+  </IconButton>
+</TableCell>
+                  <TableCell align={align}>{branch.name}</TableCell>
+                  <TableCell align={align}>{branch.address}</TableCell>
+                
 
-      <Modal
-        title={t("Edit")}
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={() => setIsModalVisible(false)}
-        confirmLoading={loading}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-        >
-          <Form.Item
-            name="name"
-            label={t("company_name")}
-          >
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item
-            name="register_number"
-            label={t("company_register_number")}
-          >
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item
-            name="credit"
-            label={t("credit")}
-            rules={[{ required: true, message: t('Please input credit!') }]}
-          >
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-          
-          <Form.Item
-            name="period"
-            label={t("period")}
-            rules={[{ required: true, message: t('Please input period!') }]}
-          >
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-          
-          <Form.Item
-            name="address"
-            label={t("address")}
-          >
-            <Input disabled />
-          </Form.Item>
-        </Form>
-    
-      </Modal>
-      <Modal
-  title={t("Add Contract Item")}
-  open={isAddModalVisible}
-  onOk={handleAddContractSubmit}
-  onCancel={() => setIsAddModalVisible(false)}
-  okText={t("common.ok")}
-  cancelText={t("common.cancel")}
+
+                </TableRow>
+
+                <TableRow>
+                  <TableCell colSpan={3} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                  <Collapse
+  in={expandedCompanies[company.id]?.expandedBranchId === branch.id}
+  timeout="auto"
+  unmountOnExit
 >
-  
-    <Products reference_id={currentBranchId} reference_key={"branch_id"}  onSelectionChange={setSelectedProducts} />
 
-  
-</Modal>
+                      <Box sx={{ m: 2 }}>
+                        {contractItemsLoading[branch.id] ? (
+                          <CircularProgress />
+                        ) : (
+                          <Table size="small">
+                            <TableHead sx={{ backgroundColor: "primary.light" }}>
+                              <TableRow>
+                                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Product Name')}</TableCell>
+                                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Part ID')}</TableCell>
+                                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Price')}</TableCell>
+                                <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Actions')}</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {(contractItems[branch.id] || []).map((item, index) => (
+                                <TableRow
+                                  sx={{
+                                    cursor: "pointer",
+                                    backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                                  }}
+                                  key={item.product_id}
+                                >
+                                  <TableCell align={align}>{item.product_name}</TableCell>
+                                  <TableCell align={align}>{item.product_part_id}</TableCell>
+                                  <TableCell  align={align}>
+                                    {editingPrice[item.product_id] ? (
+                                      <TextField
+                                        type="number"
+                                        defaultValue={item.price}
+                                        onBlur={(e) => handlePriceChange(item.branch_id, item.product_id, Number(e.target.value))}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') handlePriceChange(item.branch_id, item.product_id, Number(e.target.value));
+                                        }}
+                                        size="small"
+                                      />
+                                    ) : (
+                                      <Box
+                                        sx={{ cursor: 'pointer', color: 'primary.main' }}
+                                        onClick={() => setEditingPrice(prev => ({ ...prev, [item.product_id]: true }))}
+                                      >
+                                        {formatNumber(item.price, item.currency)}
+                                      </Box>
+                                    )}
+                                  </TableCell>
+                                  <TableCell  align={align}>
+                                    <IconButton color="error" onClick={() => handleDeleteContractItem(item)}>
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        )}
 
+                        {/* ✅ Moved button INSIDE branch tab only */}
+                        <Box sx={{ textAlign: 'center', mt: 2 }}>
+                          <Button variant="contained" onClick={() => handleAddContract(branch.id)}>
+                            {t('Add Contract Item')}
+                          </Button>
+                        </Box>
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </Box>
+  )}
 
-<Modal
-  title={t("Add Company Item")}
-  open={isAddForCOmpanyModalVisible}
-  onOk={handleAddCompanyProductSubmit}
-  onCancel={() => setIsAddForCOmpanyModalVisible(false)}
-  okText={t("common.ok")}
-  cancelText={t("common.cancel")}
->
-  
-    <Products reference_id={currentCompanyhId} reference_key={"company_id"}  onSelectionChange={setSelectedProducts} />
+  {/* --- Products Tab --- */}
+  {((expandedCompanies[company.id]?.tab || 0) === 1) && (
+    <Box sx={{ mt: 3 }}>
+      {companyItemsLoading[company.id] ? (
+        <CircularProgress />
+      ) : (
+        <Table size="small">
+          <TableHead  sx={{ backgroundColor: "primary.light" }}>
+            <TableRow>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Product Name')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Part ID')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Percentage')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Flat')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Price')}</TableCell>
+              <TableCell  align={align} sx={{ color: "white", fontWeight: 600 }}>{t('Actions')}</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {(companyItems[company.id] || []).map((record,index) => (
+              <TableRow key={record.id || record.product_id}   sx={{
+                cursor: "pointer",
+                backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+              }}>
+                <TableCell  align={align}>{record.product_name}</TableCell>
+                <TableCell  align={align}>{record.product_part_id}</TableCell>
+                <TableCell  align={align}>
+                  {editingCompanyPrice[record.id] ? (
+                    <TextField
+                      type="number"
+                      defaultValue={record.percentage_discount}
+                      onBlur={(e) => handlePriceCompanyPriceChange(record.company_id, record, Number(e.target.value), true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handlePriceCompanyPriceChange(record.company_id, record, Number(e.target.value), true);
+                      }}
+                      size="small"
+                    />
+                  ) : (
+                    <Box
+                      sx={{ cursor: 'pointer', color: 'primary.main' }}
+                      onClick={() => setEditingCompanyPrice(prev => ({ ...prev, [record.id]: true }))}
+                    >
+                      {formatPercentage(record.percentage_discount ? (record.percentage_discount / 100) : 0)}
+                    </Box>
+                  )}
+                </TableCell>
+                <TableCell  align={align}>
+                  {editingCompanyPriceFlat[record.id] ? (
+                    <TextField
+                      type="number"
+                      defaultValue={record.flat_discount ? record.flat_discount : record.price}
+                      onBlur={(e) => handlePriceCompanyPriceChange(record.company_id, record, Number(e.target.value), false)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handlePriceCompanyPriceChange(record.company_id, record, Number(e.target.value), false);
+                      }}
+                      size="small"
+                    />
+                  ) : (
+                    <Box
+                      sx={{ cursor: 'pointer', color: 'primary.main' }}
+                      onClick={() => setEditingCompanyPriceFlat(prev => ({ ...prev, [record.id]: true }))}
+                    >
+                      { formatNumber(record.flat_discount ? record.flat_discount : 0.0, record.currency) }
+                    </Box>
+                  )}
+                </TableCell>
+                <TableCell  align={align}>{formatNumber(record.price, record.currency)}</TableCell>
+                <TableCell>
+                  <IconButton color="error" onClick={() => handleConfirmDelete(record)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
-  
-</Modal>
+      <Box sx={{ textAlign: 'center', mt: 2 }}>
+        <Button variant="contained" onClick={() => handleAddProductToCompany(company.id)}>
+          {t('Add Product')}
+        </Button>
+      </Box>
+    </Box>
+  )}
+</Box>
+                         
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Paper>
 
-    </div>
-    
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>{t('Edit')}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField label={t('company_name')} value={editForm.name || ''} disabled />
+            <TextField label={t('company_register_number')} value={editForm.register_number || ''} disabled />
+            <TextField label={t('credit')} type="number" value={editForm.credit ?? ''} onChange={(e) => setEditForm(prev => ({ ...prev, credit: Number(e.target.value) }))} />
+            <TextField label={t('period')} type="number" value={editForm.period ?? ''} onChange={(e) => setEditForm(prev => ({ ...prev, period: Number(e.target.value) }))} />
+            <TextField label={t('address')} value={editForm.address || ''} disabled />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handleEditSave} disabled={loading}>{loading ? <CircularProgress size={20} /> : t('common.ok')}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Contract Item Dialog */}
+      <Dialog open={addContractOpen} onClose={() => setAddContractOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>{t('Add Contract Item')}</DialogTitle>
+        <DialogContent>
+          <Products reference_id={currentBranchId} reference_key={"branch_id"} onSelectionChange={setSelectedProducts} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddContractOpen(false)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handleAddContractSubmit}>{t('common.ok')}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Company Item Dialog */}
+      <Dialog open={addCompanyOpen} onClose={() => setAddCompanyOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>{t('Add Company Item')}</DialogTitle>
+        <DialogContent>
+          <Products reference_id={currentCompanyId} reference_key={"company_id"} onSelectionChange={setSelectedProducts} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddCompanyOpen(false)}>{t('common.cancel')}</Button>
+          <Button variant="contained" onClick={handleAddCompanyProductSubmit}>{t('common.ok')}</Button>
+        </DialogActions>
+      </Dialog>
+
+    </Box>
   );
 };
 
