@@ -253,7 +253,7 @@ const CompanyAdminPage = () => {
     setCurrentCompanyId(companyId);
     setAddCompanyOpen(true);
   };
-  const align = isRTL ? 'right' : 'left';
+  const align = isRTL() ? 'right' : 'left';
 
   const handleAddContractSubmit = async () => {
     try {
