@@ -4,7 +4,7 @@ import {
   Table,
   TableHead,
   TableBody,
-  TableRow,
+  TableRow, 
   TableCell,
   TextField,
   Button,
@@ -200,18 +200,11 @@ const Branches = () => {
           <TableHead>
             <TableRow
             
-            sx={{
-              backgroundColor: "#1976d2", // Header background color
-              "& th": {
-                color: "#fff", // Header text color
-                fontWeight: "bold",
-                textAlign: "left",
-              },
-            }}>
-              <TableCell>{t("branch_name")}</TableCell>
-              <TableCell>{t("address")}</TableCell>
-              <TableCell>{t("phone")}</TableCell>
-              <TableCell align="center">{t("Actions")}</TableCell>
+            sx={{ backgroundColor: "primary.light" }}>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("branch_name")}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("address")}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }}>{t("phone")}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }} align="center">{t("Actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -221,12 +214,8 @@ const Branches = () => {
                 hover
                 sx={{
                   cursor: "pointer",
-                  backgroundColor:
-                    index % 2 === 0 ? "#f9f9f9" : "#e3f2fd", // Alternate row colors
-                  "&:hover": {
-                    backgroundColor: "#bbdefb", // Row hover color
-                  },
-                }}
+                  backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                }} 
                 onClick={() => handleRowClick(branch)}
               >
                 <TableCell>{branch.name}</TableCell>
