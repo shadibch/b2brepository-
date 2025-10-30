@@ -313,5 +313,7 @@
     "Group Filters" : "مرشحات المجموعة",
     "Filter": "تصفية ",
     "Order Details" : "تفاصيل الطلب",
-    "No results found" : "لم يتم العثور على نتائج"
+    "No results found" : "لم يتم العثور على نتائج",
+    "Category Name (AR)" : "اسم الفئة",
+    "Select a category to edit or right-click the tree to create." : ".حدد فئة لتحريرها أو انقر بزر الماوس الأيمن على الشجرة لإنشائها"
 }

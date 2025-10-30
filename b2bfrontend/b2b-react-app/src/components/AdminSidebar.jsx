@@ -193,12 +193,13 @@ const AdminSidebar = ({ setActivePage }) => {
             </AccordionSummary>
             <AccordionDetails>
               <List>
+              <ListItemButton component={Link} to="/admin/category-management" onClick={() => setActivePage("/admin/category-management")}>
+                  <ListItemText primary={t("categories")} />
+                </ListItemButton>
                 <ListItemButton component={Link} to="/admin/group-management" onClick={() => setActivePage("/admin/group-management")}>
                   <ListItemText primary={t("Groups")} />
                 </ListItemButton>
-                <ListItemButton component={Link} to="/admin/category-management" onClick={() => setActivePage("/admin/category-management")}>
-                  <ListItemText primary={t("categories")} />
-                </ListItemButton>
+              
                 <ListItemButton component={Link} to="/admin/item-management" onClick={() => setActivePage("/admin/item-management")}>
                   <ListItemText primary={t("Products Management")} />
                 </ListItemButton>

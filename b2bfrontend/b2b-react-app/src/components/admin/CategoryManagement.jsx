@@ -1,239 +1,353 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Form, Button, Card, Tabs, Tab, Alert, Table, Pagination, Image } from "react-bootstrap";
 import axiosInstance from "../axiosInstance";
-import "./styles.css";
-import "./shared.css";
+import {
+  Box,
+  Card,
+  Tabs,
+  Tab,
+  Alert as MuiAlert,
+  Snackbar,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
+  TablePagination,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  Menu,
+  MenuItem,
+  CircularProgress,
+  Paper,
+  Avatar,
+  Stack,
+  useTheme,
+} from "@mui/material";
+import { ExpandMore, ChevronRight, MoreVert } from "@mui/icons-material";
+import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import {
   t,
-  switchLanguage,
   isRTL,
-  getCurrentLanguage,
-  formatNumber,
-  formatDate,
-  formatLocal
 } from "../../utils/translator";
-import ReactPaginate from "react-paginate";
 
-const GroupsTable = ({ groups, selectedGroups, onToggleGroup, currentPage, totalPages, onPageChange }) => {
-  const [expandedGroups, setExpandedGroups] = useState({});
 
-  const toggleExpand = (groupId) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
-  };
+
+const ThemedTablePagination = ({
+  count,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+  isRTL,
+}) => {
+  const theme = useTheme();
 
   return (
-    <div>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th style={{ width: "50px" }}>{t('Select')}</th>
-            <th>{t('Group')}</th>
-            <th style={{ width: "50px" }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {groups.map((group) => (
-            <React.Fragment key={group.id}>
-              <tr>
-                <td>
-                  <Form.Check
-                    type="checkbox"
-                    checked={selectedGroups.includes(group.id)}
-                    onChange={() => onToggleGroup(group.id)}
-                  />
-                </td>
-                <td>{group.name}</td>
-                <td>
-                  {group.subgroups?.length > 0 && (
-                    <button 
-                      className="expand-button"
-                      onClick={() => toggleExpand(group.id)}
-                    >
-                      {expandedGroups[group.id] ? "−" : "+"}
-                    </button>
-                  )}
-                </td>
-              </tr>
-              {expandedGroups[group.id] && (
-                <tr>
-                  <td colSpan="3">
-                    <div className="nested-table-container">
-                      <table className="nested-table">
-                        <thead>
-                          <tr>
-                            <th style={{ width: "50px" }}></th>
-                            <th>{t('subgroup')}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {group.subgroups?.map((subgroup) => (
-                            <tr key={subgroup.id}>
-                              <td></td>
-                              <td>{subgroup.name}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-      {totalPages > 1 && (
-        <div className="admin-pagination">
-          <Pagination>
-            <Pagination.First 
-              onClick={() => onPageChange(1)} 
-              disabled={currentPage === 1}
-            />
-            <Pagination.Prev 
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            />
-            {[...Array(totalPages)].map((_, idx) => (
-              <Pagination.Item
-                key={idx + 1}
-                active={idx + 1 === currentPage}
-                onClick={() => onPageChange(idx + 1)}
-              >
-                {idx + 1}
-              </Pagination.Item>
-            ))}
-            <Pagination.Next 
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            />
-            <Pagination.Last 
-              onClick={() => onPageChange(totalPages)}
-              disabled={currentPage === totalPages}
-            />
-          </Pagination>
-        </div>
-      )}
-    </div>
+    <Box
+      sx={{
+        bgcolor: theme.palette.background.paper,
+        borderTop: `1px solid ${theme.palette.divider}`,
+        direction: isRTL ? "rtl" : "ltr",
+      }}
+    >
+      <TablePagination
+        component="div"
+        count={count}
+        page={page - 1}
+        onPageChange={(e, newPage) => onPageChange(newPage + 1)}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={(e) =>
+          onRowsPerPageChange(parseInt(e.target.value, 10))
+        }
+        sx={{
+          "& .MuiTablePagination-toolbar": {
+            bgcolor: theme.palette.mode === "dark" ? "#1e1e1e" : "#fafafa",
+            color: theme.palette.text.primary,
+            fontSize: theme.typography.body2.fontSize,
+            px: 2,
+            borderRadius: 1,
+          },
+          "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+            {
+              fontWeight: 500,
+              color: theme.palette.text.secondary,
+            },
+          "& .MuiTablePagination-actions": {
+            color: theme.palette.primary.main,
+          },
+          "& .MuiTablePagination-select": {
+            borderRadius: "8px",
+            border: `1px solid ${theme.palette.divider}`,
+            padding: "2px 8px",
+            bgcolor:
+              theme.palette.mode === "dark"
+                ? theme.palette.background.default
+                : "#fff",
+          },
+        }}
+      />
+    </Box>
   );
 };
 
-const FileInput = ({ onChange }) => {
-  const [fileName, setFileName] = useState('');
-  const fileInputRef = useRef(null);
+// Simple FileInput component using MUI
+const FileInput = ({ onChange, fileName, onRemove }) => {
+  const fileRef = useRef(null);
+  return (
+    <Box display="flex" alignItems="center" gap={1}>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={onChange}
+      />
+      <Button variant="outlined" onClick={() => fileRef.current.click()}>
+        {fileName || t("Choose File")}
+      </Button>
+      {fileName && (
+        <Button color="error" onClick={onRemove}>
+          {t('Remove')}
+        </Button>
+      )}
+    </Box>
+  );
+};
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFileName(file.name);
-    } else {
-      setFileName('');
-    }
-    onChange(e);
-  };
+const GroupsTable = ({ groups, selectedGroups, onToggleGroup, page, rowsPerPage, onChangePage,
+   onChangeRowsPerPage ,totalCount = 0}) => {
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const toggleExpand = (groupId) => setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  const align = isRTL() ? 'right' : 'left';
 
   return (
-    <div className="custom-file-input">
-      <Button 
-        variant="outline-secondary" 
-        onClick={() => fileInputRef.current.click()}
-        className="file-select-button"
-      >
-        {fileName || t('Choose File')}
-      </Button>
-      <Form.Control
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        style={{ display: 'none' }}
-        aria-label={t('Choose File')}
+    <Paper variant="outlined">
+      <TableContainer>
+        <Table size="small">
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "primary.light" }}>
+              <TableCell sx={{ color: "white", fontWeight: 600 }} align={align}>{t('Select')}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }} align={align}>{t('Group')}</TableCell>
+              <TableCell  sx={{ color: "white", fontWeight: 600 }} align={align}></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {groups.map((group,index) => (
+              <React.Fragment key={group.id}>
+                <TableRow  sx={{
+                    cursor: "pointer",
+                    backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                  }} hover>
+                  <TableCell align={align} width={60}>
+                    <input
+                      type="checkbox"
+                      checked={selectedGroups.includes(group.id)}
+                      onChange={() => onToggleGroup(group.id)}
+                    />
+                  </TableCell>
+                  <TableCell    align={align}>{group.name}</TableCell>
+                  <TableCell align={align} width={80}>
+                    {group.subgroups?.length > 0 && (
+                      <Button size="small" onClick={() => toggleExpand(group.id)}>
+                        {expandedGroups[group.id] ? '−' : '+'}
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+                {expandedGroups[group.id] && (
+                  <TableRow>
+                    <TableCell colSpan={3}>
+                      <Table size="small">
+                        <TableBody>
+                          {group.subgroups?.map((sg,index) => (
+                            <TableRow    sx={{
+                              cursor: "pointer",
+                              backgroundColor: index % 2 === 0 ? "background.paper" : "action.hover",
+                            }} key={sg.id}>
+                              <TableCell align={align} />
+                              <TableCell align={align}>{sg.name}</TableCell>
+                              <TableCell />
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <ThemedTablePagination
+       
+        count={totalCount}
+        page={page - 1}
+        onPageChange={(e, newPage) => onChangePage(newPage + 1)}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={(e) => onChangeRowsPerPage(parseInt(e.target.value, 10))}
       />
-    </div>
+    </Paper>
   );
 };
 
 export default function CategoryManager() {
+  const theme = useTheme();
   const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
   const [selected, setSelected] = useState(null);
-  const [expanded, setExpanded] = useState({});
-  const [formState, setFormState] = useState({
-    en: { name: "" },
-    ar: { name: "" }
-  });
+  const [formState, setFormState] = useState({ en: { name: '' }, ar: { name: '' } });
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const [contextMenu, setContextMenu] = useState(null);
-  const [contextMenuTimer, setContextMenuTimer] = useState(null);
-  const [parentId, setParentId] = useState(null);
   const [message, setMessage] = useState(null);
+
+  // pagination for groups
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const languages = ["ar", "en"];
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // file handling
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await axiosInstance.get("/api/admin/categories/");
-      const dataWithRoot = [
-        { id: null, label: t("Root"), children: res.data }
-      ];
-      setCategories(dataWithRoot);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setMessage({ type: "danger", text: t("Error fetching categories") });
-    }
-  };
+  // context menu for tree
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [menuNode, setMenuNode] = useState(null);
 
-  const fetchGroups = async () => {
-    try {
-      const res = await axiosInstance.get(`/api/admin/product-groups/?page=${currentPage}`);
-      setGroups(res.data.results);
-      setTotalPages(Math.ceil(res.data.count / 10));
-    } catch (error) {
-      console.error("Error fetching groups:", error);
-      setMessage({ type: "danger", text: t("Error fetching groups") });
-    }
-  };
+  const align = isRTL() ? 'right' : 'left';
 
   useEffect(() => {
     fetchCategories();
     fetchGroups();
   }, [currentPage]);
 
-  useEffect(() => {
-    if (selected) {
-      const initialState = {
-        en: { name: "" },
-        ar: { name: "" }
-      };
-      
-      if (selected.translations) {
-        Object.entries(selected.translations).forEach(([lang, translation]) => {
-          initialState[lang] = { name: translation.name || "" };
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const res = await axiosInstance.get('/api/admin/categories/');
+      // format to RichTreeView items
+      const formatted = [{ id: 'root', label: t('Root'), children: formatTree(res.data) }];
+      setCategories(formatted);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: t('Error fetching categories') });
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const formatTree = (nodes) => (
+    nodes.map(n => ({ id: String(n.id || `node-${Math.random()}`), label: n.label || n.name || n.title || '', children: n.children ? formatTree(n.children) : [] }))
+  );
+
+  const fetchGroups = async () => {
+    try {
+    
+      const res = await axiosInstance.get(`/api/admin/product-groups/?page=${currentPage}`);
+      console.log(res.data.results);
+      setGroups(res.data.results || []);
+
+      setTotalPages(Math.ceil(res.data.count / rowsPerPage) || 1);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: t('Error fetching groups') });
+    }
+  };
+
+  const handleTreeSelect = async (event, itemId) => {
+    // find item by id from raw categories tree
+    // Raw categories are in categories[0].children
+    const node = findNodeById(categories, itemId);
+    if (!node) return;
+    // if id is 'root', clear selected
+    if (node.id === 'root') {
+      setSelected(null);
+      setFormState({ en: { name: '' }, ar: { name: '' } });
+      setSelectedGroups([]);
+      setPreviewUrl(null);
+      setFile(null);
+      return;
+    }
+
+    // try to parse original id back to number if possible
+    const originalId = node.id.startsWith('node-') ? null : Number(node.id);
+    if (originalId == null) {
+      // fallback: we don't have direct mapping; just select node minimal
+      setSelected({ id: node.id, translations: {}, groups: [], parent: null });
+      return;
+    }
+
+    try {
+      const res = await axiosInstance.get(`/api/admin/category/${originalId}`);
+      setSelected(res.data);
+      // set form state based on translations
+      const initialState = { en: { name: '' }, ar: { name: '' } };
+      if (res.data.translations) {
+        Object.entries(res.data.translations).forEach(([lang, translation]) => {
+          initialState[lang] = { name: translation.name || '' };
         });
       }
-      
       setFormState(initialState);
-      setSelectedGroups(selected.groups || []);
-      setParentId(selected.parent || null);
+    
+      setSelectedGroups(res.data.groups || []);
+      setPreviewUrl(res.data.file || null);
+      setFile(null);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: t('Error loading category') });
+    }
+  };
 
-      // Handle existing file
-      if (selected.file) {
-        setPreviewUrl(selected.file);
-        setFile(null); // We don't have the actual file object, just the URL
-      } else {
-        setPreviewUrl(null);
-        setFile(null);
+  const findNodeById = (nodes, id) => {
+    for (const node of nodes) {
+      if (node.id === id) return node;
+      if (node.children) {
+        const found = findNodeById(node.children, id);
+        if (found) return found;
       }
     }
-  }, [selected]);
+    return null;
+  };
+
+  const handleTreeContext = (event, itemId) => {
+    event.preventDefault();
+    const node = findNodeById(categories, itemId);
+    setMenuAnchor({ x: event.clientX, y: event.clientY });
+    setMenuNode(node);
+  };
+
+  const handleCreateCategory = () => {
+    const parentId = menuNode?.id === 'root' ? null : (menuNode?.id && Number(menuNode.id)) || null;
+    setFormState({ en: { name: '' }, ar: { name: '' } });
+    setSelected({ translations: { en: { name: '' }, ar: { name: '' } }, groups: [], parent: parentId });
+    setMenuAnchor(null);
+  };
+
+  const handleDeleteCategory = async () => {
+    const id = menuNode?.id && !menuNode.id.startsWith('node-') ? Number(menuNode.id) : null;
+    if (!id) {
+      setMessage({ type: 'error', text: t('Cannot delete this node') });
+      setMenuAnchor(null);
+      return;
+    }
+    try {
+      await axiosInstance.delete(`/api/categories/${id}/`);
+      setMessage({ type: 'success', text: t('Category deleted successfully') });
+      await fetchCategories();
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: t('Error deleting category') });
+    } finally {
+      setMenuAnchor(null);
+    }
+  };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
+    const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setPreviewUrl(URL.createObjectURL(selectedFile));
@@ -247,358 +361,159 @@ export default function CategoryManager() {
 
   const handleSave = async () => {
     try {
-      // Determine the name based on translations
       let name;
-      if (formState.en.name && formState.ar.name) {
-        name = formState.en.name;
-      } else if (formState.en.name) {
-        name = formState.en.name;
-      } else if (formState.ar.name) {
-        name = formState.ar.name;
-      } else {
-        setMessage({ type: "danger", text: t("Please provide at least one translation") });
+      if (formState.en.name) name = formState.en.name;
+      else if (formState.ar.name) name = formState.ar.name;
+      else {
+        setMessage({ type: 'error', text: t('Please provide at least one translation') });
         return;
       }
 
-      // Transform translations into list format
       const translationsList = Object.entries(formState)
-        .filter(([_, value]) => value.name)
-        .map(([language, value]) => ({
-          language,
-          name: value.name
-        }));
+        .filter(([_, v]) => v.name)
+        .map(([language, value]) => ({ language, name: value.name }));
 
-      // Create FormData object for file upload
       const formData = new FormData();
       formData.append('id', selected?.id || '');
       formData.append('name', name);
       formData.append('translations', JSON.stringify(translationsList));
       formData.append('groups', JSON.stringify(selectedGroups));
-      if (parentId) {
-        formData.append('parent', parentId);
-      }
-      if (file) {
-        formData.append('file', file);
-      }
+      if (selected?.parent) formData.append('parent', selected.parent);
+      if (file) formData.append('file', file);
 
-      await axiosInstance.post("/api/admin/categories_admin/", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      setMessage({ type: "success", text: t("Category created successfully") });
-      // Reset form after successful creation
-      setFormState({
-        en: { name: "" },
-        ar: { name: "" }
-      });
+      await axiosInstance.post('/api/admin/categories_admin/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setMessage({ type: 'success', text: t('Category created successfully') });
+      setFormState({ en: { name: '' }, ar: { name: '' } });
       setSelectedGroups([]);
       setSelected(null);
-      setParentId(null);
       setFile(null);
       setPreviewUrl(null);
-
-      await fetchCategories(); // Refresh the category tree
-    } catch (error) {
-      console.error("Save error:", error);
-      setMessage({ 
-        type: "danger", 
-        text: error.response?.data?.error || t("Error saving category") 
-      });
-    }
-  };
-
-  const handleDelete = async (categoryId) => {
-    try {
-      await axiosInstance.delete(`/api/categories/${categoryId}/`);
-      setMessage({ type: "success", text: t("Category deleted successfully") });
       await fetchCategories();
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: err.response?.data?.error || t('Error saving category') });
+    }
+  };
+
+  const handleDelete = async () => {
+    const id = selected?.id || null;
+    if (!id) return;
+    try {
+      await axiosInstance.delete(`/api/categories/${id}/`);
+      setMessage({ type: 'success', text: t('Category deleted successfully') });
       setSelected(null);
-      setContextMenu(null);
-    } catch (error) {
-      console.error("Delete error:", error);
-      setMessage({ 
-        type: "danger", 
-        text: error.response?.data?.error || t("Error deleting category") 
-      });
+      await fetchCategories();
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: err.response?.data?.error || t('Error deleting category') });
     }
   };
 
-  useEffect(() => {
-    // Handle click outside context menu
-    const handleClickOutside = (e) => {
-      if (contextMenu && !e.target.closest('.context-menu')) {
-        setContextMenu(null);
-      }
-    };
-
-    // Add event listener for clicks
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [contextMenu]);
-
-  const handleContextMenu = (e, cat) => {
-    e.preventDefault();
-    
-    // Clear any existing timer
-    if (contextMenuTimer) {
-      clearTimeout(contextMenuTimer);
-    }
-    
-    setContextMenu({
-      x: e.pageX,
-      y: e.pageY,
-      category: cat
-    });
-
-    // Set new timer to close menu after 3 seconds
-    const timer = setTimeout(() => {
-      setContextMenu(null);
-    }, 3000);
-    
-    setContextMenuTimer(timer);
-  };
-
-  // Clear timer when component unmounts
-  useEffect(() => {
-    return () => {
-      if (contextMenuTimer) {
-        clearTimeout(contextMenuTimer);
-      }
-    };
-  }, [contextMenuTimer]);
-
-  const handleCreateCategory = () => {
-    const parent = contextMenu?.category?.id ?? null;
-    setParentId(parent);
-    
-    const emptyTranslations = {
-      en: { name: "" },
-      ar: { name: "" }
-    };
-
-    setFormState(emptyTranslations);
-    setSelected({"translations": emptyTranslations, "groups": [], "parent": parent});
-    setSelectedGroups([]);
-    setContextMenu(null);
-  };
-
-  const handleGroupToggle = (groupId) => {
-    setSelectedGroups(prev =>
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
-  };
-
-  const toggleExpand = (id) => {
-    setExpanded(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
-  const selectItem = async (cat) => {
-    const res = await axiosInstance.get(`/api/admin/category/${cat.id}`);
-    setSelected(res.data);
-  };
-
-  const renderTree = (cats, depth = 0) => {
-    return cats.map((cat) => {
-      const buttonWidth = 2.5; // assumed button width in rem
-      const hasChildren = cat.children?.length > 0;
-      const de = depth * 0.5 + (!hasChildren ? buttonWidth : 0);
-
-      return (
-        <div key={cat.id} className={`${isRTL() ? "rtl-tree" : "ltr-tree"}`}>
-          <div className="tree-node">
-            <span
-              onClick={() => selectItem(cat)}
-              onContextMenu={(e) => handleContextMenu(e, cat)}
-              style={{
-                cursor: "pointer",
-                fontWeight: selected?.id === cat.id ? "bold" : "normal",
-                marginRight: isRTL() ? `${de}rem` : "0",
-                marginLeft: isRTL() ? "0" : `${de}rem`
-              }}
-            >
-              📁 {cat.label}
-            </span>
-
-            {hasChildren && (
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={() => toggleExpand(cat.id)}
-                style={{
-                  order: isRTL() ? -1 : 1
-                }}
-              >
-                {expanded[cat.id] ? "▾" : "▸"}
-              </Button>
-            )}
-          </div>
-
-          {expanded[cat.id] && hasChildren && (
-            <div className="tree-children">
-              {renderTree(cat.children, depth + 1)}
-            </div>
-          )}
-        </div>
-      );
-    });
-  };
+  const handleGroupToggle = (gid) => setSelectedGroups(prev => prev.includes(gid) ? prev.filter(x => x !== gid) : [...prev, gid]);
 
   return (
-    <div className="admin-container" dir={isRTL() ? "rtl" : "ltr"}>
+    <Box sx={{ p: 3, direction: isRTL() ? 'rtl' : 'ltr', bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f5f6fa' }}>
+      <Typography variant="h5" sx={{ mb: 2 }}>{t('categories')}</Typography>
+
       {message && (
-        <Alert 
-          variant={message.type} 
-          onClose={() => setMessage(null)} 
-          dismissible
-          className="mb-3"
-        >
-          {message.text}
-        </Alert>
+        <Snackbar open autoHideDuration={6000} onClose={() => setMessage(null)}>
+          <MuiAlert severity={message.type} onClose={() => setMessage(null)}>{message.text}</MuiAlert>
+        </Snackbar>
       )}
-      
-      <div className="d-flex gap-4">
-        <div className="tree-container" style={{ width: "30%" }}>
-          <Card className="admin-card">
-            <div className="admin-form">
-              <h2 className="admin-form-title">{t("categories")}</h2>
-              {renderTree(categories)}
-            </div>
+
+      <Box display="flex" gap={3}>
+        <Box sx={{ width: '30%' }}>
+          <Card variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>{t('categories')}</Typography>
+
+            {loadingCategories ? (
+              <Box display="flex" justifyContent="center" sx={{ py: 3 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <RichTreeView
+                items={categories}
+                slots={{ expandIcon: ExpandMore, collapseIcon: ChevronRight }}
+                onItemClick={handleTreeSelect}
+                onItemContextMenu={handleTreeContext}
+                sx={{ maxHeight: '70vh', overflow: 'auto' }}
+              />
+            )}
+
+            {/* context menu (MUI Menu) */}
+            <Menu
+              open={Boolean(menuAnchor)}
+              anchorReference="anchorPosition"
+              anchorPosition={menuAnchor ? { top: menuAnchor.y, left: menuAnchor.x } : undefined}
+              onClose={() => setMenuAnchor(null)}
+            >
+              <MenuItem onClick={handleCreateCategory}>{t('Create new category')}</MenuItem>
+              {menuNode && menuNode.id && !String(menuNode.id).startsWith('node-') && (
+                <MenuItem onClick={handleDeleteCategory} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
+              )}
+            </Menu>
           </Card>
-        </div>
+        </Box>
 
-        {selected && (
-          <div style={{ flex: 1 }}>
-            <Card className="admin-card">
-              <div className="admin-form">
-                <Tabs defaultActiveKey="ar" id="category-tabs" className="admin-tabs">
-                  {languages.map((lang) => (
-                    <Tab eventKey={lang} title={t(lang)} key={lang}>
-                      <div className="form-group">
-                        <Form.Control
-                          value={formState[lang]?.name || ""}
-                          onChange={(e) =>
-                            setFormState((prev) => ({
-                              ...prev,
-                              [lang]: { ...prev[lang], name: e.target.value }
-                            }))
-                          }
-                          placeholder={t("Category Name")}
-                        />
-                      </div>
-                    </Tab>
-                  ))}
-                </Tabs>
+        <Box sx={{ flex: 1 }}>
+          {selected ? (
+            <Card variant="outlined" sx={{ p: 2 }}>
+              <Tabs value={0} sx={{ mb: 2 }}>
+                <Tab label={t('en')} />
+                <Tab label={t('ar')} />
+              </Tabs>
 
-                <div className="mt-4">
-                  <h4 className="admin-form-title">{t('Category Image')}</h4>
-                  <div className="file-upload-container">
-                    <FileInput onChange={handleFileChange} />
-                    {previewUrl && (
-                      <div className="preview-container mb-3">
-                        <img
-                          src={previewUrl}
-                          alt={t('Preview')}
-                          className="preview-image"
-                        />
-                        <button
-                          className="remove-image-btn"
-                          onClick={handleRemoveFile}
-                          aria-label={t('Remove Image')}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  label={t('Category Name (EN)')}
+                  value={formState.en.name}
+                  onChange={(e) => setFormState(prev => ({ ...prev, en: { name: e.target.value } }))}
+                  fullWidth
+                />
+                <TextField
+                  label={t('Category Name (AR)')}
+                  value={formState.ar.name}
+                  onChange={(e) => setFormState(prev => ({ ...prev, ar: { name: e.target.value } }))}
+                  fullWidth
+                />
 
-                <div className="mt-4">
-                  <h4 className="admin-form-title">{t('Product Groups')}</h4>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Category Image')}</Typography>
+                  <FileInput onChange={handleFileChange} fileName={file?.name || (previewUrl ? 'Current' : '')} onRemove={handleRemoveFile} />
+                  {previewUrl && (
+                    <Box sx={{ position: 'relative', display: 'inline-block', mt: 1 }}>
+                      <Avatar variant="rounded" src={previewUrl} alt={t('Preview')} sx={{ width: 120, height: 80 }} />
+                    </Box>
+                  )}
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Product Groups')}</Typography>
                   <GroupsTable
                     groups={groups}
+                    totalCount={totalPages}
                     selectedGroups={selectedGroups}
                     onToggleGroup={handleGroupToggle}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => setCurrentPage(page)}
+                    page={currentPage}
+                    rowsPerPage={rowsPerPage}
+                    onChangePage={(p) => setCurrentPage(p)}
+                    onChangeRowsPerPage={(r) => setRowsPerPage(r)}
                   />
-                </div>
+                </Box>
 
-                <div className="mt-4">
-                  <Button
-                    variant="primary"
-                    onClick={handleSave}
-                  >
-                    {selected.id ? t("Update") : t("Create")}
-                  </Button>
-                  {selected.id && (
-                    <Button
-                      variant="danger"
-                      className="ms-2"
-                      onClick={() => handleDelete(selected.id)}
-                    >
-                      {t("Delete")}
-                    </Button>
-                  )}
-                </div>
-              </div>
+                <Box display="flex" gap={2}>
+                  <Button variant="contained" onClick={handleSave}>{selected?.id ? t('Update') : t('Create')}</Button>
+                  {selected?.id && <Button color="error" onClick={handleDelete}>{t('Delete')}</Button>}
+                </Box>
+              </Box>
             </Card>
-          </div>
-        )}
-
-        {contextMenu && (
-          <div
-            className="context-menu"
-            style={{
-              position: "absolute",
-              top: contextMenu.y,
-              left: contextMenu.x,
-              backgroundColor: "white",
-              borderRadius: "4px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              padding: "0.5rem",
-              zIndex: 9999
-            }}
-          >
-            <div
-              className="context-menu-item"
-              onClick={() => {
-                handleCreateCategory();
-                if (contextMenuTimer) {
-                  clearTimeout(contextMenuTimer);
-                }
-              }}
-              style={{ padding: "0.5rem 1rem", cursor: "pointer" }}
-            >
-              ➕ {t("Create new category")}
-            </div>
-            {contextMenu.category.id && (
-              <div
-                className="context-menu-item"
-                onClick={() => {
-                  handleDelete(contextMenu.category.id);
-                  if (contextMenuTimer) {
-                    clearTimeout(contextMenuTimer);
-                  }
-                }}
-                style={{ padding: "0.5rem 1rem", cursor: "pointer", color: "#dc3545" }}
-              >
-                🗑️ {t("Delete selected category")}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+          ) : (
+            <Card variant="outlined" sx={{ p: 4, minHeight: 240 }}>
+              <Typography>{t('Select a category to edit or right-click the tree to create.')}</Typography>
+            </Card>
+          )}
+        </Box>
+      </Box>
+    </Box>
   );
 }
