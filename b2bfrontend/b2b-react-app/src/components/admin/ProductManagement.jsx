@@ -99,7 +99,14 @@ const TranslationFields = ({ translations, setTranslations }) => {
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
             {t("Description")} ({lang.toUpperCase()} ) 
           </Typography>
-        <RichTextEditor />
+        <RichTextEditor value={translations[lang]?.description || ""}  onChange={(content) =>
+                setTranslations((prev) => ({
+                  ...prev,
+                  [lang]: { ...prev[lang], description: content }
+                }))
+              }
+              dir={lang == 'ar' ? 'rtl' : 'ltr'}
+              placeholder={t('Product Description')} />
           
         </Box>
       ))}
@@ -711,7 +718,9 @@ export default function ProductManagement() {
   const handleProductSelect = async (product) => {
     try {
       const res = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
+      
       const dp = res.data;
+      console.log(dp);
       setSelected(dp);
 
       let productTranslations = dp.translations || {};
