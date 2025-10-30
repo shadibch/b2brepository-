@@ -94,18 +94,18 @@ const OrdersPage = () => {
   const getRowColor = (status) => {
     switch (status) {
       case "PND":
-        return "#FFF8E1"; // Yellow
+        return "#FBC02D"; // Deep yellow (good contrast with white)
       case "RJC":
-        return "#FFEBEE"; // Red
+        return "#E53935"; // Strong red
       case "ACC":
-        return "#E8F5E9"; // Green
+        return "#43A047"; // Medium green
       case "PRJ":
-        return "#FFF3E0"; // Orange
+        return "#FB8C00"; // Vivid orange
       default:
-        return "inherit";
+        return "#424242"; // Neutral dark gray fallback
     }
   };
-
+  
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
@@ -131,22 +131,15 @@ const OrdersPage = () => {
         <Table>
           <TableHead>
           <TableRow
-        sx={{
-          backgroundColor: "#1976d2", // Header background color
-          "& th": {
-            color: "#fff", // Header text color
-            fontWeight: "bold",
-            textAlign: "left",
-          },
-        }}
+    sx={{ backgroundColor: "primary.light" }}
       >
-              <TableCell>{t("id_order")}</TableCell>
-              <TableCell>{t("status")}</TableCell>
-              <TableCell>{t("purchase_date")}</TableCell>
-              <TableCell>{t("rejection_reason")}</TableCell>
-              <TableCell>{t("total_price")}</TableCell>
-              <TableCell>{t("Order Status")}</TableCell>
-              <TableCell align="center">{t("Invoice")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("id_order")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("status")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("purchase_date")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("rejection_reason")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("total_price")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>{t("Order Status")}</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }} align="center">{t("Invoice")}</TableCell>
             </TableRow>
           </TableHead>
 
@@ -156,22 +149,30 @@ const OrdersPage = () => {
                 key={order.id}
                 sx={{ backgroundColor: getRowColor(order.status) }}
               >
-                <TableCell>{formatLocal(order.id)}</TableCell>
-                <TableCell>{t(order.status)}</TableCell>
-                <TableCell>{formatDate(new Date(order.purchaseDate))}</TableCell>
-                <TableCell>{order.rejection_reason || "-"}</TableCell>
-                <TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>{formatLocal(order.id)}</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>{t(order.status)}</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>{formatDate(new Date(order.purchaseDate))}</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>{order.rejection_reason || "-"}</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>
                   {order.total_price
                     ? formatNumber(order.total_price, order.currency)
                     : "-"}
                 </TableCell>
-                <TableCell>{t(order.order_status)}</TableCell>
-                <TableCell align="center">
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>{t(order.order_status)}</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }} align="center">
                   <Grid container spacing={1} direction="column">
                     <Grid item>
                       <Button
-                        variant="outlined"
+                        variant="contained"
                         size="small"
+                        sx={{
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          color: "white",
+                          border: "1px solid rgba(255, 255, 255, 0.6)",
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.35)",
+                          },
+                        }}
                         onClick={() => handleSelectedOrder(order)}
                       >
                         {t("View")}
@@ -182,6 +183,14 @@ const OrdersPage = () => {
                         <Button
                           variant="text"
                           size="small"
+                          sx={{
+                            color: "white",
+                            borderColor: "rgba(255, 255, 255, 0.7)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 0.15)",
+                              borderColor: "white",
+                            },
+                          }}
                           component="a"
                           href={`${API_BASE_URL}/api/download_invoice/${order.id}/`}
                           target="_blank"
