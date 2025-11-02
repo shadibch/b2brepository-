@@ -213,7 +213,7 @@ const navigate = useNavigate();
                     </Typography>
 
                     <Box sx={{ mb: 1 }}>
-                      {product.price > 0 ? (
+                      {product.price >0 && (product.price !=product.base_price ) ? (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography
                             variant="h6"
