@@ -38,6 +38,7 @@ import {
   ListItem,
   ListItemText,
   Collapse,
+  useTheme
 } from "@mui/material";
 
 import {
@@ -57,6 +58,7 @@ import {
   FormatListNumbered,
   ColorLens,
   Title as TitleIcon,
+  
 } from "@mui/icons-material";
 import RichTextEditor from "./Editor";
 import axiosInstance from "../axiosInstance";
@@ -83,8 +85,19 @@ import BranchContractManagement from "./BranchAdminContractManagement";
    TranslationFields
    -------------------------- */
 const TranslationFields = ({ translations, setTranslations }) => {
+  const theme = useTheme();
   return (
-    <Box>
+    
+    <Box   sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}>
       {["en", "ar"].map((lang) => (
         <Box key={lang} sx={{ mb: 3 }}>
           <TextField
@@ -171,7 +184,7 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
   const [editingPrice, setEditingPrice] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [toDelete, setToDelete] = useState(null);
-
+  const theme = useTheme();
   useEffect(() => {
     if (product?.id) loadPrices();
   }, [product]);
@@ -248,7 +261,18 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
   };
 
   return (
-    <Box>
+    <Box
+    sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}
+  >
       {message && (
         <Alert severity={message.type === "error" ? "error" : "success"} onClose={() => setMessage(null)}>
           {message.text}
@@ -256,7 +280,12 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
       )}
 
       <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
-        <Box>
+        <Box  sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 2,
+          mb: 3,
+        }}>
           <Typography variant="subtitle2">{t("Company")}</Typography>
           <AsyncSelect
             cacheOptions
@@ -767,11 +796,35 @@ export default function ProductManagement() {
     if (product.media_list && product.media_list.length > 0) return `${API_BASE_URL}${product.media_list[0]}`;
     return `${DEFAULT_IMAGE}`;
   };
-
+  const theme = useTheme();
   /* --------------------------
      UI Render
      -------------------------- */
   return (
+    <Box
+    sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}
+  >
+    {/* Header */}
+    <Typography
+      variant="h4"
+      sx={{
+        mb: 3,
+        fontWeight: 700,
+        textAlign: isRTL() ? "right" : "left",
+        color: theme.palette.text.primary,
+      }}
+    >
+      {t("Products Management")}
+    </Typography>
     <Box sx={{ p: 2 }} dir={isRTL() ? "rtl" : "ltr"}>
       <Grid container spacing={2}>
         <Grid item xs={12} md={3}>
@@ -1005,6 +1058,7 @@ export default function ProductManagement() {
           <Button color="error" onClick={confirmDelete}>{t("Delete")}</Button>
         </DialogActions>
       </Dialog>
+    </Box>
     </Box>
   );
 }
