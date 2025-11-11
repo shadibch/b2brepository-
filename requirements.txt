@@ -7,7 +7,7 @@ cloudinary
 django-cloudinary-storage
 # JWT Authentication
 djangorestframework-simplejwt>=5.3.0  
-
+beautifulsoup4
 # PostgreSQL Database Connector
 psycopg2-binary>=2.9.9  
 
