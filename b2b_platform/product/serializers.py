@@ -113,6 +113,75 @@ class CategoryCreateAdminItemSerializer(serializers.ModelSerializer):
         return {t.language: {'name': t.name} for t in trans}
 
 from .models import Product, ProductPrice, ProductMedia
+class ProductSubGroupSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()  # ✅ Use SerializerMethodField for dynamic name
+    group = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductSubGroup
+        fields = ["id", "name", "group"]  # Ensure 'name' is dynamically resolved
+
+    def get_name(self, obj):
+        request = self.context.get("request")  # Access the request from serializer context
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+       
+        translation = obj.translations.filter(language=language).first()
+        return translation.name if translation else obj.name  # Return translated name or fallback
+    def get_group(self, obj):
+        request = self.context.get("request")
+        language = request.LANGUAGE_CODE if request else "en"
+        translation = obj.group.translations.filter(language=language).first()
+        return translation.name if translation else obj.group.name 
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
+    media_list = serializers.SerializerMethodField()  # ✅ Get list of media
+    name = serializers.SerializerMethodField() 
+    image_path = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    attributs = serializers.SerializerMethodField()
+    subgroups = ProductSubGroupSerializer(many=True)
+    class Meta:
+        model = Product
+        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price", "media_list","closest_category","discount","availibility","image_path"]  # ✅ Ensure 'price' is included
+    def get_name(self,obj):
+        request = self.context.get("request")  # Access request from serializer context
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+        translation = obj.translations.filter(language=language).first()
+        return translation.name if translation and translation.name else obj.name  # Return translated name or fallback
+    def get_description(self,obj):
+        request = self.context.get("request")  # Access request from serializer context
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+        translation = obj.translations.filter(language=language).first()
+        return translation.description if translation and translation.description else obj.description  # Return translated name or fallback
+    def get_attributs(self,obj):
+        request = self.context.get("request")  # Access request from serializer context
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+        translation = obj.translations.filter(language=language).first()
+        return translation.attributs if translation and translation.attributs else obj.attributs  # Return translated name or fallback
+    def get_price(self, obj):
+        user = self.context["request"].user
+        request = self.context["request"]
+        branch_id = request.GET.get('branch_id')
+        if(branch_id and user.is_superuser):
+            branch = Branch.objects.get(id=branch_id)
+            price = calculateByBranch(branch,obj)       
+            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
+        company_id = request.GET.get('company_id')
+        if(company_id and user.is_superuser):
+            company = Company.objects.get(id=company_id)
+            price = calculatesByCompany(company,obj)       
+            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
+
+        price = calculate(user,obj)
+        
+        # ✅ Ensure price is rounded to two decimal places
+        return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    def get_image_path(self, obj):
+        return obj.media.all()[0].file if obj.media.all().count() > 0 else None
+      
+
+    def get_media_list(self, obj):
+        return [media.file for media in obj.media.all()]  # ✅ Returns UR
 
 class ProductSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
@@ -169,19 +238,6 @@ from .models import ProductGroup, ProductSubGroup
 
 from rest_framework import serializers
 
-class ProductSubGroupSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()  # ✅ Use SerializerMethodField for dynamic name
-
-    class Meta:
-        model = ProductSubGroup
-        fields = ["id", "name"]  # Ensure 'name' is dynamically resolved
-
-    def get_name(self, obj):
-        request = self.context.get("request")  # Access the request from serializer context
-        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
-       
-        translation = obj.translations.filter(language=language).first()
-        return translation.name if translation else obj.name  # Return translated name or fallback
 
 
 class ProductGroupSerializer(serializers.ModelSerializer):

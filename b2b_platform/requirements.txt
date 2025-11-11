@@ -25,4 +25,5 @@ django-cloudinary-storage
 # S3 storage
 django-storages==1.14.2
 boto3==1.34.0
+pgvector
 

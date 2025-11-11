@@ -86,6 +86,7 @@ urlpatterns = [
     path('api/refresh/',RefreshTokenView.as_view()),
     path('api/admin/orders/',SearchOrders.as_view()),
     path('api/admin/order/<int:order_id>/',AdminOrder.as_view()),
+    path('api/products/<str:partId>/similar/', similar_products, name='similar-products'),
     path('api/admin/categories/',CategoryAdminListView.as_view()),
     path('api/admin/category/<int:category_id>/',CategoryAdminDetail.as_view()),
     path('api/admin/groups/',AdminProductGroupListView.as_view()),

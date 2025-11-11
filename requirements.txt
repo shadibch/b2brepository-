@@ -21,4 +21,5 @@ arabic-reshaper
 python-bidi
 Babel
 hijri_converter
+pgvector
 

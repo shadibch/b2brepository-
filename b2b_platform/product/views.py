@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.views import APIView
@@ -178,7 +179,7 @@ class GetProductByPartID(APIView):
 
     def get(self, request, part_id):
         product = get_object_or_404(Product, part_id=part_id)  # ✅ Get product
-        serialized_product = ProductSerializer(product, context={"request": request}).data  # ✅ Pass request context
+        serialized_product = ProductItemSerializer(product, context={"request": request}).data  # ✅ Pass request context
         return Response(serialized_product)
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -834,6 +835,34 @@ from django.shortcuts import get_object_or_404
 from company.serializers import BranchWithProductSerializer
 from company.models import Branch,ProductContract
 
+
+from django.db.models import F
+from pgvector.django import CosineDistance
+from .models import Product
+
+def get_similar_products(product, limit=5):
+    base_qs = Product.objects.filter(closest_category=product.closest_category).exclude(id=product.id)
+    return ( 
+        base_qs
+        .annotate(distance=CosineDistance('embedding', product.embedding))
+        .order_by('distance')[:limit]
+    )
+
+
+# views.py
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Product
+from .serializers import ProductSerializer
+
+
+@api_view(["GET"])
+def similar_products(request, partId):
+    product = Product.objects.get(part_id=partId)
+    similar = get_similar_products(product)
+    return Response(ProductItemSerializer(similar, many=True,context={'request': request}).data)
+
+
 class ProductBranchDeleteView(APIView):
     permission_classes = [IsAuthenticated,IsSuperUser]
     serializer_class=BranchWithProductSerializer
@@ -1118,7 +1147,16 @@ class ProductAdminViewSet(ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+    from bs4 import BeautifulSoup
+    def serializeSubgroups(self, subgroups):
+       
+        result = ''
 
+        if(subgroups != None):
+            subgroups_items = ProductSubGroup.objects.filter(id__in=subgroups)
+            for subgroup in subgroups_items:
+                result += subgroup.group.name + ' = ' + subgroup.name + ' '
+        return result
     def create(self, request, *args, **kwargs):
        
         try:
@@ -1162,6 +1200,12 @@ class ProductAdminViewSet(ModelViewSet):
                 # Create translations
                 for trans in translations:
                     if trans.get('name') or trans.get('description'):
+                        language = trans['language'];
+                        if(language == 'en'):
+                            soup = BeautifulSoup(trans.get('description', ''), "html.parser") 
+                           
+                            product.description = soup.get_text(separator=" ", strip=True) + ' ' +self.serializeSubgroups(subgroups)
+                            product.save()
                         ProductTranslation.objects.create(
                             product=product,
                             language=trans['language'],
@@ -1240,6 +1284,12 @@ class ProductAdminViewSet(ModelViewSet):
                 product.translations.all().delete()
                 for trans in translations:
                     if trans.get('name') or trans.get('description'):
+                        language = trans['language'];
+                        if(language == 'en'):
+                            soup = BeautifulSoup(trans.get('description', ''), "html.parser")
+                            product.description = soup.get_text(separator=" ", strip=True)  +  ' ' + self.serializeSubgroups(subgroups)
+                            
+                            product.save()
                         ProductTranslation.objects.create(
                             product=product,
                             language=trans['language'],

@@ -66,12 +66,13 @@ class ProductSubgroupTranslation(models.Model):
         unique_together = ('productsubgroup', 'language')
     def __str__(self):
         return f"{self.productsubgroup} ({self.language}) ({self.name})"
-
+from pgvector.django import VectorField
 class Product(models.Model):
     name = models.CharField(max_length=255)
     part_id = models.CharField(max_length=50, unique=True)
     stock_quantity = models.IntegerField(default=0)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    embedding = VectorField(dimensions=384, null=True)  # based on model used
     discount = models.DecimalField(
     max_digits=5, 
     decimal_places=2, 

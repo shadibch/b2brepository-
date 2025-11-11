@@ -125,5 +125,6 @@
    "PRC":"Under Processing",
    "UDL":"Undelivered",
    "DLV":"Delivered",
+   "similar_products": "Similar Products",
  "PURCHASE_DATETIME_EXCEED":"You have exceeded your old waiting period. Please pay to complete a new purchase."
 }

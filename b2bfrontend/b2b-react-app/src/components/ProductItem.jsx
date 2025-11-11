@@ -7,6 +7,10 @@ import {
   CardMedia,
   Typography,
   Box,
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
   Button,
   TextField,
   Chip,
@@ -16,6 +20,8 @@ import {
   Breadcrumbs,
   Paper,
   CircularProgress,
+  useTheme,
+  TableContainer,
 } from '@mui/material';
 import { AddShoppingCart, Home } from '@mui/icons-material';
 import { isAuthenticated } from "./axiosInstance";
@@ -23,16 +29,19 @@ import axiosInstance from "./axiosInstance";
 import { setitemscount, useHeaderContext } from "./HeaderContext";
 import { t, isRTL, formatNumber } from '../utils/translator';
 import { API_BASE_URL } from '../utils/settings';
+import TechnicalDetailsTable from "./TechnicalDetailsTable";
+import SimilarProducts from "./SimilarProducts";
 const ProductItem = () => {
   const { partId } = useParams(); // ✅ Extract product ID from URL
   const [product, setProduct] = useState(null);
   const [categoryHierarchy, setCategoryHierarchy] = useState([]); // ✅ State for categories
   const [selectedImage, setSelectedImage] = useState(""); // ✅ Stores main image
   const [isModalOpen, setIsModalOpen] = useState(false); // ✅ Controls modal visibility
-
+  const theme = useTheme();
   const [quantity, setQuantity] = useState(1);
   const {  selectedBranchId } = useHeaderContext();
   const { refreshCartCount } = useHeaderContext();
+  const [similarProducts, setSimilarProducts] = useState([]);
   const handleAddToCart = () => {
     // Send quantity to API or cart manager
     
@@ -59,6 +68,9 @@ const ProductItem = () => {
     axiosInstance.get(`/api/product/${partId}/`)
       .then(response => {
         setProduct(response.data);
+        axiosInstance.get(`/api/products/${partId}/similar/`)
+
+        .then(response => setSimilarProducts(response.data));
         const closestCategory = response.data.closest_category;
         if (closestCategory) {
         const res =   axiosInstance.get(`/api/category_hierarchy/${closestCategory}/`)
@@ -73,6 +85,9 @@ const ProductItem = () => {
         }
       })
       .catch(error => console.error("Error fetching product:", error));
+
+    
+
   }, [partId]);
 
   if (!product) {
@@ -256,10 +271,19 @@ const ProductItem = () => {
               dangerouslySetInnerHTML={{ __html: product.description }}
               dir={isRTL() ? "rtl" : "ltr"}
             />
+             <TechnicalDetailsTable product={product} />
           </Paper>
         </Grid>
+        <Box>
+       
+       
+  
+        </Box>
+     
       </Grid>
-
+      {similarProducts.length > 0 && (
+<SimilarProducts similarProducts={similarProducts} />
+        )}
       {/* Image Modal */}
       <Dialog
         open={isModalOpen}
