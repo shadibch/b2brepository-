@@ -100,6 +100,7 @@ const ProductItem = () => {
 
   return (
     <Container
+    
     maxWidth={false}
     sx={{
       mt: 4,
@@ -110,6 +111,25 @@ const ProductItem = () => {
   >
   
       {/* Breadcrumbs */}
+      <Box
+    
+     component={Card}
+     sx={{
+       mb: 3,
+       p: 2,
+       borderRadius: 3, // curved corners
+       boxShadow: 3, // subtle elevation
+       transition: "transform 0.2s ease, box-shadow 0.2s ease",
+       bgcolor:
+       theme.palette.mode === "dark"
+         ? theme.palette.background.default
+         : "#f5f6fa",
+       "&:hover": {
+         transform: "translateY(-3px)",
+         boxShadow: 6, // elevate a bit on hover
+       },
+     }}
+   >
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -300,6 +320,7 @@ const ProductItem = () => {
           />
         </DialogContent>
       </Dialog>
+      </Box>
     </Container>
   );
 };
