@@ -507,7 +507,8 @@ export default function CategoryManager() {
 
                 <Box>
                   <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Category Image')}</Typography>
-                  <FileInput onChange={handleFileChange} fileName={file?.name || (previewUrl ? 'Current' : '')} onRemove={handleRemoveFile} />
+                  <FileInput onChange={handleFileChange} fileName={file?.name || (previewUrl ? 
+                    t('Click to upload image') : '')} onRemove={handleRemoveFile} />
                   {previewUrl && (
                     <Box sx={{ position: 'relative', display: 'inline-block', mt: 1 }}>
                       <Avatar variant="rounded" src={previewUrl} alt={t('Preview')} sx={{ width: 120, height: 80 }} />
