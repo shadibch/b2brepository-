@@ -23,7 +23,7 @@ router.register(r'categories', PublicCategoryViewSet, basename='category')
 
 urlpatterns = [
     path('', include(router.urls)),
-    
+     
     # Category Admin CRUD endpoints
     path('admin/save_category/', CategorySaveView.as_view(), name='category-save'),
     path('admin/category/', CategoryAdminViewSet.as_view(), name='category-admin-create-list'),

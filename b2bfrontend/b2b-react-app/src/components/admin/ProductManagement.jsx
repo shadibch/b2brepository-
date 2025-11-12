@@ -834,7 +834,7 @@ export default function ProductManagement() {
       maxHeight: 600, // or a responsive height, e.g. 'calc(100vh - 200px)'
       overflowY: "auto",
       overflowX: "hidden",
-    }}>
+    }}> 
             <CategoryTree
               categories={categories}
               selectedCategory={selectedCategory}

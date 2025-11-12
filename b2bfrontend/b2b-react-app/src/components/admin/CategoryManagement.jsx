@@ -204,7 +204,7 @@ export default function CategoryManager() {
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [message, setMessage] = useState(null);
-
+  const [contextMenuAnchor, setContextMenuAnchor] = useState(null);
   // pagination for groups
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -321,21 +321,26 @@ export default function CategoryManager() {
   };
 
   const handleCreateCategory = () => {
-    const parentId = menuNode?.id === 'root' ? null : (menuNode?.id && Number(menuNode.id)) || null;
+    const parentId = menuNode?.id === 'root' ? null : (selected?.id && Number(selected.id)) || null;
     setFormState({ en: { name: '' }, ar: { name: '' } });
     setSelected({ translations: { en: { name: '' }, ar: { name: '' } }, groups: [], parent: parentId });
-    setMenuAnchor(null);
+    setFile(null);
+    setSelectedGroups([]);
+    setContextMenuAnchor(null);
+    setPreviewUrl(null);
+  
   };
 
   const handleDeleteCategory = async () => {
-    const id = menuNode?.id && !menuNode.id.startsWith('node-') ? Number(menuNode.id) : null;
+    const id = selected?.id  ? Number(selected.id) : null;
     if (!id) {
       setMessage({ type: 'error', text: t('Cannot delete this node') });
-      setMenuAnchor(null);
+      setContextMenuAnchor(null);
       return;
     }
     try {
-      await axiosInstance.delete(`/api/categories/${id}/`);
+      await axiosInstance.delete(`/api/delete_categories/${id}/`);
+      setContextMenuAnchor(null);
       setMessage({ type: 'success', text: t('Category deleted successfully') });
       await fetchCategories();
     } catch (err) {
@@ -399,7 +404,7 @@ export default function CategoryManager() {
     const id = selected?.id || null;
     if (!id) return;
     try {
-      await axiosInstance.delete(`/api/categories/${id}/`);
+      await axiosInstance.delete(`/api/delete_categories/${id}/`);
       setMessage({ type: 'success', text: t('Category deleted successfully') });
       setSelected(null);
       await fetchCategories();
@@ -436,20 +441,32 @@ export default function CategoryManager() {
                 slots={{ expandIcon: ExpandMore, collapseIcon: ChevronRight }}
                 onItemClick={handleTreeSelect}
                 onItemContextMenu={handleTreeContext}
+                onContextMenu={(event, itemId) => {
+                  event.preventDefault();
+ 
+                  setContextMenuAnchor({
+                    mouseX: event.clientX + 2,
+                    mouseY: event.clientY - 6,
+                  });
+                }}
                 sx={{ maxHeight: '70vh', overflow: 'auto' }}
               />
             )}
 
             {/* context menu (MUI Menu) */}
             <Menu
-              open={Boolean(menuAnchor)}
+               open={!!contextMenuAnchor}
               anchorReference="anchorPosition"
-              anchorPosition={menuAnchor ? { top: menuAnchor.y, left: menuAnchor.x } : undefined}
-              onClose={() => setMenuAnchor(null)}
+              anchorPosition={
+                contextMenuAnchor !== null
+                  ? { top: contextMenuAnchor.mouseY, left: contextMenuAnchor.mouseX }
+                  : undefined
+              }
+              onClose={() => setContextMenuAnchor(null)}
             >
-              <MenuItem onClick={handleCreateCategory}>{t('Create new category')}</MenuItem>
-              {menuNode && menuNode.id && !String(menuNode.id).startsWith('node-') && (
-                <MenuItem onClick={handleDeleteCategory} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
+              <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
+              {selected?.id && selected.id  && (
+                <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
               )}
             </Menu>
           </Card>

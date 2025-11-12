@@ -4,25 +4,23 @@ import {
   Box,
   Typography,
   CircularProgress,
-  IconButton,
   Menu,
   MenuItem,
 } from "@mui/material";
-import { ExpandMore, ChevronRight, MoreVert } from "@mui/icons-material";
+import { ExpandMore, ChevronRight } from "@mui/icons-material";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 
-const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
+const CategoryTree = ({ onSelectCategory, onCreateCategory, onDropCategory }) => {
   const [treeData, setTreeData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [contextMenuAnchor, setContextMenuAnchor] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // 🔹 Fetch categories on mount
+  // 🔹 Fetch categories
   useEffect(() => {
     axiosInstance
       .get("/api/admin/categories/")
       .then((res) => {
-        console.log("API Response:", res.data);
         const formattedData = formatTreeData(res.data);
         setTreeData(formattedData);
       })
@@ -30,7 +28,7 @@ const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
       .finally(() => setLoading(false));
   }, []);
 
-  // 🔹 Convert your backend format to MUI tree node format
+  // 🔹 Convert backend data to MUI Tree format
   const formatTreeData = (nodes) =>
     nodes.map((node) => ({
       id: node.id,
@@ -38,16 +36,11 @@ const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
       children: node.children ? formatTreeData(node.children) : [],
     }));
 
-  // 🔹 Handle node selection
-  const handleNodeSelect = (event, nodeId) => {
-    const node = findNodeById(treeData, nodeId);
-    if (node && onSelectCategory) onSelectCategory(node);
-  };
-
+  // 🔹 Find node by id
   const findNodeById = (nodes, id) => {
     for (const node of nodes) {
       if (node.id === id) return node;
-      if (node.children) {
+      if (node.children?.length) {
         const found = findNodeById(node.children, id);
         if (found) return found;
       }
@@ -55,23 +48,35 @@ const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
     return null;
   };
 
-  // 🔹 Context menu (right-click) handler
-  const handleContextMenu = (event, node) => {
-    event.preventDefault();
-    setContextMenuAnchor(event.currentTarget);
-    setSelectedNode(node);
+  // 🔹 Handle select
+  const handleNodeSelect = (event, nodeId) => {
+    const node = findNodeById(treeData, nodeId);
+    if (node && onSelectCategory) onSelectCategory(node);
   };
 
-  const handleCloseContextMenu = () => {
-    setContextMenuAnchor(null);
+  // 🔹 Handle right-click (context menu)
+  const handleContextMenu = (event, node) => {
+    event.preventDefault();
+    setSelectedNode(node);
+    setContextMenuAnchor({
+      mouseX: event.clientX + 2,
+      mouseY: event.clientY - 6,
+    });
   };
+
+  const handleCloseContextMenu = () => setContextMenuAnchor(null);
 
   const handleCreateCategory = () => {
     if (onCreateCategory && selectedNode) onCreateCategory(selectedNode);
     handleCloseContextMenu();
   };
 
-  // 🔹 Handle drag/drop (optional — depends on MUI X Pro)
+  const handleDropCategory = () => {
+    if (onDropCategory && selectedNode) onDropCategory(selectedNode);
+    handleCloseContextMenu();
+  };
+
+  // 🔹 Handle drag/drop (optional)
   const handleDrop = async (updatedTree) => {
     setTreeData(updatedTree);
     try {
@@ -94,7 +99,6 @@ const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
 
   return (
     <Box sx={{ width: "100%", maxWidth: 400, bgcolor: "background.paper", p: 2 }}>
-    
       <RichTreeView
         items={treeData}
         defaultExpandedItems={treeData.length ? [treeData[0].id] : []}
@@ -117,7 +121,20 @@ const CategoryTree = ({ onSelectCategory, onCreateCategory }) => {
         }}
       />
 
-    
+      {/* 🔹 Context Menu */}
+      <Menu
+        open={!!contextMenuAnchor}
+        onClose={handleCloseContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenuAnchor !== null
+            ? { top: contextMenuAnchor.mouseY, left: contextMenuAnchor.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem onClick={handleCreateCategory}>Create Category</MenuItem>
+        <MenuItem onClick={handleDropCategory}>Drop</MenuItem>
+      </Menu>
     </Box>
   );
 };

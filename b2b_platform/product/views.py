@@ -343,6 +343,7 @@ class CategoryAdminViewSet(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, category_id):
+        print(str(category_id))
         """Delete a category"""
         try:
             category = get_object_or_404(Category, id=category_id)
@@ -615,48 +616,63 @@ class CategorySaveView(APIView):
     def post(self, request):
         """Create a new category"""
         try:
-            translations_data = request.data.get('translations', {})
-            
-            # Validate at least one translation exists
-            if not any(trans.get('name') for trans in translations_data.values()):
+            translations_data = json.loads(request.data.get('translations', '[]'))
+            groups = json.loads(request.data.get('groups', '[]'))
+
+          
+            # Validate at least one translation exists  
+           
+            if not any(trans.get('name') for trans in translations_data):
+                print("Not passed")
                 return Response(
                     {'error': 'At least one translation must be provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+          
             # Determine category name
-            if translations_data.get('en', {}).get('name'):
-                name = translations_data['en']['name']
+          # Try to find English translation first
+            en_translation = next((t for t in translations_data if t.get('language') == 'en' and t.get('name')), None)
+
+            if en_translation:
+                name = en_translation['name']
             else:
-                # Use the first available translation
-                name = next(trans['name'] for trans in translations_data.values() if trans.get('name'))
+    # Fallback: use the first available name
+                name = next((t['name'] for t in translations_data if t.get('name')), '')
+            file = request.FILES.get('file')
 
             with transaction.atomic():
+                file_url = None
+                if file: 
+                    # Upload to Cloudinary manually
+                    upload_result = cloudinary.uploader.upload(file)
+                    file_url = upload_result.get('secure_url')
                 # Create category
                 category_data = {
                     'name': name,
                 }
-                
+                category_data['file'] = file_url
                 # Add parent only if specified and not root
                 parent_id = request.data.get('parent')
                 if parent_id is not None:
                     category_data['parent_id'] = parent_id
+                    
 
                 category = Category.objects.create(**category_data)
 
                 # Create translations
-                for lang, trans_data in translations_data.items():
+                for  trans_data in translations_data:
                     if trans_data and trans_data.get('name'):
                         CategoryTranslation.objects.create(
                             category=category,
-                            language=lang,
+                            language=trans_data.get('language'),
                             name=trans_data['name']
                         )
 
                 # Set groups
-                groups = request.data.get('groups', [])
+               
                 if groups:
                     category.groups.set(groups)
+                    category.save()
 
                 serializer = CategoryAdminItemSerializer(category, context={'request': request})
                 return Response({
@@ -665,6 +681,7 @@ class CategorySaveView(APIView):
                 }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            print(str(e))
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -681,21 +698,28 @@ class CategorySaveView(APIView):
                 )
 
             category = get_object_or_404(Category, id=category_id)
-            translations_data = request.data.get('translations', {})
+            translations_data = json.loads(request.data.get('translations', '[]'))
+            groups = json.loads(request.data.get('groups', '[]'))
 
-            # Validate at least one translation exists
-            if not any(trans.get('name') for trans in translations_data.values()):
+          
+            # Validate at least one translation exists  
+           
+            if not any(trans.get('name') for trans in translations_data):
+                print("Not passed")
                 return Response(
                     {'error': 'At least one translation must be provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+          
             # Determine category name
-            if translations_data.get('en', {}).get('name'):
-                name = translations_data['en']['name']
+          # Try to find English translation first
+            en_translation = next((t for t in translations_data if t.get('language') == 'en' and t.get('name')), None)
+
+            if en_translation:
+                name = en_translation['name']
             else:
-                # Use the first available translation
-                name = next(trans['name'] for trans in translations_data.values() if trans.get('name'))
+    # Fallback: use the first available name
+                name = next((t['name'] for t in translations_data if t.get('name')), '')
 
             with transaction.atomic():
                 # Update category
@@ -723,7 +747,7 @@ class CategorySaveView(APIView):
                 # Update groups
                 groups = request.data.get('groups', [])
                 category.groups.set(groups)
-
+                category.save()
                 serializer = CategoryAdminItemSerializer(category, context={'request': request})
                 return Response({
                     'message': 'Category updated successfully',
@@ -741,7 +765,7 @@ class CategorySaveView(APIView):
 import cloudinary.uploader
 
 
-class CategoryAdminCreateUpdateView(CreateAPIView):
+class CategoryAdminCreateUpdateView(APIView):
     permission_classes = [IsSuperUser]
     serializer_class = CategoryAdminCreateUpdateSerializer
     queryset = Category.objects.all()
@@ -808,6 +832,8 @@ class CategoryAdminCreateUpdateView(CreateAPIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+   
 from cart.serializers import *
 
 from django.http import JsonResponse
@@ -861,7 +887,34 @@ def similar_products(request, partId):
     product = Product.objects.get(part_id=partId)
     similar = get_similar_products(product)
     return Response(ProductItemSerializer(similar, many=True,context={'request': request}).data)
-
+@api_view(["DELETE"])
+@permission_classes([IsSuperUser])
+def delete_category( request, category_id):
+        print(str(category_id))
+        """Delete a category"""
+        try:
+            category = get_object_or_404(Category, id=category_id)
+            
+            # Check for children
+            if category.children.exists():
+                return Response(
+                    {'error': 'Cannot delete category with child categories'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for products
+            if category.products.exists():
+                return Response(
+                    {'error': 'Cannot delete category with associated products'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            category.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
+        except Exception as e:
+            print(e)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class ProductBranchDeleteView(APIView):
     permission_classes = [IsAuthenticated,IsSuperUser]
