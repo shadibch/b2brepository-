@@ -726,26 +726,22 @@ class CategorySaveView(APIView):
                 category.name = name
                 
                 # Update parent only if specified and not root
-                parent_id = request.data.get('parent')
-                if parent_id is not None:
-                    category.parent_id = parent_id
-                elif request.data.get('parent') is None:  # Explicitly set to root
-                    category.parent = None
-                
+             
+                                
                 category.save()
 
                 # Update translations
                 category.translations.all().delete()  # Remove existing translations
-                for lang, trans_data in translations_data.items():
+                for  trans_data in translations_data:
                     if trans_data and trans_data.get('name'):
                         CategoryTranslation.objects.create(
                             category=category,
-                            language=lang,
+                            language=trans_data.get('language'),
                             name=trans_data['name']
                         )
 
                 # Update groups
-                groups = request.data.get('groups', [])
+          
                 category.groups.set(groups)
                 category.save()
                 serializer = CategoryAdminItemSerializer(category, context={'request': request})

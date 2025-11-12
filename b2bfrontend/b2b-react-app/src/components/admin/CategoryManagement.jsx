@@ -200,6 +200,7 @@ export default function CategoryManager() {
   const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [selected, setSelected] = useState(null);
+  const [update,setUpdate] = useState(true);
   const [formState, setFormState] = useState({ en: { name: '' }, ar: { name: '' } });
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -261,6 +262,7 @@ export default function CategoryManager() {
   const handleTreeSelect = async (event, itemId) => {
     // find item by id from raw categories tree
     // Raw categories are in categories[0].children
+    setUpdate(true);
     const node = findNodeById(categories, itemId);
     if (!node) return;
     // if id is 'root', clear selected
@@ -270,6 +272,7 @@ export default function CategoryManager() {
       setSelectedGroups([]);
       setPreviewUrl(null);
       setFile(null);
+
       return;
     }
 
@@ -284,6 +287,7 @@ export default function CategoryManager() {
     try {
       const res = await axiosInstance.get(`/api/admin/category/${originalId}`);
       setSelected(res.data);
+      setUpdate(true);
       // set form state based on translations
       const initialState = { en: { name: '' }, ar: { name: '' } };
       if (res.data.translations) {
@@ -324,6 +328,7 @@ export default function CategoryManager() {
     const parentId = menuNode?.id === 'root' ? null : (selected?.id && Number(selected.id)) || null;
     setFormState({ en: { name: '' }, ar: { name: '' } });
     setSelected({ translations: { en: { name: '' }, ar: { name: '' } }, groups: [], parent: parentId });
+    setUpdate(false);
     setFile(null);
     setSelectedGroups([]);
     setContextMenuAnchor(null);
@@ -385,8 +390,13 @@ export default function CategoryManager() {
       formData.append('groups', JSON.stringify(selectedGroups));
       if (selected?.parent) formData.append('parent', selected.parent);
       if (file) formData.append('file', file);
-
-      await axiosInstance.post('/api/admin/categories_admin/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if(update) {
+        await axiosInstance.put('/api/admin/categories_admin/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      }else {
+        await axiosInstance.post('/api/admin/categories_admin/', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+    }
+      setUpdate(true);
       setMessage({ type: 'success', text: t('Category created successfully') });
       setFormState({ en: { name: '' }, ar: { name: '' } });
       setSelectedGroups([]);
@@ -407,6 +417,7 @@ export default function CategoryManager() {
       await axiosInstance.delete(`/api/delete_categories/${id}/`);
       setMessage({ type: 'success', text: t('Category deleted successfully') });
       setSelected(null);
+      setUpdate(true);
       await fetchCategories();
     } catch (err) {
       console.error(err);
