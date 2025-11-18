@@ -21,7 +21,22 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.generics import ListAPIView
 from .models import Category
 from .serializers import CategorySerializer
+from rest_framework.decorators import api_view
 
+
+
+@api_view(["POST"])
+def moveProductToCatefory(request, categoryId,productId):
+    product = Product.objects.get(part_id=productId)
+    category = Category.objects.get(id=categoryId)
+    product.closest_category=category
+    categories = []
+    while category:
+        categories.append(category)
+        category = category.parent
+    product.categories.set(categories)
+    product.save()
+    return Response(ProductItemSerializer(product,context={'request': request}).data)
 class CategoryListView(ListAPIView):
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]

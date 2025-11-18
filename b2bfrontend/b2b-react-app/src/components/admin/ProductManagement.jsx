@@ -74,6 +74,7 @@ import CategoryTree from "./Categories";
 
 import AsyncSelect from "react-select/async";
 import BranchContractManagement from "./BranchAdminContractManagement";
+import ProductTable from "./ProductTable";
 
 
 /* --------------------------
@@ -408,7 +409,7 @@ const ProductContractPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [categories, setCategories] = useState([]);
+
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -423,6 +424,7 @@ export default function ProductManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [contextProduct,setContextProduct] = useState(null);
 
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -443,12 +445,15 @@ export default function ProductManagement() {
   }, [currentPage, selectedCategory]);
 
   const fetchInitial = async () => {
-    await fetchCategories();
+    
     await fetchGroups();
     if (selectedCategory?.id) await fetchProductsByCategory(selectedCategory.id);
     else await fetchProducts();
   };
 
+  const handleContextProductSelected= (contextProductSelected)=> {
+setContextProduct(contextProductSelected);
+  };
   const fetchProducts = async () => {
     try {
       const res = await axiosInstance.get(`/api/products/?page=${currentPage}`);
@@ -459,15 +464,7 @@ export default function ProductManagement() {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const res = await axiosInstance.get("/api/admin/categories/");
-      const withRoot = [{ id: null, label: t("Root"), children: res.data }];
-      setCategories(withRoot);
-    } catch (err) {
-      setMessage({ type: "error", text: t("Error fetching categories") });
-    }
-  };
+
 
   const fetchGroups = async () => {
     try {
@@ -716,10 +713,10 @@ export default function ProductManagement() {
       const res = await axiosInstance[method](url, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
+      selectedCategory ?  await fetchProductsByCategory(selectedCategory.id ) : await fetchProducts();
       setMessage({ type: "success", text: t(selected?.id ? "Product updated successfully" : "Product created successfully") });
-      clearForm();
-      await fetchProducts();
+
+
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error saving product") });
     }
@@ -734,7 +731,7 @@ export default function ProductManagement() {
     try {
       await axiosInstance.delete(`/api/admin/products/${productToDelete}/`);
       setMessage({ type: "success", text: t("Product deleted successfully") });
-      await fetchProducts();
+       selectedCategory ?  await fetchProductsByCategory(selectedCategory.id ) : await fetchProducts();
       clearForm();
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error deleting product") });
@@ -796,6 +793,27 @@ export default function ProductManagement() {
     if (product.media_list && product.media_list.length > 0) return `${API_BASE_URL}${product.media_list[0]}`;
     return `${DEFAULT_IMAGE}`;
   };
+
+  const handleMovedProduct = async () => {
+    try {
+      const res = await axiosInstance.post(
+        `/api/category/move/${selectedCategory.id}/${contextProduct.part_id}/`
+      );
+  
+      await fetchProductsByCategory(selectedCategory.id); // refresh list
+  
+      setMessage({ type: "info", text: t("Product moved to the new category") });
+      setContextProduct(null);
+  
+    } catch (err) {
+      console.error(err);
+      setMessage({
+        type: "error",
+        text: t("Error moving product to the new category"),
+      });
+    }
+  };
+  
   const theme = useTheme();
   /* --------------------------
      UI Render
@@ -836,7 +854,7 @@ export default function ProductManagement() {
       overflowX: "hidden",
     }}> 
             <CategoryTree
-              categories={categories}
+
               selectedCategory={selectedCategory}
               onSelect={async (cat) => {
                 setSelectedCategory(cat);
@@ -844,8 +862,11 @@ export default function ProductManagement() {
                 if (cat?.id) await fetchProductsByCategory(cat.id);
                 else await fetchProducts();
               }}
+              handleMovedSelectedProduct={handleMovedProduct}
+              
               expandedCategories={expandedCategories}
               setExpandedCategories={setExpandedCategories}
+              selectedContextProduct={contextProduct}
             />
           </Paper>
         </Grid>
@@ -893,46 +914,12 @@ export default function ProductManagement() {
                     <Button variant="outlined" onClick={clearForm}>{t("New Product")}</Button>
                   </Box>
 
-                  <TableContainer sx={{ maxHeight: 420 }}>
-                    <Table size="small" stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>{t("Image")}</TableCell>
-                          <TableCell>{t("Product Name")}</TableCell>
-                          <TableCell>{t("Part ID")}</TableCell>
-                          <TableCell></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {products.map((p) => (
-                          <TableRow
-                            key={p.id}
-                            hover
-                            selected={selected?.id === p.id}
-                            onClick={() => handleProductSelect(p)}
-                            sx={{ cursor: "pointer" }}
-                          >
-                            <TableCell sx={{ width: 80 }}>
-                              <Avatar src={getProductImage(p)} variant="rounded" sx={{ width: 60, height: 60 }} />
-                            </TableCell>
-                            <TableCell>{p.name}</TableCell>
-                            <TableCell>{p.part_id}</TableCell>
-                            <TableCell>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(p.id);
-                                }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                <ProductTable products={products} selected={selected} 
+                handleProductSelect={handleProductSelect}
+                handleDelete={handleDelete} 
+                getProductImage={getProductImage}
+                handleContextProductSelected={handleContextProductSelected}
+                ></ProductTable>
 
                   {totalPages > 1 && (
                     <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
@@ -1038,7 +1025,7 @@ export default function ProductManagement() {
                   )}
 
                   <Box sx={{ mt: 2 }}>
-                    <Button variant="contained" onClick={handleSave} disabled={!translations.en && !translations.ar}>
+                    <Button variant="contained" onClick={()=>handleSave()} disabled={!translations.en && !translations.ar}>
                       {selected ? t("Update") : t("Create")}
                     </Button>
                   </Box>
