@@ -169,13 +169,16 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
 
   const handleSubmit = async () => {
     const payload = { name, translations, subgroups };
+    console.log(JSON.stringify( payload));
     try {
       if (selectedGroup?.id)
         await axiosInstance.put(
           `/api/admin/product-groups/${selectedGroup.id}/`,
           payload
         );
-      else await axiosInstance.post("/api/admin/product-groups/", payload);
+      else 
+      
+      await axiosInstance.post("/api/admin/product-groups/", payload);
 
       setAlert({
         type: "success",

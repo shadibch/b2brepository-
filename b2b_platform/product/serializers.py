@@ -309,6 +309,7 @@ class ProductAdminGroupSerializer(serializers.ModelSerializer):
         return getProductName(language,obj)
 
     def validate_name(self, value):
+        print(str(value))
         if not value:
             raise serializers.ValidationError("Name is required")
         return value
@@ -431,6 +432,92 @@ class ProductGroupCreateSerializer(serializers.ModelSerializer):
                 )
 
         return group
+from django.db import transaction
+from rest_framework import serializers
+
+class ProductGroupUpdateSerializer(serializers.ModelSerializer):
+    translations = ProductGroupTranslationSerializer(many=True)
+    subgroups = ProductSubgroupCreateSerializer(many=True)
+
+    class Meta:
+        model = ProductGroup
+        fields = ('name', 'translations', 'subgroups')
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        # --------------------
+        # Update group fields
+        # --------------------
+        instance.name = validated_data.get('name', instance.name)
+        instance.save()
+
+        # ----------------------------
+        # Update group translations
+        # ----------------------------
+        translations_data = validated_data.pop('translations', [])
+        instance.translations.all().delete()   # reset old translations
+
+        for trans in translations_data:
+            ProductGroupTranslation.objects.create(
+                productgroup=instance,
+                **trans
+            )
+
+        # ----------------------------
+        # Update subgroups
+        # ----------------------------
+        subgroups_data = validated_data.pop('subgroups', [])
+
+        # Create a lookup of existing subgroups
+        existing_subgroups = {sg.id: sg for sg in instance.subgroups.all()}
+
+        submitted_ids = []
+
+        for subgroup_data in subgroups_data:
+            subgroup_translations = subgroup_data.pop('translations')
+
+            # Case 1: Updating existing subgroup
+            subgroup_id = subgroup_data.get('id')
+
+            if subgroup_id and subgroup_id in existing_subgroups:
+                subgroup = existing_subgroups[subgroup_id]
+                submitted_ids.append(subgroup_id)
+
+                # update subgroup fields
+                for attr, value in subgroup_data.items():
+                    setattr(subgroup, attr, value)
+                subgroup.save()
+
+                # Reset translations
+                subgroup.translations.all().delete()
+
+                for trans in subgroup_translations:
+                    ProductSubgroupTranslation.objects.create(
+                        productsubgroup=subgroup,
+                        **trans
+                    )
+
+            else:
+                # Case 2: Create new subgroup
+                subgroup = ProductSubGroup.objects.create(
+                    group=instance,
+                    **subgroup_data
+                )
+
+                for trans in subgroup_translations:
+                    ProductSubgroupTranslation.objects.create(
+                        productsubgroup=subgroup,
+                        **trans
+                    )
+
+        # -------------------------------------------
+        # Remove subgroups not included in update
+        # -------------------------------------------
+        for sg_id, sg in existing_subgroups.items():
+            if sg_id not in submitted_ids:
+                sg.delete()
+
+        return instance
 
 class ProductAdminSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()

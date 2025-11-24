@@ -469,7 +469,8 @@ class ProductGroupViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return ProductGroupCreateSerializer
-        return ProductAdminGroupSerializer
+        print("Not create")
+        return ProductGroupUpdateSerializer
 
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
