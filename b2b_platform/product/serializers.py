@@ -441,7 +441,7 @@ class ProductGroupUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductGroup
-        fields = ('name', 'translations', 'subgroups')
+        fields = ( 'name', 'translations', 'subgroups')
 
     @transaction.atomic
     def update(self, instance, validated_data):

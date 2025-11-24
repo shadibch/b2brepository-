@@ -169,7 +169,7 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
 
   const handleSubmit = async () => {
     const payload = { name, translations, subgroups };
-    console.log(JSON.stringify( payload));
+   
     try {
       if (selectedGroup?.id)
         await axiosInstance.put(
