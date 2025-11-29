@@ -178,7 +178,7 @@ const navigate = useNavigate();
                   <CardMedia
                     component="img"
                     height="200"
-                    image={product.media_url > 0 ? product.media_url : DEFAULT_IMAGE}
+                    image={product.media_url ? product.media_url : DEFAULT_IMAGE}
                     alt={product.name}
                     sx={{
                       objectFit: 'contain',

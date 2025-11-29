@@ -292,7 +292,7 @@ const ProductItem = () => {
         <DialogContent sx={{ p: 0 }}>
           <CardMedia
             component="img"
-            image={media_url}
+            image={product.media_url}
             alt="Magnified Product"
             sx={{ width: '100%', height: 'auto' }}
           />
