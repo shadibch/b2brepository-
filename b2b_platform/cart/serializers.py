@@ -18,21 +18,19 @@ class ProductInstanceSerializer(serializers.ModelSerializer):
 
 class ProductInstanceUpdateSerializer(serializers.ModelSerializer):
      part_id = serializers.SerializerMethodField()  
-     image_path = serializers.SerializerMethodField()
+  
      cart_items_count = serializers.SerializerMethodField()
      project_name = serializers.SerializerMethodField()
      branch_name = serializers.SerializerMethodField()
     
      class Meta:
         model = ProductInstance
-        fields = ['branch_name','project_name' , 'id', 'part_id', 'image_path', 'price',  'currency',  'quantity', 'branch','cart' ,'cart_items_count','status','rejection_reason']    
+        fields = ['branch_name','project_name' , 'id', 'part_id', 'media_url', 'price',  'currency',  'quantity', 'branch','cart' ,'cart_items_count','status','rejection_reason']    
 
 
      def get_part_id(self, obj):
         return obj.product.part_id
-     def get_image_path(self, obj):
-        media = obj.product.media.all()
-        return media[0].file if media and media.count() > 0 else None
+    
      def get_cart_items_count(self,obj):
         return obj.cart.instances.count() if obj.cart else obj.order.items.count()
      def get_project_name(self,obj):
@@ -45,7 +43,7 @@ class ProductInstanceUpdateSerializer(serializers.ModelSerializer):
 class ProductInstanceAdminSerializer(serializers.ModelSerializer):
      part_id = serializers.SerializerMethodField()  
      product_id = serializers.SerializerMethodField()
-     image_path = serializers.SerializerMethodField()
+     
 
      project_name = serializers.SerializerMethodField()
      branch_name = serializers.SerializerMethodField()
@@ -53,16 +51,14 @@ class ProductInstanceAdminSerializer(serializers.ModelSerializer):
      class Meta:
         model = ProductInstance
         fields = ['product_id' ,'branch_name','project_name' ,
-                   'id', 'part_id', 'image_path', 'price',  'currency',
+                   'id', 'part_id', 'media_url', 'price',  'currency',
                        'quantity', 'branch','cart','status','rejection_reason' ]    
 
      def get_product_id(self, obj):
         return obj.product.id  
      def get_part_id(self, obj):
         return obj.product.part_id
-     def get_image_path(self, obj):
-        media = obj.product.media.all()
-        return media[0].file if media and media.count() > 0 else None
+     
     
      def get_project_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context

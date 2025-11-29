@@ -119,20 +119,21 @@ const Products = ({ reference_id ,onSelectionChange,reference_key }) => {
     className="product-item"
     onClick={() => console.log(`/productitem/${product.part_id}`)}
     onMouseEnter={(e) => {
-      if (product.media_list.length > 1) {
-        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[1]}`;
+      if (product.media_url) {
+        e.currentTarget.querySelector("img").src = `${product.media_url}`;
       }
     }}
     onMouseLeave={(e) => {
-      if (product.media_list.length > 1) {
-        e.currentTarget.querySelector("img").src = `${API_BASE_URL}${product.media_list[0]}`;
+      if (product.media_url) {
+        e.currentTarget.querySelector("img").src = `${product.media_url}`;
+      
       }
     }}
   >
     {/* ✅ Product Image */}
     <Checkbox id={product.id}   onChange={(e) => handleCheckboxChange(product, e.target.checked)}/>
     <img
-      src={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
+      src={product.media_url ? `${product.media_url}` : DEFAULT_IMAGE}
       alt={product.name}
       className="product-image"
     />

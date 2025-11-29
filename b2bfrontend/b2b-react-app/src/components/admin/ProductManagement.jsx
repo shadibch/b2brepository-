@@ -451,7 +451,7 @@ export default function ProductManagement() {
 
   const fetchInitial = async () => {
    
-    await fetchGroups();
+  
     if (selectedCategory?.id) await fetchProductsByCategory(selectedCategory.id);
     else await fetchProducts();
   };
@@ -473,16 +473,12 @@ setContextProduct(contextProductSelected);
 
 
 
-  const fetchGroups = async () => {
-    try {
-      const res = await axiosInstance.get("/api/admin/product-groups/");
-      setGroups(res.data.results || []);
-    } catch (err) {
-      setMessage({ type: "error", text: t("Error fetching groups") });
-    }
-  };
+
 
   const fetchProductsByCategory = async (categoryId) => {
+    if(loading) {
+      return;
+    }
     setLoading(true);
     if(categoryId == "null") {
       fetchProducts();
@@ -506,6 +502,9 @@ setContextProduct(contextProductSelected);
   };
 
   const handleSearch = async () => {
+    if(loading) {
+      return;
+    }
     setLoading(true);
     try {
       
@@ -572,7 +571,7 @@ setContextProduct(contextProductSelected);
         });
         const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
         setSelected(res.data);
-        setSelectedImageIndex(res.data.media_list.length - 1);
+        setSelectedImageIndex(0);
       } catch (err) {
         setMessage({ type: "error", text: t("Error adding product image") });
       }
@@ -585,12 +584,12 @@ setContextProduct(contextProductSelected);
 
   const handleDeleteMainImage = async () => {
     if (selected?.id) {
-      if (!selected.media_list?.length) return;
+      if (!selected.media_url) return;
       try {
         await axiosInstance.delete(`/api/admin/products/${selected.id}/delete_media/?index=${selectedImageIndex}`);
         const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
         setSelected(res.data);
-        setSelectedImageIndex(Math.max(0, Math.min(selectedImageIndex, res.data.media_list.length - 1)));
+        setSelectedImageIndex(0);
       } catch (err) {
         setMessage({ type: "error", text: t("Error deleting product image") });
       }
@@ -606,34 +605,13 @@ setContextProduct(contextProductSelected);
   };
 
   const renderImageGallery = () => {
-    const mediaList = selected?.id ? (selected?.media_list || []) : tempPreviewUrls;
+    const mediaList = selected?.id ? ([selected?.media_url] || []) : tempPreviewUrls;
+
     return (
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>{t("Images")}</Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
-          <Stack direction="row" spacing={1} sx={{ maxWidth: 160, overflowX: "auto" }}>
-            {mediaList.map((m, idx) => (
-              <Paper
-                key={idx}
-                variant={idx === selectedImageIndex ? "elevation" : "outlined"}
-                onClick={() => setSelectedImageIndex(idx)}
-                sx={{
-                  width: 80,
-                  height: 80,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-              >
-                <img
-                  src={selected?.id ? `${API_BASE_URL}${m}` : m}
-                  alt="thumb"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </Paper>
-            ))}
-          </Stack>
+         
 
           <Box sx={{ flex: 1 }}>
             {mediaList.length > 0 ? (
@@ -644,7 +622,7 @@ setContextProduct(contextProductSelected);
                   sx={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative" }}
                 >
                   <img
-                    src={selected?.id ? `${API_BASE_URL}${mediaList[selectedImageIndex]}` : mediaList[selectedImageIndex]}
+                    src={ `${mediaList[0]}` }
                     alt="main"
                     style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                   />
@@ -692,6 +670,9 @@ setContextProduct(contextProductSelected);
   };
 
   const handleSave = async () => {
+    if(loading) {
+      return;
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -756,6 +737,9 @@ setContextProduct(contextProductSelected);
   };
 
   const handleProductSelect = async (product) => {
+    if(loading) {
+      return;
+    }
     setLoading(true);
     try {
       const res = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
@@ -806,7 +790,7 @@ setContextProduct(contextProductSelected);
   };
 
   const getProductImage = (product) => {
-    if (product.media_list && product.media_list.length > 0) return `${API_BASE_URL}${product.media_list[0]}`;
+    if ( product.media_url) return `${product.media_url}`;
     return `${DEFAULT_IMAGE}`;
   };
 

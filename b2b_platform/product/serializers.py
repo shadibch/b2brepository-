@@ -134,15 +134,15 @@ class ProductSubGroupSerializer(serializers.ModelSerializer):
 
 class ProductItemSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
-    media_list = serializers.SerializerMethodField()  # ✅ Get list of media
+      # ✅ Get list of media
     name = serializers.SerializerMethodField() 
-    image_path = serializers.SerializerMethodField()
+    
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
     subgroups = ProductSubGroupSerializer(many=True)
     class Meta:
         model = Product
-        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price", "media_list","closest_category","discount","availibility","image_path"]  # ✅ Ensure 'price' is included
+        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price","closest_category","discount","availibility","media_url"]  # ✅ Ensure 'price' is included
     def get_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
         language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
@@ -176,23 +176,21 @@ class ProductItemSerializer(serializers.ModelSerializer):
         
         # ✅ Ensure price is rounded to two decimal places
         return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    def get_image_path(self, obj):
-        return obj.media.all()[0].file if obj.media.all().count() > 0 else None
+    
       
 
-    def get_media_list(self, obj):
-        return [media.file for media in obj.media.all()]  # ✅ Returns UR
+     # ✅ Returns UR
 
 class ProductSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
-    media_list = serializers.SerializerMethodField()  # ✅ Get list of media
+      # ✅ Get list of media
     name = serializers.SerializerMethodField() 
-    image_path = serializers.SerializerMethodField()
+    
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price", "media_list","closest_category","discount","availibility","image_path"]  # ✅ Ensure 'price' is included
+        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price","closest_category","discount","availibility","media_url"]  # ✅ Ensure 'price' is included
     def get_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
         language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
@@ -226,12 +224,9 @@ class ProductSerializer(serializers.ModelSerializer):
         
         # ✅ Ensure price is rounded to two decimal places
         return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    def get_image_path(self, obj):
-        return obj.media.all()[0].file if obj.media.all().count() > 0 else None
-      
+       
 
-    def get_media_list(self, obj):
-        return [media.file for media in obj.media.all()]  # ✅ Returns URLs of media files
+   
  # ✅ Returns URLs of media files
 
 from .models import ProductGroup, ProductSubGroup
@@ -521,16 +516,16 @@ class ProductGroupUpdateSerializer(serializers.ModelSerializer):
 
 class ProductAdminSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
-    media_list = serializers.SerializerMethodField()
-    image_path = serializers.SerializerMethodField()
+    
+    
     
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'part_id', 'base_price', 
                   'closest_category', 'stock_quantity',
-                  'image_path',
-              'subgroups', 'translations', 'media_list',"availibility"]
+                  'media_url',
+              'subgroups', 'translations', "availibility"]
 
     def get_translations(self, obj):
         translations = obj.translations.all()
@@ -541,15 +536,12 @@ class ProductAdminSerializer(serializers.ModelSerializer):
             }
             for trans in translations
         }
-    def get_image_path(self, obj):
-        return obj.media.all()[0].file if obj.media.all().count() > 0 else None
-    def get_media_list(self, obj):
-        request = self.context.get('request')
-        return [request.build_absolute_uri(media.file) for media in obj.media.all()] if request else []
+
+   
 
 class ProductDetailedAdminSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
-    media_list = serializers.SerializerMethodField()
+    
     category_hierarchy = serializers.SerializerMethodField()
     groups = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     subgroups = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -557,8 +549,8 @@ class ProductDetailedAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'part_id', 'base_price', 'translations',
-                   'media_list','stock_quantity', 
-                 'category_hierarchy', 'groups', 'subgroups','description','availibility']
+                   'stock_quantity', 
+                 'category_hierarchy', 'groups', 'subgroups','description','availibility','media_url']
 
     def get_translations(self, obj):
         translations = {}
@@ -569,8 +561,7 @@ class ProductDetailedAdminSerializer(serializers.ModelSerializer):
             }
         return translations
 
-    def get_media_list(self, obj):
-        return [media.file for media in obj.media.all()]
+
 
     def get_category_hierarchy(self, obj):
         hierarchy = []

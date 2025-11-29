@@ -99,12 +99,9 @@ class ProductListByCategoryView(ListAPIView):
         user = self.request.user
         category_id = self.kwargs.get("category_id")  # ✅ Correctly extract category ID
 
-        if not Category.objects.filter(id=category_id).exists():
-            return Product.objects.none()  # ✅ Return an empty queryset if category doesn't exist
-
-
+       
     
-        return Product.objects.filter(categories__id=category_id).prefetch_related("translations").prefetch_related("media")  # ✅ **Ensure this line does not end with `.all()`**
+        return Product.objects.filter(categories__id=category_id).prefetch_related("translations") # ✅ **Ensure this line does not end with `.all()`**
         
 
 from .models import ProductGroup
@@ -118,13 +115,20 @@ class ProductGroupListView(ListAPIView):
     serializer_class = ProductGroupSerializer
 
     def get_queryset(self):
-        category_id = self.kwargs.get("category_id")  # Get category_id from URL
-        return ProductGroup.objects.filter(categories_groups__id=category_id).prefetch_related("subgroups").all()
+        category_id = self.kwargs.get("category_id")
+        return (
+            ProductGroup.objects
+            .filter(categories_groups__id=category_id)
+            .prefetch_related("translations")
+            .prefetch_related("subgroups__translations")
+            .prefetch_related("subgroups")
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context["request"] = self.request  # ✅ Pass the request to the serializer context
+        context["request"] = self.request
         return context
+
   # ✅ Dynamically filter by category_id
 
 class AdminProductGroupListView(ListAPIView):
@@ -1205,13 +1209,9 @@ class ProductAdminViewSet(ModelViewSet):
             image = request.FILES['images']
             upload_result = cloudinary.uploader.upload(image)
             file_url = upload_result.get('secure_url')
-            
-            # Create new media
-            ProductMedia.objects.create(
-                product=product,
-                file=file_url,
-                media_type='image'
-            )
+            product.media_url = file_url
+            product.save()
+           
 
             return Response({'message': 'Media added successfully'})
 
@@ -1421,7 +1421,9 @@ class ProductDetailedAdminView(APIView):
     def get(self, request, product_id):
         try:
             product = Product.objects.get(id=product_id)
+
             serializer = ProductDetailedAdminSerializer(product)
+           
             return Response(serializer.data)
         except Product.DoesNotExist:
             return Response(

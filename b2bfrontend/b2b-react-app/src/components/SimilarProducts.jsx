@@ -42,7 +42,7 @@ const SimilarProducts = ({ similarProducts = [] }) => {
      <CardMedia
        component="img"
        height="100"
-       image={product.image_path}
+       image={product.media_url}
        alt={product.name || "Product"}
        sx={{
          objectFit: "contain",

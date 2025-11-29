@@ -35,7 +35,7 @@ const ProductItem = () => {
   const { partId } = useParams(); // ✅ Extract product ID from URL
   const [product, setProduct] = useState(null);
   const [categoryHierarchy, setCategoryHierarchy] = useState([]); // ✅ State for categories
-  const [selectedImage, setSelectedImage] = useState(""); // ✅ Stores main image
+
   const [isModalOpen, setIsModalOpen] = useState(false); // ✅ Controls modal visibility
   const theme = useTheme();
   const [quantity, setQuantity] = useState(1);
@@ -80,8 +80,8 @@ const ProductItem = () => {
             })
             .catch(err => console.error("Error fetching category hierarchy:", err));
         }
-        if (response.data.media_list.length > 0) {
-          setSelectedImage(API_BASE_URL + response.data.media_list[0]);
+        if (response.data.media_url) {
+          setSelectedImage(response.data.media_url);
         }
       })
       .catch(error => console.error("Error fetching product:", error));
@@ -153,29 +153,7 @@ const ProductItem = () => {
         <Grid item xs={12} md={5}>
           <Paper elevation={2} sx={{ p: 2 }}>
             {/* Thumbnail Bar */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
-              {product.media_list.map((img, index) => (
-                <Card
-                  key={index}
-                  sx={{
-                    minWidth: 80,
-                    height: 80,
-                    cursor: 'pointer',
-                    border: selectedImage === API_BASE_URL + img ? 2 : 1,
-                    borderColor: selectedImage === API_BASE_URL + img ? 'primary.main' : 'grey.300',
-                  }}
-                  onClick={() => setSelectedImage(API_BASE_URL + img)}
-                >
-                  <CardMedia
-                    component="img"
-                    height="100%"
-                    image={API_BASE_URL + img}
-                    alt={`Preview ${index}`}
-                    sx={{ objectFit: 'contain' }}
-                  />
-                </Card>
-              ))}
-            </Box>
+           
 
             {/* Main Image */}
             <Card
@@ -185,7 +163,7 @@ const ProductItem = () => {
               <CardMedia
                 component="img"
                 height="400"
-                image={selectedImage}
+                image={product.media_url}
                 alt="Main Product"
                 sx={{ objectFit: 'contain' }}
               />
@@ -314,7 +292,7 @@ const ProductItem = () => {
         <DialogContent sx={{ p: 0 }}>
           <CardMedia
             component="img"
-            image={selectedImage}
+            image={media_url}
             alt="Magnified Product"
             sx={{ width: '100%', height: 'auto' }}
           />

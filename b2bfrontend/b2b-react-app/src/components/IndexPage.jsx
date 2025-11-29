@@ -178,22 +178,13 @@ const navigate = useNavigate();
                   <CardMedia
                     component="img"
                     height="200"
-                    image={product.media_list.length > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
+                    image={product.media_url > 0 ? product.media_url : DEFAULT_IMAGE}
                     alt={product.name}
                     sx={{
                       objectFit: 'contain',
                       p: 1,
                     }}
-                    onMouseEnter={(e) => {
-                      if (product.media_list.length > 1) {
-                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[1]}`;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (product.media_list.length > 1) {
-                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[0]}`;
-                      }
-                    }}
+                  
                   />
                   <CardContent sx={{ flexGrow: 1, p: 2 }}>
                     <Typography

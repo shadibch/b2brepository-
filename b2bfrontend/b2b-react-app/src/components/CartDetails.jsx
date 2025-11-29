@@ -139,8 +139,8 @@ export default function CreateDetails() {
               <CardMedia
                 component="img"
                 image={
-                  item.image_path
-                    ? `${API_BASE_URL}${item.image_path}`
+                  item.media_url
+                    ? `${item.media_url}`
                     : DEFAULT_IMAGE
                 }
                 alt={item.project_name}

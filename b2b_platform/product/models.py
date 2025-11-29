@@ -69,6 +69,7 @@ class ProductSubgroupTranslation(models.Model):
 from pgvector.django import VectorField
 class Product(models.Model):
     name = models.CharField(max_length=255)
+    media_url = models.CharField(max_length=300)
     part_id = models.CharField(max_length=50, unique=True)
     stock_quantity = models.IntegerField(default=0)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -86,7 +87,7 @@ class Product(models.Model):
 
     description = models.TextField()
     subgroups = models.ManyToManyField(ProductSubGroup, related_name="products")
-    categories = models.ManyToManyField(Category, related_name="products") 
+    categories = models.ManyToManyField(Category, related_name="products",    db_index=True ) 
     attributs = models.JSONField(blank=True, null=True)
     closest_category = models.ForeignKey('Category', blank=True, null=True, related_name='children_products', on_delete=models.CASCADE)
     currency = models.CharField(

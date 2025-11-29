@@ -175,7 +175,7 @@ const BranchManagement = ({ company }) => {
       render: (_, record) => (
         <Image
           width={50}
-          src={record.media_list.length > 0 ? `${API_BASE_URL}${record.media_list[0]}` : DEFAULT_IMAGE}
+          src={record.media_url ? record.media_url : DEFAULT_IMAGE}
         />
       ),
     }

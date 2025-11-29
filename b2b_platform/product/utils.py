@@ -83,6 +83,8 @@ def price(branch,obj):
                 else obj.base_price
             )
       
-def getProductName(language,obj):
-    translation = obj.translations.filter(language=language).first()
-    return translation.name if translation else obj.name
+def getProductName(language, obj):
+    for t in obj.translations.all():  # uses prefetched results
+        if t.language == language:
+            return t.name
+    return obj.name

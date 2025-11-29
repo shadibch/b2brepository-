@@ -138,8 +138,8 @@ export default function Contracts() {
 <CardMedia
                 component="img"
                 image={
-                  item.product.image_path
-                  ? `${API_BASE_URL}${item.product.image_path}`
+                  item.product.media_url
+                  ? `${item.product.media_url}`
                   : DEFAULT_IMAGE
                 }
                 alt={item.project_name}

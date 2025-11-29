@@ -161,8 +161,8 @@ export default function ProcessingOrders() {
                 <Grid item xs={12} sm={2}>
                   <img
                     src={
-                      item.image_path
-                        ? `${API_BASE_URL}${item.image_path}`
+                      item.media_url
+                        ? `${item.media_url}`
                         : DEFAULT_IMAGE
                     }
                     alt={item.project_name}

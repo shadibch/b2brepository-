@@ -178,7 +178,7 @@ export default function OrderManagement() {
                 >
                   <Grid item xs={12} sm={2}>
                     <img
-                      src={item.image_path ? `${API_BASE_URL}${item.image_path}` : DEFAULT_IMAGE}
+                      src={item.media_url ? `${item.media_url}` : DEFAULT_IMAGE}
                       alt={item.project_name}
                       style={{ width: "100%", maxWidth: 80, borderRadius: 4 }}
                     />
