@@ -325,7 +325,7 @@ export default function ProcessingOrders() {
         <DialogContent>{t("Are you sure this order is ready to be delivered?")}</DialogContent>
         <DialogActions>
           <Button onClick={() => setShowConfirmModal(false)}>{t("Cancel")}</Button>
-          <Button variant="contained" color="success" onClick={()=>WconfirmReadyToDeliver}>
+          <Button variant="contained" color="success" onClick={()=>confirmReadyToDeliver()}>
             {t("Confirm")}
           </Button>
         </DialogActions>

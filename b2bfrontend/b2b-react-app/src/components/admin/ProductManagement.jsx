@@ -38,7 +38,9 @@ import {
   ListItem,
   ListItemText,
   Collapse,
-  useTheme
+  useTheme,
+  CircularProgress,
+  Backdrop
 } from "@mui/material";
 
 import {
@@ -75,6 +77,7 @@ import CategoryTree from "./Categories";
 import AsyncSelect from "react-select/async";
 import BranchContractManagement from "./BranchAdminContractManagement";
 import ProductTable from "./ProductTable";
+import FullScreenLoader from "./FullscreenLoadingOverlay";
 
 
 /* --------------------------
@@ -185,6 +188,7 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
   const [editingPrice, setEditingPrice] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [toDelete, setToDelete] = useState(null);
+
   const theme = useTheme();
   useEffect(() => {
     if (product?.id) loadPrices();
@@ -261,6 +265,7 @@ const ProductPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
     }
   };
 
+ 
   return (
     <Box
     sx={{
@@ -409,7 +414,7 @@ const ProductContractPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState(null);
-
+  const [loading,setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [groups, setGroups] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
@@ -445,7 +450,7 @@ export default function ProductManagement() {
   }, [currentPage, selectedCategory]);
 
   const fetchInitial = async () => {
-    
+   
     await fetchGroups();
     if (selectedCategory?.id) await fetchProductsByCategory(selectedCategory.id);
     else await fetchProducts();
@@ -455,13 +460,15 @@ export default function ProductManagement() {
 setContextProduct(contextProductSelected);
   };
   const fetchProducts = async () => {
+    setLoading(true);
     try {
       const res = await axiosInstance.get(`/api/products/?page=${currentPage}`);
       setProducts(res.data.results || []);
-      setTotalPages(Math.ceil(res.data.count / (res.data.page_size || 10)));
+      setTotalPages(res.data.num_pages);
     } catch (err) {
       setMessage({ type: "error", text: t("Error fetching products") });
     }
+    setLoading(false);
   };
 
 
@@ -476,7 +483,7 @@ setContextProduct(contextProductSelected);
   };
 
   const fetchProductsByCategory = async (categoryId) => {
-   
+    setLoading(true);
     if(categoryId == "null") {
       fetchProducts();
     }else {
@@ -495,11 +502,15 @@ setContextProduct(contextProductSelected);
       setMessage({ type: "error", text: t("Error fetching category products") });
     }
   }
+  setLoading(false);
   };
 
   const handleSearch = async () => {
+    setLoading(true);
     try {
+      
       if (searchQuery.trim()) {
+        
         const res = await axiosInstance.get(`/api/search_text?q=${encodeURIComponent(searchQuery)}`);
         setProducts(res.data.results || []);
         setTotalPages(Math.ceil((res.data.count || 0) / 10));
@@ -510,6 +521,7 @@ setContextProduct(contextProductSelected);
     } catch (err) {
       setMessage({ type: "error", text: t("Error searching products") });
     }
+    setLoading(false);
   };
 
   /* --- Image handling --- */
@@ -680,6 +692,7 @@ setContextProduct(contextProductSelected);
   };
 
   const handleSave = async () => {
+    setLoading(true);
     try {
       const fd = new FormData();
 
@@ -720,6 +733,7 @@ setContextProduct(contextProductSelected);
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error saving product") });
     }
+    setLoading(false);
   };
 
   const handleDelete = (id) => {
@@ -742,6 +756,7 @@ setContextProduct(contextProductSelected);
   };
 
   const handleProductSelect = async (product) => {
+    setLoading(true);
     try {
       const res = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
       
@@ -787,6 +802,7 @@ setContextProduct(contextProductSelected);
     } catch (err) {
       setMessage({ type: "error", text: t("Error fetching product details") });
     }
+    setLoading(false);
   };
 
   const getProductImage = (product) => {
@@ -815,9 +831,17 @@ setContextProduct(contextProductSelected);
   };
   
   const theme = useTheme();
+
   /* --------------------------
      UI Render
      -------------------------- */
+     <Backdrop
+     sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+     open={loading}
+   >
+     <CircularProgress color="inherit" />
+   </Backdrop>
+   
   return (
     <Box
     sx={{
@@ -831,6 +855,7 @@ setContextProduct(contextProductSelected);
       direction: isRTL() ? "rtl" : "ltr",
     }}
   >
+     {loading && <FullScreenLoader />}
     {/* Header */}
     <Typography
       variant="h4"
@@ -857,16 +882,19 @@ setContextProduct(contextProductSelected);
 
               selectedCategory={selectedCategory}
               onSelect={async (cat) => {
+                
                 setSelectedCategory(cat);
                 setCurrentPage(1);
                 if (cat?.id) await fetchProductsByCategory(cat.id);
                 else await fetchProducts();
+
               }}
               handleMovedSelectedProduct={handleMovedProduct}
               
               expandedCategories={expandedCategories}
               setExpandedCategories={setExpandedCategories}
               selectedContextProduct={contextProduct}
+              setLoading={setLoading}
             />
           </Paper>
         </Grid>

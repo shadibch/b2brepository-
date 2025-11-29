@@ -54,7 +54,14 @@ from rest_framework.pagination import PageNumberPagination
 
 class ProductPagination(PageNumberPagination):
     page_size = 50  # ✅ Limit results to 50 per page
-
+    def get_paginated_response(self, data):
+        return Response({
+            "count": self.page.paginator.count,
+            "page": self.page.number,
+            "num_pages": self.page.paginator.num_pages,
+            "page_size": self.page_size,  # 👈 add this
+            "results": data
+        })
 class ProductsPrices(ListAPIView):
     serializer_class = ProductPriceCompanySerializer
     pagination_class = ProductPagination

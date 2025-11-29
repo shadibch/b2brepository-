@@ -8,12 +8,26 @@ import {
   Paper,
   Typography,
   useTheme,
+  Box,
 } from "@mui/material";
+import { isRTL } from "../utils/translator";
 
 const TechnicalDetailsTable = ({ product }) => {
   const theme = useTheme();
 
   return (
+    <Box
+    sx={{
+      width: "100%",
+      minHeight: "100vh",
+      bgcolor:
+        theme.palette.mode === "dark"
+          ? theme.palette.background.default
+          : "#f5f6fa",
+      p: 3,
+      direction: isRTL() ? "rtl" : "ltr",
+    }}
+  >
     <TableContainer
       component={Paper}
       elevation={0}
@@ -44,6 +58,7 @@ const TechnicalDetailsTable = ({ product }) => {
                   color: theme.palette.text.primary,
                   backgroundColor: theme.palette.action.selected,
                   fontSize: "0.875rem",
+                  textAlign: isRTL() ? 'right' : 'left', 
                   py: 1,
                   px: 2,
                 }}
@@ -54,6 +69,7 @@ const TechnicalDetailsTable = ({ product }) => {
                 sx={{
                   color: theme.palette.text.secondary,
                   fontSize: "0.875rem",
+                  textAlign: isRTL() ? 'right' : 'left', 
                   py: 1,
                   px: 2,
                 }}
@@ -65,6 +81,7 @@ const TechnicalDetailsTable = ({ product }) => {
         </TableBody>
       </Table>
     </TableContainer>
+    </Box>
   );
 };
 

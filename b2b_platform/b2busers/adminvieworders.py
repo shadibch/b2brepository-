@@ -19,6 +19,14 @@ class OrdersAdminUserPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
+    def get_paginated_response(self, data):
+        return Response({
+            "count": self.page.paginator.count,
+            "page": self.page.number,
+            "num_pages": self.page.paginator.num_pages,
+            "page_size": self.page_size,  # 👈 add this
+            "results": data
+        })
 
 class SearchOrders(ListAPIView):
     permission_classes = [IsAuthenticated, IsSuperUser]  # Ensure user is logged in and is superuser

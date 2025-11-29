@@ -44,7 +44,7 @@ export default function PaidOrders() {
         `/api/admin/paid-orders/?page=${currentPage}&q=${searchQuery}`
       );
       setOrders(response.data.results);
-      setTotalPages(Math.ceil(response.data.count / response.data.page_size));
+      setTotalPages(response.data.num_pages);
     } catch (error) {
       setMessage({ type: "error", text: t("Error fetching orders") });
     }

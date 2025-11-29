@@ -17,8 +17,10 @@ const CategoryTree = ({
   expandedCategories,
   setExpandedCategories,
   selectedContextProduct,
-  handleMovedSelectedProduct
+  handleMovedSelectedProduct,
+  setLoading
 }) => {
+  
   // 🔹 Convert category objects into a tree data structure MUI RichTreeView understands
   useEffect(() => {
     axiosInstance
@@ -66,6 +68,7 @@ const CategoryTree = ({
   
   // 🔹 Handle selection
   const handleSelect = (event, nodeId) => {
+    setLoading(true);
     console.log(selectedContextProduct);
     const node = findNodeById(treeData, nodeId);
 
@@ -73,6 +76,7 @@ const CategoryTree = ({
       setSelectedNode({ id: node.id, label: node.label });
       onSelect({ id: node.id, label: node.label });
     }
+    setLoading(false);
   };
 
   const handleMovedProduct = ()=> {
