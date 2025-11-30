@@ -452,8 +452,7 @@ export default function ProductManagement() {
   const fetchInitial = async () => {
    
   
-    if (selectedCategory?.id) await fetchProductsByCategory(selectedCategory.id);
-    else await fetchProducts();
+  handleSearch();
   };
 
   const handleContextProductSelected= (contextProductSelected)=> {
@@ -481,7 +480,7 @@ setContextProduct(contextProductSelected);
     }
     setLoading(true);
     if(categoryId == "null") {
-      fetchProducts();
+      handleSearch();
     }else {
     try {
       const res = await axiosInstance.get(`/api/products/category/${categoryId}`);
@@ -508,14 +507,18 @@ setContextProduct(contextProductSelected);
     setLoading(true);
     try {
       
-      if (searchQuery.trim()) {
+      if (searchQuery && searchQuery.trim() != '' ) {
         
         const res = await axiosInstance.get(`/api/search_text?q=${encodeURIComponent(searchQuery)}`);
         setProducts(res.data.results || []);
         setTotalPages(Math.ceil((res.data.count || 0) / 10));
         setCurrentPage(1);
       } else {
+       if(selectedCategory?.id) {
+        fetchProductsByCategory(selectedCategory?.id);
+       }else {
         await fetchProducts();
+       }
       }
     } catch (err) {
       setMessage({ type: "error", text: t("Error searching products") });
@@ -538,8 +541,7 @@ setContextProduct(contextProductSelected);
         await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-        setSelected(res.data);
+        
       } catch (err) {
         setMessage({ type: "error", text: t("Error updating product images") });
       }
@@ -707,7 +709,7 @@ setContextProduct(contextProductSelected);
       const res = await axiosInstance[method](url, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      selectedCategory ?  await fetchProductsByCategory(selectedCategory.id ) : await fetchProducts();
+      await handleSearch();
       setMessage({ type: "success", text: t(selected?.id ? "Product updated successfully" : "Product created successfully") });
 
 
@@ -726,7 +728,7 @@ setContextProduct(contextProductSelected);
     try {
       await axiosInstance.delete(`/api/admin/products/${productToDelete}/`);
       setMessage({ type: "success", text: t("Product deleted successfully") });
-       selectedCategory ?  await fetchProductsByCategory(selectedCategory.id ) : await fetchProducts();
+      await handleSearch();
       clearForm();
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error deleting product") });
@@ -745,8 +747,13 @@ setContextProduct(contextProductSelected);
       const res = await axiosInstance.get(`/api/admin/product-detail/${product.id}/`);
       
       const dp = res.data;
-      console.log(dp);
+      
       setSelected(dp);
+
+    
+      const category_id = dp.closest_category;
+      const groupsRes = await axiosInstance.get(`/api/product_groups/`+category_id+`/`);
+      setGroups(groupsRes.data || []);
 
       let productTranslations = dp.translations || {};
 
@@ -869,8 +876,8 @@ setContextProduct(contextProductSelected);
                 
                 setSelectedCategory(cat);
                 setCurrentPage(1);
-                if (cat?.id) await fetchProductsByCategory(cat.id);
-                else await fetchProducts();
+                setSearchQuery("");
+                await handleSearch();
 
               }}
               handleMovedSelectedProduct={handleMovedProduct}

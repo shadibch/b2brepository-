@@ -226,6 +226,7 @@ class WideSearch(ListAPIView):
         query = self.request.GET.get("q")
         branch_id = self.request.GET.get('branch_id')
         company_id = self.request.GET.get('company_id')
+
         return self.search_products(query,branch_id,company_id)
     def search_products(self, query, branch_id,company_id):
   
@@ -272,8 +273,7 @@ class WideSearch(ListAPIView):
              # Final ordering by rank descending
     )
 
-        for product in results:
-            print(f"Product ID: {product.id}, Rank: {product.rank}")
+
 
         return results
 

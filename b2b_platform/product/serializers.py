@@ -549,7 +549,7 @@ class ProductDetailedAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'name', 'part_id', 'base_price', 'translations',
-                   'stock_quantity', 
+                   'stock_quantity', 'closest_category',
                  'category_hierarchy', 'groups', 'subgroups','description','availibility','media_url']
 
     def get_translations(self, obj):
