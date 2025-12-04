@@ -443,6 +443,7 @@ export default function ProductManagement() {
   const addImageInputRef = useRef(null);
 
   const [tabIndex, setTabIndex] = useState(0);
+  const [initiated,setInitiated] = useState(false);
 
   /* --- Fetching & init --- */
   useEffect(() => {
@@ -450,10 +451,13 @@ export default function ProductManagement() {
   }, [currentPage, selectedCategory]);
 
   const fetchInitial = async () => {
-   
+   if(!initiated) {
   
   handleSearch();
-  };
+  setInitiated(true);
+   }  
+};
+
 
   const handleContextProductSelected= (contextProductSelected)=> {
 setContextProduct(contextProductSelected);
@@ -485,7 +489,7 @@ setContextProduct(contextProductSelected);
     try {
       const res = await axiosInstance.get(`/api/products/category/${categoryId}`);
       setProducts(res.data.results || []);
-      setTotalPages(Math.ceil(res.data.count / (res.data.page_size || 10)));
+      setTotalPages(res.data.num_pages);
       // Fetch groups for category if endpoint exists
       try {
         const groupsRes = await axiosInstance.get(`/api/product_groups/${categoryId}/`);
@@ -581,27 +585,6 @@ setContextProduct(contextProductSelected);
     }  
   };
 
-  const handleDeleteMainImage = async () => {
-    if (selected?.id) {
-      if (!selected.media_url) return;
-      try {
-        await axiosInstance.delete(`/api/admin/products/${selected.id}/delete_media/?index=${selectedImageIndex}`);
-        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-        setSelected(res.data);
-        setSelectedImageIndex(0);
-      } catch (err) {
-        setMessage({ type: "error", text: t("Error deleting product image") });
-      }
-    } else {
-      const newImages = [...tempImages];
-      const newPreviews = [...tempPreviewUrls];
-      newImages.splice(selectedImageIndex, 1);
-      newPreviews.splice(selectedImageIndex, 1);
-      setTempImages(newImages);
-      setTempPreviewUrls(newPreviews);
-      setSelectedImageIndex(Math.max(0, newImages.length - 1));
-    }
-  };
 
   const renderImageGallery = () => {
     const mediaList = selected?.id ? ([selected?.media_url] || []) : tempPreviewUrls;
@@ -711,12 +694,15 @@ setContextProduct(contextProductSelected);
       const res = await axiosInstance[method](url, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSelected(res.data.data);
+      const saved = res.data.data;
+      setSelected(saved);
+      if (saved.closest_category) {
+        const groupsRes = await axiosInstance.get(`/api/product_groups/${saved.closest_category}/`);
+        setGroups(groupsRes.data || []);
+        setSelectedSubgroups(saved.subgroups || []); // optional, if you want them pre-checked
+      }
      
       setMessage({ type: "success", text: t(selected?.id ? "Product updated successfully" : "Product created successfully") });
-     
-   
-      await handleSearch();
 
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error saving product") });
@@ -733,7 +719,6 @@ setContextProduct(contextProductSelected);
     try {
       await axiosInstance.delete(`/api/admin/products/${productToDelete}/`);
       setMessage({ type: "success", text: t("Product deleted successfully") });
-      await handleSearch();
       clearForm();
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error deleting product") });
