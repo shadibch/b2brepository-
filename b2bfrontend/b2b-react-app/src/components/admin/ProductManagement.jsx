@@ -511,7 +511,7 @@ setContextProduct(contextProductSelected);
         
         const res = await axiosInstance.get(`/api/search_text?q=${encodeURIComponent(searchQuery)}`);
         setProducts(res.data.results || []);
-        setTotalPages(Math.ceil((res.data.count || 0) / 10));
+        setTotalPages(res.data.num_pages);
         setCurrentPage(1);
       } else {
        if(selectedCategory?.id) {
@@ -533,55 +533,52 @@ setContextProduct(contextProductSelected);
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const file = files[0];
+    const newTempImages = [...tempImages];
+    const newTempPreviews = [...tempPreviewUrls];
+     
+      newTempImages.push(file);
+      newTempPreviews.push(URL.createObjectURL(file));
+    
+    setTempImages(newTempImages);
+    setTempPreviewUrls(newTempPreviews);
+   
 
     if (selected?.id) {
       try {
         const formData = new FormData();
         formData.append("images", file);
-        await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`, formData, {
+        const rest = await axiosInstance.post(`/api/admin/products/${selected.id}/update_media/?index=${selectedImageIndex}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        
+        selected.media_url = rest.media_url;
       } catch (err) {
         setMessage({ type: "error", text: t("Error updating product images") });
       }
-    } else {
-      const newTempImages = [...tempImages];
-      const newTempPreviews = [...tempPreviewUrls];
-      if (selectedImageIndex < newTempImages.length) {
-        newTempImages[selectedImageIndex] = file;
-        newTempPreviews[selectedImageIndex] = URL.createObjectURL(file);
-      } else {
-        newTempImages.push(file);
-        newTempPreviews.push(URL.createObjectURL(file));
-      }
-      setTempImages(newTempImages);
-      setTempPreviewUrls(newTempPreviews);
-    }
+    }  
+     
+    
   };
 
   const handleAddImage = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     const file = files[0];
+    setTempImages((s) => [...s, file]);
+      setTempPreviewUrls((s) => [...s, URL.createObjectURL(file)]);
+      setSelectedImageIndex(tempImages.length);
     if (selected?.id) {
       try {
         const formData = new FormData();
         formData.append("images", file);
-        await axiosInstance.post(`/api/admin/products/${selected.id}/add_media/`, formData, {
+       const res = await axiosInstance.post(`/api/admin/products/${selected.id}/add_media/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        const res = await axiosInstance.get(`/api/admin/product-detail/${selected.id}/`);
-        setSelected(res.data);
+        selected.media_url = res.media_url;
         setSelectedImageIndex(0);
       } catch (err) {
         setMessage({ type: "error", text: t("Error adding product image") });
       }
-    } else {
-      setTempImages((s) => [...s, file]);
-      setTempPreviewUrls((s) => [...s, URL.createObjectURL(file)]);
-      setSelectedImageIndex(tempImages.length);
-    }
+    }  
   };
 
   const handleDeleteMainImage = async () => {
@@ -634,8 +631,7 @@ setContextProduct(contextProductSelected);
                 </Paper>
 
                 <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                  <Button variant="outlined" color="error" onClick={handleDeleteMainImage} startIcon={<DeleteIcon />}>{t("Delete")}</Button>
-                  <Button variant="contained" onClick={() => addImageInputRef.current?.click()} startIcon={<AddIcon />}>{t("Add Image")}</Button>
+                       <Button variant="contained" onClick={() => addImageInputRef.current?.click()} startIcon={<AddIcon />}>{t("Add Image")}</Button>
                 </Box>
               </Box>
             ) : (
@@ -690,7 +686,11 @@ setContextProduct(contextProductSelected);
       if (selected?.id) fd.append("id", selected.id);
       else if (partId) fd.append("part_id", partId);
 
-      if (selectedCategory?.id) fd.append("closest_category", selectedCategory.id);
+      if (selectedCategory?.id) 
+        fd.append("closest_category", selectedCategory.id);
+      else if(selected?.closest_category) {
+        fd.append("closest_category", selected.closest_category);
+      }
       else return setMessage({ type: "error", text: t("Please select a category") });
 
       fd.append("base_price", price);
@@ -701,6 +701,8 @@ setContextProduct(contextProductSelected);
 
       if (!selected?.id) {
         tempImages.forEach((img) => fd.append("images", img));
+       
+      
       }
 
       const url = selected?.id ? `/api/admin/products/${selected.id}/` : "/api/admin/products/";
@@ -709,9 +711,12 @@ setContextProduct(contextProductSelected);
       const res = await axiosInstance[method](url, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      await handleSearch();
+      setSelected(res.data.data);
+     
       setMessage({ type: "success", text: t(selected?.id ? "Product updated successfully" : "Product created successfully") });
-
+     
+   
+      await handleSearch();
 
     } catch (err) {
       setMessage({ type: "error", text: err.response?.data?.error || t("Error saving product") });

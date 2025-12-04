@@ -1138,26 +1138,20 @@ class ProductAdminViewSet(ModelViewSet):
                     {'error': 'No image file provided'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            print("Passed Images")
+     
             image = request.FILES['images']
             
             # Get the media item at the specified index
-            media_items = list(product.media.all())
-            print(index)
-            print(len(media_items))
+
+            
             
             # Delete the old media and create new one
-            if index < len(media_items):
-                media_items[index].delete()
+           
             upload_result = cloudinary.uploader.upload(image)
             file_url = upload_result.get('secure_url')
-            ProductMedia.objects.create(
-                product=product,
-                file=file_url,
-                media_type='image'
-            )
-
-            return Response({'message': 'Media updated successfully'})
+            product.media_url = file_url
+            product.save()
+            return Response({'media_url':file_url })
 
         except Exception as e:
             print(e)
@@ -1292,10 +1286,8 @@ class ProductAdminViewSet(ModelViewSet):
                 for image in images :
                     upload_result = cloudinary.uploader.upload(image)
                     file_url = upload_result.get('secure_url')
-                    ProductMedia.objects.create(
-                        product=product,
-                        file=file_url
-                    )
+                    product.media_url = file_url
+                    product.save()
                 print("Start Created 6")
                 # Set groups and subgroups
 
@@ -1376,11 +1368,9 @@ class ProductAdminViewSet(ModelViewSet):
                     for image in images:
                         upload_result = cloudinary.uploader.upload(image)
                         file_url = upload_result.get('secure_url')
-
-                        ProductMedia.objects.create(
-                            product=product,
-                            file=file_url
-                        )
+                        product.media_url = file_url
+                        product.save()
+                        
 
                 # Update groups and subgroups
                 
