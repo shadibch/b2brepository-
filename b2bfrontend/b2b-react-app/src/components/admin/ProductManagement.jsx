@@ -648,6 +648,7 @@ setContextProduct(contextProductSelected);
     setSelectedImageIndex(0);
     setStockQuantity(0);
     setAvailability("M");
+    setLoading(false); // Reset loading state
   };
 
   const handleSave = async () => {
@@ -674,7 +675,11 @@ setContextProduct(contextProductSelected);
       else if(selected?.closest_category) {
         fd.append("closest_category", selected.closest_category);
       }
-      else return setMessage({ type: "error", text: t("Please select a category") });
+      else {
+        setMessage({ type: "error", text: t("Please select a category") });
+        setLoading(false);
+        return;
+      }
 
       fd.append("base_price", price);
       fd.append("availibility", availability);
