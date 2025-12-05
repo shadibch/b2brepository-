@@ -441,22 +441,17 @@ export default function ProductManagement() {
 
   const fileInputRef = useRef(null);
   const addImageInputRef = useRef(null);
+  const isSearchingRef = useRef(false);
 
   const [tabIndex, setTabIndex] = useState(0);
-  const [initiated,setInitiated] = useState(false);
 
   /* --- Fetching & init --- */
   useEffect(() => {
-    fetchInitial();
+    if (!isSearchingRef.current) {
+      handleSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, selectedCategory]);
-
-  const fetchInitial = async () => {
-   if(!initiated) {
-  
-  handleSearch();
-  setInitiated(true);
-   }  
-};
 
 
   const handleContextProductSelected= (contextProductSelected)=> {
@@ -505,9 +500,10 @@ setContextProduct(contextProductSelected);
   };
 
   const handleSearch = async () => {
-    if(loading) {
+    if(loading || isSearchingRef.current) {
       return;
     }
+    isSearchingRef.current = true;
     setLoading(true);
     try {
       
@@ -519,15 +515,17 @@ setContextProduct(contextProductSelected);
         setCurrentPage(1);
       } else {
        if(selectedCategory?.id) {
-        fetchProductsByCategory(selectedCategory?.id);
+        await fetchProductsByCategory(selectedCategory?.id);
        }else {
         await fetchProducts();
        }
       }
     } catch (err) {
       setMessage({ type: "error", text: t("Error searching products") });
+    } finally {
+      setLoading(false);
+      isSearchingRef.current = false;
     }
-    setLoading(false);
   };
 
   /* --- Image handling --- */
@@ -868,12 +866,10 @@ setContextProduct(contextProductSelected);
 
               selectedCategory={selectedCategory}
               onSelect={async (cat) => {
-                
                 setSelectedCategory(cat);
                 setCurrentPage(1);
                 setSearchQuery("");
-                await handleSearch();
-
+                // Let useEffect handle the search when selectedCategory changes
               }}
               handleMovedSelectedProduct={handleMovedProduct}
               
