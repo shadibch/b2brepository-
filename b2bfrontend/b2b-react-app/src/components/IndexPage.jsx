@@ -120,84 +120,40 @@ const navigate = useNavigate();
       <Container maxWidth="xl" sx={{ mt: 5, mb: 4 }}>
         {/* Categories Section */}
         <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Grid container spacing={3}>
-  {products.map((product) => (
-    <Grid 
-      item 
-      xs={12} sm={6} md={4} lg={3}
-      key={product.id}
-      sx={{ display: "flex" }}
-    >
-      <Card
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",  // 🔥 keeps grid perfectly aligned
-          cursor: "pointer",
-          transition: "transform 0.2s ease-in-out",
-          "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: 4,
-          },
-        }}
-        onClick={() => navigate(`/productitem/${product.part_id}`)}
-      >
-        <CardMedia
-          component="img"
-          height="200"
-          image={product.media_url || DEFAULT_IMAGE}
-          alt={product.name}
-          sx={{ objectFit: "contain", p: 1 }}
-        />
-
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: "medium",
-              mb: 1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-            }}
-          >
-            {truncateText(product.name)}
-          </Typography>
-
-          <Box sx={{ mb: 1 }}>
-            {product.price > 0 && product.price !== product.base_price ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6" sx={{ color: "error.main", fontWeight: "bold" }}>
-                  {formatNumber(product.price, product.currency)}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ textDecoration: "line-through", color: "text.secondary" }}
+          <Grid container spacing={2} justifyContent="center">
+            {categories.map((category) => (
+              <Grid item key={category.id}>
+                <Button
+                  variant="outlined"
+                  onClick={() => fetchProductsByCategory(category.id)}
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    p: 2,
+                    minWidth: 120,
+                    height: 100,
+                    borderRadius: 2,
+                  }}
                 >
-                  {formatNumber(product.base_price, product.currency)}
-                </Typography>
-              </Box>
-            ) : (
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                {formatNumber(product.base_price, product.currency)}
-              </Typography>
-            )}
-          </Box>
-
-          <Chip
-            label={t(product.availibility === "M" ? "Market" : "Stock")}
-            color={product.availibility === "M" ? "error" : "success"}
-            size="small"
-            sx={{ fontWeight: "bold" }}
-          />
-        </CardContent>
-      </Card>
-    </Grid>
-  ))}
-</Grid>
-
+                  <Box
+                    component="img"
+                    src={category.file}
+                    alt={category.name}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      mb: 1,
+                      objectFit: 'contain',
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                    {category.name}
+                  </Typography>
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
         </Box>
 
         {/* Products Section */}
@@ -222,13 +178,22 @@ const navigate = useNavigate();
                   <CardMedia
                     component="img"
                     height="200"
-                    image={product.media_url ? product.media_url : DEFAULT_IMAGE}
+                    image={product.media_url > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
                     alt={product.name}
                     sx={{
                       objectFit: 'contain',
                       p: 1,
                     }}
-                  
+                    onMouseEnter={(e) => {
+                      if (product.media_list.length > 1) {
+                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[1]}`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (product.media_list.length > 1) {
+                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[0]}`;
+                      }
+                    }}
                   />
                   <CardContent sx={{ flexGrow: 1, p: 2 }}>
                     <Typography
