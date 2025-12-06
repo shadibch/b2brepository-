@@ -158,99 +158,84 @@ const navigate = useNavigate();
 
         {/* Products Section */}
         <Box sx={{ mt: 4 }}>
-          <Grid container spacing={3}>
-            {products.map((product) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={product.id}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                    },
-                  }}
-                  onClick={() => navigate(`/productitem/${product.part_id}`)}
+        <Grid container spacing={3}>
+  {products.map((product) => (
+    <Grid 
+      item 
+      xs={12} sm={6} md={4} lg={3}
+      key={product.id}
+      sx={{ display: "flex" }}
+    >
+      <Card
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",  // 🔥 keeps grid perfectly aligned
+          cursor: "pointer",
+          transition: "transform 0.2s ease-in-out",
+          "&:hover": {
+            transform: "translateY(-4px)",
+            boxShadow: 4,
+          },
+        }}
+        onClick={() => navigate(`/productitem/${product.part_id}`)}
+      >
+        <CardMedia
+          component="img"
+          height="200"
+          image={product.media_url || DEFAULT_IMAGE}
+          alt={product.name}
+          sx={{ objectFit: "contain", p: 1 }}
+        />
+
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: "medium",
+              mb: 1,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {truncateText(product.name)}
+          </Typography>
+
+          <Box sx={{ mb: 1 }}>
+            {product.price > 0 && product.price !== product.base_price ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="h6" sx={{ color: "error.main", fontWeight: "bold" }}>
+                  {formatNumber(product.price, product.currency)}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ textDecoration: "line-through", color: "text.secondary" }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={product.media_url > 0 ? `${API_BASE_URL}${product.media_list[0]}` : DEFAULT_IMAGE}
-                    alt={product.name}
-                    sx={{
-                      objectFit: 'contain',
-                      p: 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (product.media_list.length > 1) {
-                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[1]}`;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (product.media_list.length > 1) {
-                        e.currentTarget.src = `${API_BASE_URL}${product.media_list[0]}`;
-                      }
-                    }}
-                  />
-                  <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                    <Typography
-                      variant="body2"
-                      component="p"
-                      sx={{
-                        fontWeight: 'medium',
-                        mb: 1,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {truncateText(product.name)}
-                    </Typography>
+                  {formatNumber(product.base_price, product.currency)}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                {formatNumber(product.base_price, product.currency)}
+              </Typography>
+            )}
+          </Box>
 
-                    <Box sx={{ mb: 1 }}>
-                      {product.price >0 && (product.price !=product.base_price ) ? (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography
-                            variant="h6"
-                            component="span"
-                            sx={{ color: 'error.main', fontWeight: 'bold' }}
-                          >
-                            {formatNumber(product.price, product.currency)}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            component="span"
-                            sx={{
-                              color: 'text.secondary',
-                              textDecoration: 'line-through',
-                            }}
-                          >
-                            {formatNumber(product.base_price, product.currency)}
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Typography variant="h6" component="span" sx={{ fontWeight: 'bold' }}>
-                          {formatNumber(product.base_price, product.currency)}
-                        </Typography>
-                      )}
-                    </Box>
+          <Chip
+            label={t(product.availibility === "M" ? "Market" : "Stock")}
+            color={product.availibility === "M" ? "error" : "success"}
+            size="small"
+            sx={{ fontWeight: "bold" }}
+          />
+        </CardContent>
+      </Card>
+    </Grid>
+  ))}
+</Grid>
 
-                    <Chip
-                      label={t(product.availibility === 'M' ? 'Market' : 'Stock')}
-                      color={product.availibility === 'M' ? 'error' : 'success'}
-                      size="small"
-                      sx={{ fontWeight: 'bold' }}
-                    />
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
         </Box>
       </Container>
     </>
