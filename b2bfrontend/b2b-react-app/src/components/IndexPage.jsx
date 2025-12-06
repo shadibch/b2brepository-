@@ -157,7 +157,7 @@ const navigate = useNavigate();
         </Box>
 
         {/* Products Section */}
-        <Box sx={{ mt: 4 }}>
+        
         <Box
   sx={{
     display: "grid",
@@ -238,7 +238,7 @@ const navigate = useNavigate();
   ))}
 </Box>
 
-        </Box>
+      
       </Container>
     </>
   );
