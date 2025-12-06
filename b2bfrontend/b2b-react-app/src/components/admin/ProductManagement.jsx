@@ -635,7 +635,7 @@ setContextProduct(contextProductSelected);
   /* --- Form handling --- */
   const clearForm = () => {
     setSelected(null);
-    setSelectedCategory(null);
+
     setSelectedGroups([]);
     setSelectedSubgroups([]);
     setTranslations({ en: { name: "", description: "" }, ar: { name: "", description: "" } });
