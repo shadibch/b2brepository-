@@ -158,26 +158,28 @@ const navigate = useNavigate();
 
         {/* Products Section */}
         <Box sx={{ mt: 4 }}>
-        <Grid container spacing={3}>
+        <Box
+  sx={{
+    display: "grid",
+    gap: 3,
+    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  }}
+>
   {products.map((product) => (
-    <Grid 
-      item 
-      xs={12} sm={6} md={4} lg={3}
-      key={product.id}
-      sx={{ display: "flex" }}
-    >
+    
       <Card
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",  // 🔥 keeps grid perfectly aligned
-          cursor: "pointer",
-          transition: "transform 0.2s ease-in-out",
-          "&:hover": {
-            transform: "translateY(-4px)",
-            boxShadow: 4,
-          },
-        }}
+      key={product.id}
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        cursor: "pointer",
+        transition: "transform 0.2s ease-in-out",
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: 4,
+        },
+      }}
         onClick={() => navigate(`/productitem/${product.part_id}`)}
       >
         <CardMedia
@@ -232,9 +234,9 @@ const navigate = useNavigate();
           />
         </CardContent>
       </Card>
-    </Grid>
+
   ))}
-</Grid>
+</Box>
 
         </Box>
       </Container>
