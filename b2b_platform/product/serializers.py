@@ -429,10 +429,25 @@ class ProductGroupCreateSerializer(serializers.ModelSerializer):
         return group
 from django.db import transaction
 from rest_framework import serializers
+class ProductSubgroupTranslationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductSubgroupTranslation
+        fields = ('language', 'name')
+
+class ProductSubgroupUpdateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    translations = ProductSubgroupTranslationSerializer(many=True)
+
+    class Meta:
+        model = ProductSubGroup
+        fields = ('id', 'name', 'translations')
+
+
+
 
 class ProductGroupUpdateSerializer(serializers.ModelSerializer):
     translations = ProductGroupTranslationSerializer(many=True)
-    subgroups = ProductSubgroupCreateSerializer(many=True)
+    subgroups = ProductSubgroupUpdateSerializer(many=True)
 
     class Meta:
         model = ProductGroup
@@ -443,6 +458,7 @@ class ProductGroupUpdateSerializer(serializers.ModelSerializer):
         # --------------------
         # Update group fields
         # --------------------
+
         instance.name = validated_data.get('name', instance.name)
         instance.save()
 
@@ -462,6 +478,7 @@ class ProductGroupUpdateSerializer(serializers.ModelSerializer):
         # Update subgroups
         # ----------------------------
         subgroups_data = validated_data.pop('subgroups', [])
+
 
         # Create a lookup of existing subgroups
         existing_subgroups = {sg.id: sg for sg in instance.subgroups.all()}

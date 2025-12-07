@@ -157,6 +157,7 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
       );
       setSubgroups(
         (selectedGroup.subgroups || []).map((sg) => ({
+          
           name: sg.base_name,
           id:sg.id,
           translations: sg.translations || [

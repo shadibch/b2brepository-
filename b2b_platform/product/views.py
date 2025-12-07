@@ -478,6 +478,7 @@ class ProductGroupViewSet(viewsets.ModelViewSet):
     pagination_class = GroupPagination
 
     def get_serializer_class(self):
+        print(self.request.data)
         if self.action == 'create':
             return ProductGroupCreateSerializer
         if self.action == 'list':
