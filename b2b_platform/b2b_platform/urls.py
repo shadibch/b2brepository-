@@ -90,7 +90,7 @@ urlpatterns = [
     path('api/products/<str:partId>/similar/', similar_products, name='similar-products'),
     path('api/delete_categories/<str:category_id>/', delete_category, name='delete-category'),
     path('api/admin/categories/',CategoryAdminListView.as_view()),
-    
+    path('api/admin/subgroups/<int:group_id>/',savesubgroup, name='savesubgroup'),
     path('api/admin/category/<int:category_id>/',CategoryAdminDetail.as_view()),
     path('api/admin/groups/',AdminProductGroupListView.as_view()),
     path('api/admin/', include(router.urls) ),

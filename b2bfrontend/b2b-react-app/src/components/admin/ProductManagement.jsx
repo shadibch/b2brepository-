@@ -90,6 +90,8 @@ import FullScreenLoader from "./FullscreenLoadingOverlay";
    -------------------------- */
 const TranslationFields = ({ translations, setTranslations }) => {
   const theme = useTheme();
+ 
+ 
   return (
     
     <Box   sx={{
@@ -138,11 +140,65 @@ const TranslationFields = ({ translations, setTranslations }) => {
 /* --------------------------
    GroupSelector
    -------------------------- */
-const GroupSelector = ({ groups, selectedGroups, onGroupSelect, selectedSubgroups, onSubgroupSelect }) => {
+const  GroupSelector = ({
+  categoryId,
+  groups,
+  setGroups,
+  selectedGroups,
+  onGroupSelect,
+  selectedSubgroups,
+  onSubgroupSelect,
+  onSubgroupsUpdated,
+}) => {
   const [expanded, setExpanded] = useState({});
 
   const toggle = (id) => setExpanded((s) => ({ ...s, [id]: !s[id] }));
+  const [modelSubGroup, setModelSubGroup] = useState(false);
+  const [subGroup, setSubGroup] = useState(null);
+  const addSubgroup = (groupId) => {
+    setModelSubGroup(true);
+    setSubGroup({
+      groupId,
+      name_en: "",
+      name_ar: "",
+    });
+  };
 
+
+  const handleSaveSubgroup = async () => {
+    try {
+      if (!subGroup?.groupId) return;
+
+      const payload = {
+        name: subGroup.name_en || subGroup.name_ar || "",
+        translations: [
+          { language: "en", name: subGroup.name_en || "" },
+          { language: "ar", name: subGroup.name_ar || "" },
+        ],
+      };
+
+      await axiosInstance.post(
+        `/api/admin/subgroups/${subGroup.groupId}/`,
+        payload
+      );
+
+      setModelSubGroup(false);
+      setSubGroup(null);
+      try {
+        const groupsRes = await axiosInstance.get(`/api/product_groups/${categoryId}/`);
+        setGroups(groupsRes.data || []);
+      } catch (e) {
+        // ignore
+      }
+
+      if (onSubgroupsUpdated) {
+        await onSubgroupsUpdated();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+ 
   return (
     <Box>
       {groups.map((g) => (
@@ -168,10 +224,68 @@ const GroupSelector = ({ groups, selectedGroups, onGroupSelect, selectedSubgroup
                   <Typography sx={{ ml: 1 }}>{s.name}</Typography>
                 </Box>
               ))}
+
+<Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={() => addSubgroup(g.id)}
+        sx={{ mt: 1 }}
+      >
+        {t("Add Subgroup")}
+      </Button>
             </Box>
           </Collapse>
         </Paper>
       ))}
+
+      <Dialog
+        open={modelSubGroup}
+        onClose={() => {
+          setModelSubGroup(false);
+          setSubGroup(null);
+        }}
+      >
+        <DialogTitle>{t("Add Subgroup")}</DialogTitle>
+        <DialogContent sx={{ mt: 1 }}>
+          <TextField
+            fullWidth
+            margin="dense"
+            label={`${t("Subgroup Name")} (EN)`}
+            value={subGroup?.name_en || ""}
+            onChange={(e) =>
+              setSubGroup((prev) => ({
+                ...(prev || {}),
+                name_en: e.target.value,
+              }))
+            }
+          />
+          <TextField
+            fullWidth
+            margin="dense"
+            label={`${t("Subgroup Name")} (AR)`}
+            value={subGroup?.name_ar || ""}
+            onChange={(e) =>
+              setSubGroup((prev) => ({
+                ...(prev || {}),
+                name_ar: e.target.value,
+              }))
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setModelSubGroup(false);
+              setSubGroup(null);
+            }}
+          >
+            {t("Cancel")}
+          </Button>
+          <Button variant="contained" onClick={handleSaveSubgroup}>
+            {t("Save")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
@@ -816,6 +930,19 @@ setContextProduct(contextProductSelected);
   
   const theme = useTheme();
 
+  const refreshGroupsForCurrentCategory = async () => {
+    try {
+      const categoryId = selectedCategory?.id || selected?.closest_category;
+      if (!categoryId) return;
+      const groupsRes = await axiosInstance.get(
+        `/api/product_groups/${categoryId}/`
+      );
+      setGroups(groupsRes.data || []);
+    } catch (e) {
+      // ignore refresh errors
+    }
+  };
+
   /* --------------------------
      UI Render
      -------------------------- */
@@ -997,6 +1124,8 @@ setContextProduct(contextProductSelected);
                   {tabIndex === 1 && (
                     <Box>
                       <GroupSelector
+                        setGroups={setGroups}
+                        categoryId={selectedCategory?.id}
                         groups={groups}
                         selectedGroups={selectedGroups}
                         onGroupSelect={(id) => {
@@ -1010,6 +1139,7 @@ setContextProduct(contextProductSelected);
                           });
                           setSelectedSubgroups([...otherGroupSubgroups, subId]);
                         }}
+                        onSubgroupsUpdated={refreshGroupsForCurrentCategory}
                       />
                     </Box>
                   )}

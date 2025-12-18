@@ -465,8 +465,39 @@ from .models import ProductGroup
 from .serializers import ProductGroupSerializer
 from rest_framework.pagination import PageNumberPagination
 
+
+
 class GroupPagination(PageNumberPagination):
     page_size = 10
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+
+@api_view(['POST'])
+@permission_classes([IsSuperUser])
+def savesubgroup(request, group_id):
+    data = request.data
+
+    subgroup = ProductSubGroup.objects.create(
+        name=data['name'],
+        group_id=group_id
+    )
+
+    translations = data.get('translations', [])
+    for trans_data in translations:
+        ProductSubgroupTranslation.objects.create(
+            productsubgroup=subgroup,
+            **trans_data
+        )
+
+    group = ProductGroup.objects.get(id=group_id)
+    serializer = ProductAdminGroupSerializer(group)
+
+    return Response(serializer.data)
+
+
+    
+    
 
 
 class ProductGroupViewSet(viewsets.ModelViewSet):

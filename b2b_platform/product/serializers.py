@@ -389,6 +389,7 @@ class ProductSubgroupCreateSerializer(serializers.ModelSerializer):
         model = ProductSubGroup
         fields = ('name', 'translations')
 
+
 class ProductGroupCreateSerializer(serializers.ModelSerializer):
     translations = ProductGroupTranslationSerializer(many=True)
     subgroups = ProductSubgroupCreateSerializer(many=True)
@@ -441,6 +442,7 @@ class ProductSubgroupUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductSubGroup
         fields = ('id', 'name', 'translations')
+
 
 
 
