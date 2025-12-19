@@ -44,7 +44,7 @@ const Header = ({ setProducts }) => {
   const direction = isRTL() ? 'rtl' : 'ltr';
 
   const { itemscount, setitemscount } = useHeaderContext();
-  const { setSelectedBranchId } = useHeaderContext();
+  const { setSelectedBranchId, selectedBranchId } = useHeaderContext();
   const [query, setQuery] = useState(''); // Store the input value
   const [links, setLinks] = useState([]);
   const [message, setMessage] = useState(null);
@@ -267,7 +267,7 @@ const Header = ({ setProducts }) => {
               {user && (
                 <>
                   <Divider />
-                  {links.map((link) => (
+                  {links &&links.map((link) => (
                     <MenuItem key={link.url} component={RouterLink} to={link.url} onClick={handleUserMenuClose}>
                       <ListItemText>{t(link.name)}</ListItemText>
                     </MenuItem>
@@ -280,8 +280,8 @@ const Header = ({ setProducts }) => {
                         <FormControl fullWidth size="small">
                           <InputLabel>{t('switchbranch')}</InputLabel>
                           <Select
-                            value={branches[0]?.id || ''}
-                            onChange={handleChange}
+                            value={selectedBranchId ||branches[0]?.id || ''}
+                            onChange={(e) => handleChange(e)}
                             label={t('switchbranch')}
                           >
                             {branches.map((branch) => (
