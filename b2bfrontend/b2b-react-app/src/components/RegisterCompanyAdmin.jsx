@@ -90,6 +90,12 @@ const RegisterCompanyAdmin = () => {
           </Alert>
         )}
 
+{errors && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors}
+          </Alert>
+        )}
+
       
             <TextField
              margin="normal"

@@ -114,7 +114,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Update the user instance with validated data
-        instance.email = validated_data.get('email', instance.email)
+        instance.email = validated_data.get('email', instance.email).lower()
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.branches.set(validated_data.get('branches', instance.branches.all()))  # Update branches (many-to-many field)
