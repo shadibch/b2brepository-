@@ -40,7 +40,7 @@ class LoginAPIView(TokenObtainPairView):
     permission_classes = [AllowAny]
     
     def post(self, request):
-        email = request.data.get("email")
+        email = request.data.get("email").lower()
         password = request.data.get("password")
 
         user = authenticate(email=email, password=password)
