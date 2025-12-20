@@ -93,7 +93,7 @@ class CategoryAdminSerializer(serializers.ModelSerializer):
 
     def get_level(self, obj):
         parent = obj.parent
-        level = 1
+        level = 0
         while parent:
             level += 1
             parent = parent.parent
@@ -101,11 +101,17 @@ class CategoryAdminSerializer(serializers.ModelSerializer):
 
 class CategoryAdminItemSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
-    
+    level = serializers.SerializerMethodField()
     class Meta:
         model = Category
-        fields = ['id', 'translations', 'file', 'groups']
-        
+        fields = ['id', 'translations', 'file', 'groups', 'level']
+    def get_level(self, obj):
+        parent = obj.parent
+        level = 0
+        while parent:
+            level += 1
+            parent = parent.parent
+        return level    
     def get_translations(self, obj):
         trans = obj.translations.all()
         return {t.language: {'name': t.name} for t in trans}

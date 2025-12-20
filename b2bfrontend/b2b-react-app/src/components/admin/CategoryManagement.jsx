@@ -478,7 +478,7 @@ export default function CategoryManager() {
               }
               onClose={() => setContextMenuAnchor(null)}
             >
-              {selected?.level < 3 && (
+              {selected?.level < 2 && (
                 <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
               )}
               
