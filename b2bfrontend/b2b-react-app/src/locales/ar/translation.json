@@ -317,5 +317,8 @@
     "Category Name (AR)" : "اسم الفئة",
     "similar_products": "المنتجات المشابهة",
     "Product moved to the new category" : "تم نقل المنتج إلى الفئة الجديدة",
+    "Group deleted successfully.": "تم حذف المجموعة بنجاح",
+    "Are you sure you want to delete this group?" : "هل أنت متأكد من رغبتك في حذف هذه المجموعة؟",
+    "Confirm Delete" : "تأكيد الحذف",
     "Select a category to edit or right-click the tree to create." : ".حدد فئة لتحريرها أو انقر بزر الماوس الأيمن على الشجرة لإنشائها"
 }

@@ -94,6 +94,7 @@ urlpatterns = [
     path('api/admin/category/<int:category_id>/',CategoryAdminDetail.as_view()),
     path('api/admin/groups/',AdminProductGroupListView.as_view()),
     path('api/admin/', include(router.urls) ),
+    path('api/admin/group/<int:groupid>/' , deleteGroup),
     path('api/admin/categories_admin/',CategorySaveView.as_view()),
     path('api/admin/product-detail/<int:product_id>/', ProductDetailedAdminView.as_view(), name='product-detail-admin'),
     path('api/admin/paid-orders/', PaidOrdersView.as_view(), name='paid-orders'),

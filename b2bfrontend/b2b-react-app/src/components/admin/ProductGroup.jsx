@@ -20,6 +20,11 @@ import {
   Pagination,
   Box,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -242,13 +247,34 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
 };
 
 // ---------------------- Group Table ----------------------
-const GroupTable = ({ groups, onEdit }) => {
+const GroupTable = ({ groups, onEdit, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const [page, setPage] = useState(1);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState(null);
   const perPage = 10;
   const totalPages = Math.ceil(groups.length / perPage);
 
   const displayed = groups.slice((page - 1) * perPage, page * perPage);
+
+  const handleDeleteClick = (group, e) => {
+    e.stopPropagation();
+    setGroupToDelete(group);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (groupToDelete && onDelete) {
+      await onDelete(groupToDelete.id);
+      setShowDeleteDialog(false);
+      setGroupToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setGroupToDelete(null);
+  };
 
   return (
     <Card variant="outlined" sx={{ backgroundColor: "background.paper", boxShadow: 1 }}>
@@ -274,18 +300,32 @@ const GroupTable = ({ groups, onEdit }) => {
     },
   }}
 >
-  <Typography
-    sx={{
-      flexGrow: 1,
-      cursor: "pointer",
-    }}
-    onClick={(e) => {
-      e.stopPropagation();
-      onEdit(group);
-    }}
-  >
-    {group.name}
-  </Typography>
+  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+    <Typography
+      sx={{
+        flexGrow: 1,
+        cursor: "pointer",
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onEdit(group);
+      }}
+    >
+      {group.name}
+    </Typography>
+    <IconButton
+      size="small"
+      onClick={(e) => handleDeleteClick(group, e)}
+      sx={{
+        color: "primary.contrastText",
+        "&:hover": {
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+        },
+      }}
+    >
+      <DeleteIcon fontSize="small" />
+    </IconButton>
+  </Box>
 </AccordionSummary>
 
 <AccordionDetails>
@@ -353,6 +393,24 @@ const GroupTable = ({ groups, onEdit }) => {
           <Pagination count={totalPages} page={page} onChange={(e, v) => setPage(v)} />
         </Box>
       </CardContent>
+
+      <Dialog open={showDeleteDialog} onClose={handleCancelDelete}>
+        <DialogTitle>{t("Confirm Delete")}</DialogTitle>
+        <DialogContent>
+          {t("Are you sure you want to delete this group?")}
+          {groupToDelete && (
+            <Typography variant="body2" sx={{ mt: 1, fontWeight: "bold" }}>
+              {groupToDelete.name}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>{t("Cancel")}</Button>
+          <Button color="error" onClick={handleConfirmDelete}>
+            {t("Delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 };
@@ -361,6 +419,7 @@ const GroupTable = ({ groups, onEdit }) => {
 export default function ProductGroupManager() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [alert, setAlert] = useState(null);
 
   const fetchGroups = async () => {
     try {
@@ -368,6 +427,28 @@ export default function ProductGroupManager() {
       setGroups(res.data.results || []);
     } catch (err) {
       console.error("Error fetching groups:", err);
+      setAlert({ type: "error", text: t("Error fetching groups") });
+    }
+  };
+
+  const handleDeleteGroup = async (groupId) => {
+    try {
+      await axiosInstance.delete(`/api/admin/group/${groupId}/`);
+      setAlert({
+        type: "success",
+        text: t("Group deleted successfully"),
+      });
+      // Clear selected group if it was deleted
+      if (selectedGroup?.id === groupId) {
+        setSelectedGroup(null);
+      }
+      fetchGroups();
+    } catch (err) {
+      setAlert({
+        type: "error",
+        text: err.response?.data?.error || t("Error deleting group"),
+      });
+      console.error("Error deleting group:", err);
     }
   };
 
@@ -396,8 +477,12 @@ export default function ProductGroupManager() {
       </Grid>
 
       <Grid item xs={12}>
-        <GroupTable groups={groups} onEdit={setSelectedGroup} />
+        <GroupTable groups={groups} onEdit={setSelectedGroup} onDelete={handleDeleteGroup} />
       </Grid>
+
+      <Snackbar open={!!alert} autoHideDuration={3000} onClose={() => setAlert(null)}>
+        {alert && <Alert severity={alert.type}>{alert.text}</Alert>}
+      </Snackbar>
     </Box>
   );
 }
