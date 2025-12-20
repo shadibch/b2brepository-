@@ -90,9 +90,9 @@ const RegisterCompanyAdmin = () => {
           </Alert>
         )}
 
-{errors && (
+{errors.register_number && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {errors}
+            {errors.register_number}
           </Alert>
         )}
 

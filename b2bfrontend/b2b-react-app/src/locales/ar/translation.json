@@ -320,5 +320,6 @@
     "Group deleted successfully.": "تم حذف المجموعة بنجاح",
     "Are you sure you want to delete this group?" : "هل أنت متأكد من رغبتك في حذف هذه المجموعة؟",
     "Confirm Delete" : "تأكيد الحذف",
+    "Register number already exists.":"رقم التسجيل موجود بالفعل.",
     "Select a category to edit or right-click the tree to create." : ".حدد فئة لتحريرها أو انقر بزر الماوس الأيمن على الشجرة لإنشائها"
 }
