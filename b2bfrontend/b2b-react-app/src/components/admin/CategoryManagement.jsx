@@ -231,7 +231,7 @@ export default function CategoryManager() {
       setLoadingCategories(true);
       const res = await axiosInstance.get('/api/admin/categories/');
       // format to RichTreeView items
-      const formatted = [{ id: 'root', label: t('Root'), children: formatTree(res.data) }];
+      const formatted = [{ id: 'root', label: t('Root'), children: formatTree(res.data), level: 0 }];
       setCategories(formatted);
     } catch (err) {
       console.error(err);
@@ -242,7 +242,10 @@ export default function CategoryManager() {
   };
 
   const formatTree = (nodes) => (
-    nodes.map(n => ({ id: String(n.id || `node-${Math.random()}`), label: n.label || n.name || n.title || '', children: n.children ? formatTree(n.children) : [] }))
+    nodes.map(n => ({ id: String(n.id || `node-${Math.random()}`), 
+    label: n.label || n.name || n.title || '',
+    level: n.level || 0,
+    children: n.children ? formatTree(n.children) : [] }))
   );
 
   const fetchGroups = async () => {
@@ -475,7 +478,10 @@ export default function CategoryManager() {
               }
               onClose={() => setContextMenuAnchor(null)}
             >
-              <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
+              {selected?.level < 3 && (
+                <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
+              )}
+              
               {selected?.id && selected.id  && (
                 <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
               )}

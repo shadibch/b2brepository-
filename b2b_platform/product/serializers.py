@@ -76,10 +76,11 @@ class CategoryAdminCreateUpdateSerializer(serializers.ModelSerializer):
 class CategoryAdminSerializer(serializers.ModelSerializer):
     children = serializers.SerializerMethodField()
     label = serializers.SerializerMethodField()
+    level = serializers.SerializerMethodField()
     
     class Meta:
         model = Category
-        fields = ['id', 'label', 'children', 'file']
+        fields = ['id', 'label', 'children', 'file','level']
 
     def get_children(self, obj):
         return CategoryAdminSerializer(obj.children.all(), many=True, context=self.context).data
@@ -89,6 +90,14 @@ class CategoryAdminSerializer(serializers.ModelSerializer):
         language = request.LANGUAGE_CODE if request else "en"
         translation = obj.translations.filter(language=language).first()
         return translation.name if translation else obj.name
+
+    def get_level(self, obj):
+        parent = obj.parent
+        level = 1
+        while parent:
+            level += 1
+            parent = parent.parent
+        return level
 
 class CategoryAdminItemSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
