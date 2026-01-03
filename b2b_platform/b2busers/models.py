@@ -22,7 +22,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    
+    reset_token = models.CharField(max_length=50)
+    reset_expiary_date=models.DateTimeField()
     branches = models.ManyToManyField(
         'company.Branch',
         related_name="users",

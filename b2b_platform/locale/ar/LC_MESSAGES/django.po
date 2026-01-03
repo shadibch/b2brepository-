@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-22 19:43+0300\n"
+"POT-Creation-Date: 2026-01-03 16:08+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,121 +18,162 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
-#: .\b2busers\adminvieworders.py:184
-msgid "Missing start_date"
-msgstr "تاريخ البداية مفقود "
-
-#: .\b2busers\adminvieworders.py:189
-msgid "Invalid date format"
-msgstr "صيغة التاريخ غير صالحة"
-
-#: .\b2busers\adminvieworders.py:198
-msgid "Orders Report"
-msgstr "تقرير الطلبات"
-
-#: .\b2busers\adminvieworders.py:208
-msgid "ID"
-msgstr "المعرف"
-
-#: .\b2busers\adminvieworders.py:209
-msgid "Status"
-msgstr "الحالة"
-
-#: .\b2busers\adminvieworders.py:210
-msgid "Order Status"
-msgstr "حالة الطلب"
-
-#: .\b2busers\adminvieworders.py:211
-msgid "Purchase Date"
-msgstr "تاريخ الشراء"
-
-#: .\b2busers\adminvieworders.py:212
-msgid "Paid Date"
-msgstr "تاريخ الدفع"
-
-#: .\b2busers\adminvieworders.py:213
-msgid "Company Name"
-msgstr "اسم الشركة"
-
-#: .\b2busers\adminvieworders.py:214
-msgid "Company Register Number"
-msgstr "رقم تسجيل الشركة"
-
-#: .\b2busers\adminvieworders.py:215
-msgid "Company Credit"
-msgstr "رصيد الشركة"
-
-#: .\b2busers\adminvieworders.py:216
-msgid "Total Price"
-msgstr "السعر الإجمالي"
 
 #
-msgid "ACC"
-msgstr "مقبول"
+#: .\b2busers\adminvieworders.py:190
+#, python-format
+msgid "Not enough items in the stock:  %(items_str)s"
+msgstr "لا يوجد ما يكفي من هذه العناصر في المخزن: %(items_str)s"
 
 #
-msgid "UDL"
-msgstr "جاهز للتسليم"
-#
-msgid "RJC"
-msgstr  "تم رفض الطلب"
-
-#
-msgid "UNP"
-msgstr "الطلب غير مدفوع"
-
-#
-msgid "PRC"
-msgstr "تحت المعالجة"
-
-#
-msgid "DLV"
-msgstr "تم التسليم"
-
-#
-msgid "PND"
-msgstr "قيد الانتظار"
-
-#
+#: .\b2busers\adminvieworders.py:259 .\b2busers\adminvieworders.py:361
 msgid "Name"
 msgstr "الاسم"
 
 #
+#: .\b2busers\adminvieworders.py:260 .\b2busers\adminvieworders.py:362
 msgid "Part Id"
 msgstr "رقم المنتج"
 
 #
-msgid "Order ID"
-msgstr "رقم الطلب"
-#
-msgid "Branch"
-msgstr "اسم الفرع"
-#
-
+#: .\b2busers\adminvieworders.py:261 .\b2busers\adminvieworders.py:363
 msgid "Price"
 msgstr "السعر"
 
 #
+#: .\b2busers\adminvieworders.py:262 .\b2busers\adminvieworders.py:364
 msgid "Quantity"
 msgstr "الكمية"
 
-msgid "Products Order"
-msgstr "منتجات الطلب"
 #
-msgid "Credit"
-msgstr "ما تبقى من التامين"
+#: .\b2busers\adminvieworders.py:263 .\b2busers\adminvieworders.py:365
+msgid "Branch"
+msgstr "اسم الفرع"
+
+#: .\b2busers\adminvieworders.py:264 .\b2busers\adminvieworders.py:366
+#: .\b2busers\adminvieworders.py:382 .\b2busers\adminvieworders.py:527
+msgid "Total Price"
+msgstr "السعر الإجمالي"
 
 #
-msgid "Company"
-msgstr "الشركة"
-
-#
+#: .\b2busers\adminvieworders.py:265
 msgid "Quantities In Stock"
 msgstr "الكمية في المخزن"
 
 #
+#: .\b2busers\adminvieworders.py:266
+msgid "Company"
+msgstr "الشركة"
+
+#: .\b2busers\adminvieworders.py:267 .\b2busers\adminvieworders.py:521
+msgid "Purchase Date"
+msgstr "تاريخ الشراء"
+
+#: .\b2busers\adminvieworders.py:268 .\b2busers\adminvieworders.py:382
+#: .\b2busers\adminvieworders.py:525
+msgid "Company Credit"
+msgstr "رصيد الشركة"
+
+#
+#: .\b2busers\adminvieworders.py:269 .\b2busers\adminvieworders.py:382
+#: .\b2busers\adminvieworders.py:526
+msgid "Credit"
+msgstr "ما تبقى من التامين"
+
+#
+#: .\b2busers\adminvieworders.py:274
 msgid "Purchased Items"
 msgstr "المنتوجات المشتراة"
+
+#: .\b2busers\adminvieworders.py:372
+msgid "Products Order"
+msgstr "منتجات الطلب"
+
+#: .\b2busers\adminvieworders.py:382 .\b2busers\adminvieworders.py:523
+msgid "Company Name"
+msgstr "اسم الشركة"
+
 #
-msgid "Not enough items in the stock:  %(items_str)s"
-msgstr "لا يوجد ما يكفي من هذه العناصر في المخزن: %(items_str)s"
+#: .\b2busers\adminvieworders.py:382
+msgid "Order ID"
+msgstr "رقم الطلب"
+
+#: .\b2busers\adminvieworders.py:501
+msgid "Missing start_date"
+msgstr "تاريخ البداية مفقود "
+
+#: .\b2busers\adminvieworders.py:508
+msgid "Orders Report"
+msgstr "تقرير الطلبات"
+
+#: .\b2busers\adminvieworders.py:518
+msgid "ID"
+msgstr "المعرف"
+
+#: .\b2busers\adminvieworders.py:519
+msgid "Status"
+msgstr "الحالة"
+
+#: .\b2busers\adminvieworders.py:520
+msgid "Order Status"
+msgstr "حالة الطلب"
+
+#: .\b2busers\adminvieworders.py:522
+msgid "Paid Date"
+msgstr "تاريخ الدفع"
+
+#: .\b2busers\adminvieworders.py:524
+msgid "Company Register Number"
+msgstr "رقم تسجيل الشركة"
+
+#
+#: .\b2busers\views.py:162
+msgid "RESET_SUBJECT"
+msgstr "إعادة تعيين كلمة المرور"
+
+#
+#: .\b2busers\views.py:169
+msgid "RESET_MESSAGE_PASSWORD"
+msgstr ""
+"عزيزي/عزيزتي %(name)s<br/>"
+"<br/>"
+"لقد طلبتَ/طلبتِ إعادة تعيين كلمة مرورك.<br/>"
+"<br/>"
+"يرجى النقر على الرابط التالي:<br/>"
+"<br/>"
+"<a href=\"https://b2brepository.onrender.com/reset/%(token)s\">إعادة تعيين كلمة مرورك</a><br/>"
+"<br/>"
+"فريق دعم B2B<br/>"
+"مع التحية"
+
+
+#~ msgid "Invalid date format"
+#~ msgstr "صيغة التاريخ غير صالحة"
+
+#
+#~ msgid "ACC"
+#~ msgstr "مقبول"
+
+#
+#~ msgid "UDL"
+#~ msgstr "جاهز للتسليم"
+
+#
+#~ msgid "RJC"
+#~ msgstr "تم رفض الطلب"
+
+#
+#~ msgid "UNP"
+#~ msgstr "الطلب غير مدفوع"
+
+#
+#~ msgid "PRC"
+#~ msgstr "تحت المعالجة"
+
+#
+#~ msgid "DLV"
+#~ msgstr "تم التسليم"
+
+#
+#~ msgid "PND"
+#~ msgstr "قيد الانتظار"

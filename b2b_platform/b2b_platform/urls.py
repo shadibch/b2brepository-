@@ -41,6 +41,8 @@ router.register(r'products', ProductAdminViewSet, basename='product-admin')
 import os
 urlpatterns = [
     path('administrator/', admin.site.urls),
+    path('api/request/resetpassword/' , requestResetPassword ),
+    path('api/reset_password/' , reset_password),
     path('api/', include('company.urls')),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),

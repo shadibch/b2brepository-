@@ -26,6 +26,8 @@ import { IconButton } from "@mui/material";
 import { Brightness4, Brightness7 } from "@mui/icons-material";
 import { appTheme } from "./components/theme";
 import "./assets/fonts/fonts.css";
+import RequestResetPasswordPage from "./components/RequestResetPassword";
+import ResetPassword from "./components/ResetPassword.";
 
 function App() {
   const token = localStorage.getItem("authToken");
@@ -70,6 +72,8 @@ function App() {
           <Route path="/branches" element={<Branches />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/contracts" element={<Contracts />} />
+          <Route path="/requestResetPassword" element={<RequestResetPasswordPage/>} /> 
+          <Route path="/reset/:token" element={<ResetPassword/>} /> 
           <Route path="*" element={<NotFound />} />
         </Routes>
         <IconButton

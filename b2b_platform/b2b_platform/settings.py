@@ -115,6 +115,8 @@ TEMPLATES = [
     },
 ]
 
+
+EXPIARY_TOKEN_TIME=int(os.environ.get('EXPIARY_TOKEN_TIME',10))
 WSGI_APPLICATION = 'b2b_platform.wsgi.application'
 
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.example.com')

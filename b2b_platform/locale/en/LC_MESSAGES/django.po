@@ -1,71 +1,144 @@
-#: .\b2busers\adminvieworders.py:184
-msgid "Missing start_date"
-msgstr "Missing start_date"
+#: .\b2busers\adminvieworders.py:190
+#, python-format
+msgid "Not enough items in the stock:  %(items_str)s"
+msgstr ""
 
-#: .\b2busers\adminvieworders.py:189
-msgid "Invalid date format"
-msgstr "Invalid date format"
+#: .\b2busers\adminvieworders.py:259 .\b2busers\adminvieworders.py:361
+msgid "Name"
+msgstr ""
 
-#: .\b2busers\adminvieworders.py:198
-msgid "Orders Report"
-msgstr "Orders Report"
+#: .\b2busers\adminvieworders.py:260 .\b2busers\adminvieworders.py:362
+msgid "Part Id"
+msgstr ""
 
-#: .\b2busers\adminvieworders.py:208
-msgid "ID"
-msgstr "ID"
+#: .\b2busers\adminvieworders.py:261 .\b2busers\adminvieworders.py:363
+#, fuzzy
+#| msgid "Total Price"
+msgid "Price"
+msgstr "Total Price"
 
-#: .\b2busers\adminvieworders.py:209
-msgid "Status"
-msgstr "Status"
+#: .\b2busers\adminvieworders.py:262 .\b2busers\adminvieworders.py:364
+msgid "Quantity"
+msgstr ""
 
-#: .\b2busers\adminvieworders.py:210
-msgid "Order Status"
-msgstr "Order Status"
+#: .\b2busers\adminvieworders.py:263 .\b2busers\adminvieworders.py:365
+msgid "Branch"
+msgstr ""
 
-#: .\b2busers\adminvieworders.py:211
-msgid "Purchase Date"
-msgstr "Purchase Date"
-
-#: .\b2busers\adminvieworders.py:212
-msgid "Paid Date"
-msgstr "Paid Date"
-
-#: .\b2busers\adminvieworders.py:213
-msgid "Company Name"
-msgstr "Company Name"
-
-#: .\b2busers\adminvieworders.py:214
-msgid "Company Register Number"
-msgstr "Company Register Number"
-
-#: .\b2busers\adminvieworders.py:215
-msgid "Company Credit"
-msgstr "Company Credit"
-
-#: .\b2busers\adminvieworders.py:216
+#: .\b2busers\adminvieworders.py:264 .\b2busers\adminvieworders.py:366
+#: .\b2busers\adminvieworders.py:382 .\b2busers\adminvieworders.py:527
 msgid "Total Price"
 msgstr "Total Price"
 
-msgid "ACC"
-msgstr "Accepted"
+#: .\b2busers\adminvieworders.py:265
+msgid "Quantities In Stock"
+msgstr ""
 
+#: .\b2busers\adminvieworders.py:266
+#, fuzzy
+#| msgid "Company Name"
+msgid "Company"
+msgstr "Company Name"
 
-msgid "UDL"
-msgstr "Ready for Delivery"
+#: .\b2busers\adminvieworders.py:267 .\b2busers\adminvieworders.py:521
+msgid "Purchase Date"
+msgstr "Purchase Date"
 
-msgid "RJC"
-msgstr  "Order has rejected"
+#: .\b2busers\adminvieworders.py:268 .\b2busers\adminvieworders.py:382
+#: .\b2busers\adminvieworders.py:525
+msgid "Company Credit"
+msgstr "Company Credit"
 
-msgid "UNP"
-msgstr "Unpaid Order"
+#: .\b2busers\adminvieworders.py:269 .\b2busers\adminvieworders.py:382
+#: .\b2busers\adminvieworders.py:526
+#, fuzzy
+#| msgid "Company Credit"
+msgid "Credit"
+msgstr "Company Credit"
 
-msgid "PRC"
-msgstr "Under Processing"
+#: .\b2busers\adminvieworders.py:274
+#, fuzzy
+#| msgid "Purchase Date"
+msgid "Purchased Items"
+msgstr "Purchase Date"
 
-msgid "DLV"
-msgstr "Delivered"
+#: .\b2busers\adminvieworders.py:372
+msgid "Products Order"
+msgstr ""
 
-msgid "PND"
-msgstr "Pending"
+#: .\b2busers\adminvieworders.py:382 .\b2busers\adminvieworders.py:523
+msgid "Company Name"
+msgstr "Company Name"
 
+#: .\b2busers\adminvieworders.py:382
+#, fuzzy
+#| msgid "Order Status"
+msgid "Order ID"
+msgstr "Order Status"
 
+#: .\b2busers\adminvieworders.py:501
+msgid "Missing start_date"
+msgstr "Missing start_date"
+
+#: .\b2busers\adminvieworders.py:508
+msgid "Orders Report"
+msgstr "Orders Report"
+
+#: .\b2busers\adminvieworders.py:518
+msgid "ID"
+msgstr "ID"
+
+#: .\b2busers\adminvieworders.py:519
+msgid "Status"
+msgstr "Status"
+
+#: .\b2busers\adminvieworders.py:520
+msgid "Order Status"
+msgstr "Order Status"
+
+#: .\b2busers\adminvieworders.py:522
+msgid "Paid Date"
+msgstr "Paid Date"
+
+#: .\b2busers\adminvieworders.py:524
+msgid "Company Register Number"
+msgstr "Company Register Number"
+
+#: .\b2busers\views.py:162
+msgid "RESET_SUBJECT"
+msgstr "Reset Password"
+
+#
+#: .\b2busers\views.py:169
+msgid "RESET_MESSAGE_PASSWORD"
+msgstr ""
+"Dear %(name)s,\n\n <BR/>"
+"You have requested to reset your password. Please click on the following link:\n\n <BR/>"
+"<a href=\"https://b2brepository.onrender.com/reset/%(token)s\">Reset your password</a>\n\n <BR/>"
+"If you did not request a password reset, please ignore this email.\n\n <BR/>"
+"Regards,\n <BR/>"
+"B2B Team"
+
+#~ msgid "Invalid date format"
+#~ msgstr "Invalid date format"
+
+#~ msgid "ACC"
+#~ msgstr "Accepted"
+
+#~ msgid "UDL"
+#~ msgstr "Ready for Delivery"
+
+#~ msgid "RJC"
+#~ msgstr "Order has rejected"
+
+#~ msgid "UNP"
+#~ msgstr "Unpaid Order"
+
+#~ msgid "PRC"
+#~ msgstr "Under Processing"
+
+#~ msgid "DLV"
+#~ msgstr "Delivered"
+
+#~ msgid "PND"
+#~ msgstr "Pending"

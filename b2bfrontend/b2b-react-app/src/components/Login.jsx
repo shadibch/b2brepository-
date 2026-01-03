@@ -9,6 +9,7 @@ import {
   Typography,
   Box,
   Link as MuiLink,
+  Stack,
 } from '@mui/material';
 import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
 import axiosInstance from './axiosInstance';
@@ -97,11 +98,16 @@ const Login = () => {
                     >
                         {t('login')}
                     </Button>
-                    <Box textAlign="center">
-                        <MuiLink component={Link} to="/register_company_admin" variant="body2">
-                            {t('signup')}
-                        </MuiLink>
-                    </Box>
+                    <Stack spacing={1} alignItems="center">
+    <MuiLink component={Link} to="/register_company_admin" variant="body2">
+        {t('signup')}
+    </MuiLink>
+
+    <MuiLink component={Link} to="/requestResetPassword" variant="body2">
+        {t('Forget Password')}
+    </MuiLink>
+</Stack>
+
                 </Box>
             </Paper>
         </Container>

@@ -1,4 +1,10 @@
 # views.py
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
+from django.http import response
+from b2b_platform.settings import EMAIL_HOST, EMAIL_HOST_EMAIL, EMAIL_HOST_PASSWORD, EMAIL_HOST_USER, EMAIL_PORT, EXPIARY_TOKEN_TIME
+from b2busers.utils import addMinutesToNow, newtoken
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -134,9 +140,111 @@ class CompanyUserRegistrationAPIView(APIView):
             user = serializer.save()
             return Response({"message": "User created successfully", "user_id": user.id}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.utils import timezone
+from .models import CustomUser
+
+@api_view(['POST'])
+def requestResetPassword(request):
+    email = request.data.get("email")
+
+    if not email:
+        return Response(
+            {"error": "Email is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        user = CustomUser.objects.get(email=email)
+    except CustomUser.DoesNotExist:
+        # Prevent email enumeration (security best practice)
+        return Response(status=status.HTTP_200_OK)
+
+    user.reset_token = newtoken()
+    user.reset_expiary_date = addMinutesToNow(EXPIARY_TOKEN_TIME)
+    user.save()
+
+    sendUserResetRequest(user)
+
+    return Response(status=status.HTTP_200_OK)
+
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
+from django.contrib.auth.hashers import make_password
+from .models import CustomUser
+
+@api_view(['POST'])
+def reset_password(request):
+    """
+    Reset user password using a reset token.
+    Expects JSON:
+    {
+        "reset_token": "token_here",
+        "new_password": "NewPass123!",
+        "confirm_password": "NewPass123!"
+    }
+    """
+    data = request.data
+    reset_token = data.get("reset_token")
+    new_password = data.get("new_password")
+    confirm_password = data.get("confirm_password")
+
+    if not reset_token or not new_password or not confirm_password:
+        return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if new_password != confirm_password:
+        return Response({"error": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = CustomUser.objects.get(reset_token=reset_token)
+        if not user.reset_expiary_date or timezone.make_aware(user.reset_expiary_date) < timezone.now():
+            return Response({"error": "Reset token has expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+    except CustomUser.DoesNotExist:
+        return Response({"error": "Invalid reset token."}, status=status.HTTP_400_BAD_REQUEST)
+
+ 
+
+    # Set new password
+    user.set_password(new_password)
+    # Clear reset token and expiry
+    user.reset_token = None
+    user.reset_expiary_date = None
+    user.save()
+
+    return Response({"message": "Password reset successfully."}, status=status.HTTP_200_OK)
+
+
+from django.utils.translation import gettext as _
+def sendUserResetRequest(user):
+    message = MIMEMultipart()
+    message["Subject"] = _("RESET_SUBJECT")
+    
+        
+    sender_email = EMAIL_HOST_EMAIL
+    receiver_email = user.email
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    body = _("RESET_MESSAGE_PASSWORD") % {
+    "name": user.first_name,
+    "token": user.reset_token,
+}
+    # Create the multipart email
+
+
+    # Attach the text part
+    message.attach(MIMEText(body, "html"))
+ 
+      
+    with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
+        server.starttls()  # Secure the connection
+        server.login(EMAIL_HOST_USER , EMAIL_HOST_PASSWORD )
+        server.sendmail( EMAIL_HOST_EMAIL, user.email ,message.as_string())
 
 
 

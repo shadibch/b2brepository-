@@ -321,5 +321,15 @@
     "Are you sure you want to delete this group?" : "هل أنت متأكد من رغبتك في حذف هذه المجموعة؟",
     "Confirm Delete" : "تأكيد الحذف",
     "Register number already exists.":"رقم التسجيل موجود بالفعل.",
-    "Select a category to edit or right-click the tree to create." : ".حدد فئة لتحريرها أو انقر بزر الماوس الأيمن على الشجرة لإنشائها"
+    "Select a category to edit or right-click the tree to create." : ".حدد فئة لتحريرها أو انقر بزر الماوس الأيمن على الشجرة لإنشائها",
+    "Email is required":"البريد الإلكتروني مطلوب",
+    "If this email exists, a reset link has been sent." : "إذا كان هذا البريد الالكتروني موجود ، فسيتم إرسال رابط إعادة تعيين.",
+    "Unable to process your request. Please try again." : "تعذر معالجة طلبك. يرجى المحاولة مرة أخرى.",
+    "Reset your password":"اعادة تعيين كلمة السر",
+    "Enter your email address and we’ll send you a password reset link.": "أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور.",
+    "Forget Password" : "نسيت كلمة السر",
+    "Send reset link":"إرسال رابط إعادة التعيين",
+    "Sending..." : "إرسال...",
+    "Reset Password": "إعادة تعيين كلمة المرور",
+    "New Password" : "كلمة المرور الجديدة"
 }
