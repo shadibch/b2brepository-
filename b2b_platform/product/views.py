@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .models import Category, CategoryTranslation, ProductPrice, Product, ProductTranslation, ProductMedia
 from .serializers import *
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.db import transaction
 from b2busers.permissions import IsSuperUser
 import json
@@ -76,17 +76,32 @@ class ProductListView(ListAPIView):
     pagination_class = ProductPagination
     
     def get_queryset(self):
-        user = self.request.user
+        request = self.request
+        language = request.LANGUAGE_CODE or "en"
 
-        query =      self.request.query_params.get('branch_id')
-        company_id = self.request.query_params.get('company_id')
-        if query:
-            return Product.objects.exclude(branch_prices__branch__id=query).prefetch_related("media").prefetch_related("translations").all()
+        branch_id = request.query_params.get("branch_id")
+        company_id = request.query_params.get("company_id")
+
+        translations_prefetch = Prefetch(
+            "translations",
+            queryset=ProductTranslation.objects.filter(language=language),
+            to_attr="filtered_translations"
+        )
+
+        qs = (
+            Product.objects
+            .select_related("closest_category")
+            .prefetch_related("media", translations_prefetch)
+            .order_by("id")
+        )
+
+        if branch_id:
+            qs = qs.exclude(branch_prices__branch__id=branch_id)
+
         elif company_id:
-            return Product.objects.exclude(prices__purchaser__id=company_id)
-        else:
-            return Product.objects.all().prefetch_related("media").prefetch_related("translations")
+            qs = qs.exclude(prices__purchaser__id=company_id)
 
+        return qs
     def get_permissions(self):
         if self.request.user.is_authenticated:
             return [IsAuthenticated()]  # ✅ Restrict advanced queries for logged-in users

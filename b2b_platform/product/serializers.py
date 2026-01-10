@@ -197,48 +197,60 @@ class ProductItemSerializer(serializers.ModelSerializer):
      # ✅ Returns UR
 
 class ProductSerializer(serializers.ModelSerializer):
-    price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
-      # ✅ Get list of media
-    name = serializers.SerializerMethodField() 
-    
+    price = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
-        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price","closest_category","discount","availibility","media_url"]  # ✅ Ensure 'price' is included
-    def get_name(self,obj):
-        request = self.context.get("request")  # Access request from serializer context
-        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
-        translation = obj.translations.filter(language=language).first()
-        return translation.name if translation and translation.name else obj.name  # Return translated name or fallback
-    def get_description(self,obj):
-        request = self.context.get("request")  # Access request from serializer context
-        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
-        translation = obj.translations.filter(language=language).first()
-        return translation.description if translation and translation.description else obj.description  # Return translated name or fallback
-    def get_attributs(self,obj):
-        request = self.context.get("request")  # Access request from serializer context
-        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
-        translation = obj.translations.filter(language=language).first()
-        return translation.attributs if translation and translation.attributs else obj.attributs  # Return translated name or fallback
-    def get_price(self, obj):
-        user = self.context["request"].user
-        request = self.context["request"]
-        branch_id = request.GET.get('branch_id')
-        if(branch_id and user.is_superuser):
-            branch = Branch.objects.get(id=branch_id)
-            price = calculateByBranch(branch,obj)       
-            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
-        company_id = request.GET.get('company_id')
-        if(company_id and user.is_superuser):
-            company = Company.objects.get(id=company_id)
-            price = calculatesByCompany(company,obj)       
-            return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) 
+        fields = [
+            "id", "name", "part_id", "stock_quantity", "base_price",
+            "description", "subgroups", "categories", "attributs",
+            "currency", "price", "closest_category", "discount",
+            "availibility", "media_url"
+        ]
 
-        price = calculate(user,obj)
-        
-        # ✅ Ensure price is rounded to two decimal places
+    # ---------- TRANSLATIONS (NO EXTRA QUERIES) ----------
+
+    def _get_translation(self, obj):
+        translations = getattr(obj, "filtered_translations", [])
+        return translations[0] if translations else None
+
+    def get_name(self, obj):
+        tr = self._get_translation(obj)
+        return tr.name if tr and tr.name else obj.name
+
+    def get_description(self, obj):
+        tr = self._get_translation(obj)
+        return tr.description if tr and tr.description else obj.description
+
+    def get_attributs(self, obj):
+        tr = self._get_translation(obj)
+        return tr.attributs if tr and tr.attributs else obj.attributs
+
+    # ---------- PRICE (OPTIMIZED) ----------
+
+    def get_price(self, obj):
+        request = self.context["request"]
+        user = request.user
+
+        branch_id = request.GET.get("branch_id")
+        company_id = request.GET.get("company_id")
+
+        if branch_id and user.is_superuser:
+            branch = Branch.objects.only("id").get(id=branch_id)
+            price = calculateByBranch(branch, obj)
+
+        elif company_id and user.is_superuser:
+            company = Company.objects.only("id").get(id=company_id)
+            price = calculatesByCompany(company, obj)
+
+        else:
+            price = calculate(user, obj)
+
         return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
        
 
    
