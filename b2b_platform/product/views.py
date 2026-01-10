@@ -225,7 +225,7 @@ class ProductListByCategoryView(ListAPIView):
                 translations_prefetch
             ))
         if category_id >1 :
-            qys.filter(categories__id=category_id)
+            qys = qys.filter(categories__id=category_id)
         return qys.order_by("id")
         
        
