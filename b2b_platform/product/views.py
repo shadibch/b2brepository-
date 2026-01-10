@@ -89,11 +89,17 @@ class ProductListView(ListAPIView):
         )
 
         qs = (
-            Product.objects
-            .select_related("closest_category")
-            .prefetch_related("media", translations_prefetch)
-            .order_by("id")
+         Product.objects
+         .select_related("closest_category")
+         .prefetch_related(
+            "media",
+            "categories",      # ✅ FIX
+            "subgroups",       # ✅ FIX
+            translations_prefetch
         )
+    .order_by("id")
+)
+
 
         if branch_id:
             qs = qs.exclude(branch_prices__branch__id=branch_id)
