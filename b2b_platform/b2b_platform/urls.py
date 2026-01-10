@@ -113,9 +113,9 @@ urlpatterns = [
     path('api/contract/',contracts),
     path('api/admin/product_instance/update/<int:productinstance_id>/',AdminUpdateProductInstance.as_view()),
     path('api/companies/<int:company_id>/branches/', get_company_branches, name='company-branches'),
-     path('api/company/<int:company_id>/product/<int:product_id>/branches/', get_company_branches_with_product),
+    path('api/company/<int:company_id>/product/<int:product_id>/branches/', get_company_branches_with_product),
   
-     path('api/product/<int:product_id>/branches/<int:branch_id>/', ProductBranchDeleteView.as_view(), name='delete-product-branch'),
+    path('api/product/<int:product_id>/branches/<int:branch_id>/', ProductBranchDeleteView.as_view(), name='delete-product-branch'),
 
 
     # Catch-all route for SPA

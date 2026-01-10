@@ -161,10 +161,74 @@ class ProductListByCategoryView(ListAPIView):
         user = self.request.user
         category_id = self.kwargs.get("category_id")  # ✅ Correctly extract category ID
 
-       
-    
-        return Product.objects.filter(categories__id=category_id).prefetch_related("translations") # ✅ **Ensure this line does not end with `.all()`**
+        request = self.request
+        user = request.user
+        language = request.LANGUAGE_CODE or "en"
+        branch_id = request.query_params.get("branch_id")
+        company_id = request.query_params.get("company_id")
+
+        target_company_id = None
+        target_branch_id = None
+
+        if user.is_authenticated:
+            if user.is_superuser:
+                target_branch_id = branch_id
+                target_company_id = company_id
+            else:
+                target_company_id = user.company_id
+                # Optimization: use .values_list instead of full objects to avoid extra queries
+                user_branches = list(user.branches.values_list("id", flat=True))
+                if len(user_branches) == 1:
+                    target_branch_id = user_branches[0]
+
+        # 1. Subqueries
+        contract_subquery = ProductContract.objects.filter(
+            product=OuterRef("pk"), 
+            branch_id=target_branch_id
+        ).values("price")[:1]
+
+        pp_subquery = ProductPrice.objects.filter(
+            product=OuterRef("pk"), 
+            purchaser_id=target_company_id
+        )
+
+        # 2. Prefetch Translations
+        translations_prefetch = Prefetch(
+            "translations",
+            queryset=ProductTranslation.objects.filter(language=language),
+            to_attr="filtered_translations"
+        )
+
+        # 3. Main Queryset
+        qys =  (
+            Product.objects.annotate(
+                # Use Coalesce to ensure we don't do math with None values
+                ann_contract_price=Coalesce(Subquery(contract_subquery), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_flat=Coalesce(Subquery(pp_subquery.values("flat_discount")[:1]), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_perc=Coalesce(Subquery(pp_subquery.values("percentage_discount")[:1]), Value(0, output_field=db_models.DecimalField())),
+            )
+            .annotate(
+                final_price=Case(
+                    When(ann_contract_price__gt=0, then=F("ann_contract_price")),
+                    When(ann_pp_flat__gt=0, then=F("ann_pp_flat")),
+                    When(ann_pp_perc__gt=0, then=F("base_price") * (100 - F("ann_pp_perc")) / 100),
+                    When(discount__gt=0, then=F("base_price") * (100 - F("discount")) / 100),
+                    default=F("base_price"),
+                    output_field=db_models.DecimalField(max_digits=12, decimal_places=2) # <--- Corrected
+                )
+            )
+            .select_related("closest_category")
+            .prefetch_related(
+                "media",
+                "categories",
+                "subgroups",
+                translations_prefetch
+            ))
+        if category_id >1 :
+            qys.filter(categories__id=category_id)
+        return qys.order_by("id")
         
+       
 
 from .models import ProductGroup
 from .serializers import ProductGroupSerializer
@@ -172,19 +236,31 @@ from .serializers import ProductGroupSerializer
 from rest_framework.generics import ListAPIView
 from .models import ProductGroup
 from .serializers import ProductGroupSerializer
+from django.db.models import Prefetch
+
+from django.db.models import Prefetch
 
 class ProductGroupListView(ListAPIView):
     serializer_class = ProductGroupSerializer
 
     def get_queryset(self):
         category_id = self.kwargs.get("category_id")
+
         return (
-            ProductGroup.objects
-            .filter(categories_groups__id=category_id)
-            .prefetch_related("translations")
-            .prefetch_related("subgroups__translations")
-            .prefetch_related("subgroups")
+    ProductGroup.objects
+    .filter(categories_groups__id=category_id)
+    .prefetch_related(
+        Prefetch("translations", to_attr="prefetched_translations"),
+        Prefetch(
+            "subgroups",
+            queryset=ProductSubGroup.objects.select_related("group").prefetch_related(
+                Prefetch("translations", to_attr="prefetched_translations"),
+                Prefetch("group__translations", to_attr="prefetched_translations"),
+            )
         )
+    )
+)
+
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

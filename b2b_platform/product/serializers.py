@@ -129,23 +129,33 @@ class CategoryCreateAdminItemSerializer(serializers.ModelSerializer):
 
 from .models import Product, ProductPrice, ProductMedia
 class ProductSubGroupSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()  # ✅ Use SerializerMethodField for dynamic name
+    name = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductSubGroup
-        fields = ["id", "name", "group"]  # Ensure 'name' is dynamically resolved
+        fields = ["id", "name", "group"]
 
     def get_name(self, obj):
-        request = self.context.get("request")  # Access the request from serializer context
-        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
-       
-        translation = obj.translations.filter(language=language).first()
-        return translation.name if translation else obj.name  # Return translated name or fallback
+        request = self.context.get("request")
+        language = getattr(request, "LANGUAGE_CODE", "en")
+
+        for t in getattr(obj, "prefetched_translations", []):
+            if t.language == language:
+                return t.name
+
+        return obj.name
+
     def get_group(self, obj):
         request = self.context.get("request")
-        language = request.LANGUAGE_CODE if request else "en"
-        translation = obj.group.translations.filter(language=language).first()
-        return translation.name if translation else obj.group.name 
+        language = getattr(request, "LANGUAGE_CODE", "en")
+
+        # IMPORTANT: the group must also be prefetched
+        for t in getattr(obj.group, "prefetched_translations", []):
+            if t.language == language:
+                return t.name
+
+        return obj.group.name
 
 class ProductItemSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
@@ -245,20 +255,24 @@ from .models import ProductGroup, ProductSubGroup
 from rest_framework import serializers
 
 
-
 class ProductGroupSerializer(serializers.ModelSerializer):
     subgroups = ProductSubGroupSerializer(many=True)
- # Nested serialization
-    name = serializers.SerializerMethodField()  # ✅ Use SerializerMethodField for dynamic name
-    
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductGroup
         fields = ["id", "name", "subgroups"]
 
     def get_name(self, obj):
-        request = self.context.get("request")  # Access request from serializer context
-        language = request.LANGUAGE_CODE if request else "ar"  # Fallback to default language
-        return getProductName(language,obj)
+        request = self.context.get("request")
+        language = getattr(request, "LANGUAGE_CODE", "ar")
+
+        for t in getattr(obj, "prefetched_translations", []):
+            if t.language == language:
+                return t.name
+
+        return obj.name
+
 class AdminProductGroupSerializer(serializers.ModelSerializer):
  # Nested serialization
     name = serializers.SerializerMethodField()  # ✅ Use SerializerMethodField for dynamic name
