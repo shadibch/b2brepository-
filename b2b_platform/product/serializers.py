@@ -196,7 +196,10 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
      # ✅ Returns UR
 
+from decimal import Decimal, ROUND_HALF_UP
+
 class ProductSerializer(serializers.ModelSerializer):
+    # Map directly to the annotated field
     price = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
@@ -211,9 +214,13 @@ class ProductSerializer(serializers.ModelSerializer):
             "availibility", "media_url"
         ]
 
-    # ---------- TRANSLATIONS (NO EXTRA QUERIES) ----------
+    def get_price(self, obj):
+        # final_price was calculated in SQL
+        val = getattr(obj, "final_price", obj.base_price)
+        return Decimal(val).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def _get_translation(self, obj):
+        # Uses the 'to_attr' from the Prefetch object
         translations = getattr(obj, "filtered_translations", [])
         return translations[0] if translations else None
 
@@ -228,29 +235,6 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_attributs(self, obj):
         tr = self._get_translation(obj)
         return tr.attributs if tr and tr.attributs else obj.attributs
-
-    # ---------- PRICE (OPTIMIZED) ----------
-
-    def get_price(self, obj):
-        request = self.context["request"]
-        user = request.user
-
-        branch_id = request.GET.get("branch_id")
-        company_id = request.GET.get("company_id")
-
-        if branch_id and user.is_superuser:
-            branch = Branch.objects.only("id").get(id=branch_id)
-            price = calculateByBranch(branch, obj)
-
-        elif company_id and user.is_superuser:
-            company = Company.objects.only("id").get(id=company_id)
-            price = calculatesByCompany(company, obj)
-
-        else:
-            price = calculate(user, obj)
-
-        return Decimal(price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
        
 
    

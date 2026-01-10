@@ -1,4 +1,7 @@
+from multiprocessing import Value
 from bs4 import BeautifulSoup
+from django.db.models.base import Coalesce
+from django.forms import DecimalField
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.views import APIView
@@ -9,7 +12,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .models import Category, CategoryTranslation, ProductPrice, Product, ProductTranslation, ProductMedia
 from .serializers import *
-from django.db.models import OuterRef, Prefetch, Subquery
+from django.db.models import Case, OuterRef, Prefetch, Subquery, When
 from django.db import transaction
 from b2busers.permissions import IsSuperUser
 import json
@@ -70,44 +73,82 @@ class ProductsPrices(ListAPIView):
         company_id = self.kwargs.get("company_id")  
         return ProductPrice.objects.filter(purchaser__id=company_id).prefetch_related("product").all()
 
-
+from django.db import models as db_models  # Use alias to avoid conflict with serializers
+from django.db.models import F, Q, Case, When, OuterRef, Subquery, Prefetch, Value
+from django.db.models.functions import Coalesce
+from rest_framework.generics import ListAPIView
 class ProductListView(ListAPIView):
     serializer_class = ProductSerializer
     pagination_class = ProductPagination
     
     def get_queryset(self):
         request = self.request
+        user = request.user
         language = request.LANGUAGE_CODE or "en"
-
         branch_id = request.query_params.get("branch_id")
         company_id = request.query_params.get("company_id")
 
+        target_company_id = None
+        target_branch_id = None
+
+        if user.is_authenticated:
+            if user.is_superuser:
+                target_branch_id = branch_id
+                target_company_id = company_id
+            else:
+                target_company_id = user.company_id
+                # Optimization: use .values_list instead of full objects to avoid extra queries
+                user_branches = list(user.branches.values_list("id", flat=True))
+                if len(user_branches) == 1:
+                    target_branch_id = user_branches[0]
+
+        # 1. Subqueries
+        contract_subquery = ProductContract.objects.filter(
+            product=OuterRef("pk"), 
+            branch_id=target_branch_id
+        ).values("price")[:1]
+
+        pp_subquery = ProductPrice.objects.filter(
+            product=OuterRef("pk"), 
+            purchaser_id=target_company_id
+        )
+
+        # 2. Prefetch Translations
         translations_prefetch = Prefetch(
             "translations",
             queryset=ProductTranslation.objects.filter(language=language),
             to_attr="filtered_translations"
         )
 
-        qs = (
-         Product.objects
-         .select_related("closest_category")
-         .prefetch_related(
-            "media",
-            "categories",      # ✅ FIX
-            "subgroups",       # ✅ FIX
-            translations_prefetch
+        # 3. Main Queryset
+        return (
+            Product.objects.annotate(
+                # Use Coalesce to ensure we don't do math with None values
+                ann_contract_price=Coalesce(Subquery(contract_subquery), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_flat=Coalesce(Subquery(pp_subquery.values("flat_discount")[:1]), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_perc=Coalesce(Subquery(pp_subquery.values("percentage_discount")[:1]), Value(0, output_field=db_models.DecimalField())),
+            )
+            .annotate(
+                final_price=Case(
+                    When(ann_contract_price__gt=0, then=F("ann_contract_price")),
+                    When(ann_pp_flat__gt=0, then=F("ann_pp_flat")),
+                    When(ann_pp_perc__gt=0, then=F("base_price") * (100 - F("ann_pp_perc")) / 100),
+                    When(discount__gt=0, then=F("base_price") * (100 - F("discount")) / 100),
+                    default=F("base_price"),
+                    output_field=db_models.DecimalField(max_digits=12, decimal_places=2) # <--- Corrected
+                )
+            )
+            .select_related("closest_category")
+            .prefetch_related(
+                "media",
+                "categories",
+                "subgroups",
+                translations_prefetch
+            )
+            .order_by("id")
         )
-    .order_by("id")
-)
 
-
-        if branch_id:
-            qs = qs.exclude(branch_prices__branch__id=branch_id)
-
-        elif company_id:
-            qs = qs.exclude(prices__purchaser__id=company_id)
-
-        return qs
+        
     def get_permissions(self):
         if self.request.user.is_authenticated:
             return [IsAuthenticated()]  # ✅ Restrict advanced queries for logged-in users
