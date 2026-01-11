@@ -356,64 +356,100 @@ from .models import Category
 from .serializers import CategorySerializer
 from django.db.models import F
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from django.db.models import Prefetch
+
 class WideSearch(ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = ProductSerializer
-    pagination_class = ProductPagination  # ✅ Enable pagination
+    pagination_class = ProductPagination
+
     def get_queryset(self):
-        query = self.request.GET.get("q")
-        branch_id = self.request.GET.get('branch_id')
-        company_id = self.request.GET.get('company_id')
+        query = self.request.GET.get("q", "")
+        branch_id = self.request.GET.get("branch_id")
+        company_id = self.request.GET.get("company_id")
 
-        return self.search_products(query,branch_id,company_id)
-    def search_products(self, query, branch_id,company_id):
-  
+        return self.search_products(query, branch_id, company_id)
 
-    # Build search vectors
-        search_vector = (
-            SearchVector('part_id', weight='A') +
-            SearchVector('name', weight='B') +
-            SearchVector('description', weight='C')
-        )
-
-        translation_search_vector = (
-            SearchVector('part_id', weight='A') +
-            SearchVector('translations__name', weight='B') +
-            SearchVector('translations__description', weight='C')
-        )
-
-    # Search query
+    def search_products(self, query, branch_id, company_id):
+        request = self.request
+        user = request.user
+        language = request.LANGUAGE_CODE or "en"
         search_query = SearchQuery(query)
 
-    # Annotate rank (for both Product and Translation)
-        results = (
-            Product.objects
-            .annotate(
-                rank=SearchRank(search_vector, search_query) +
-                     SearchRank(translation_search_vector, search_query)
-            )
-            .filter(rank__gte=0.01)
-            .prefetch_related("media", "translations")
+        # 🔹 Base search vector (no joins)
+        search_vector = (
+            SearchVector("part_id", weight="A") +
+            SearchVector("name", weight="B") +
+            SearchVector("description", weight="C")
+        )
+        target_company_id = None
+        target_branch_id = None
+
+        if user.is_authenticated:
+            if user.is_superuser:
+                target_branch_id = branch_id
+                target_company_id = company_id
+            else:
+                target_company_id = user.company_id
+                # Optimization: use .values_list instead of full objects to avoid extra queries
+                user_branches = list(user.branches.values_list("id", flat=True))
+                if len(user_branches) == 1:
+                    target_branch_id = user_branches[0]
+        contract_subquery = ProductContract.objects.filter(
+            product=OuterRef("pk"), 
+            branch_id=target_branch_id
+        ).values("price")[:1]
+        pp_subquery = ProductPrice.objects.filter(
+            product=OuterRef("pk"), 
+            purchaser_id=target_company_id
         )
 
-    # Exclude by branch (if given)
+        # 2. Prefetch Translations
+        translations_prefetch = Prefetch(
+            "translations",
+            queryset=ProductTranslation.objects.filter(language=language),
+            to_attr="filtered_translations"
+        )
+
+        qs = (
+            Product.objects
+            .annotate(rank=SearchRank(search_vector, search_query),ann_contract_price=Coalesce(Subquery(contract_subquery), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_flat=Coalesce(Subquery(pp_subquery.values("flat_discount")[:1]), Value(0, output_field=db_models.DecimalField())),
+                ann_pp_perc=Coalesce(Subquery(pp_subquery.values("percentage_discount")[:1]), Value(0, output_field=db_models.DecimalField())))
+            .filter(rank__gte=0.01)
+            .annotate(
+                final_price=Case(
+                    When(ann_contract_price__gt=0, then=F("ann_contract_price")),
+                    When(ann_pp_flat__gt=0, then=F("ann_pp_flat")),
+                    When(ann_pp_perc__gt=0, then=F("base_price") * (100 - F("ann_pp_perc")) / 100),
+                    When(discount__gt=0, then=F("base_price") * (100 - F("discount")) / 100),
+                    default=F("base_price"),
+                    output_field=db_models.DecimalField(max_digits=12, decimal_places=2) # <--- Corrected
+                )
+            )
+            .select_related("closest_category")   # if you use them in serializer
+            .prefetch_related(
+                "media",
+                "categories",
+                "subgroups",
+                translations_prefetch,
+            )
+            .order_by("-rank")
+        )
+
+        # 🔹 Optional exclusions (optimized)
         if branch_id:
-            results = results.exclude(branch_prices__branch__id=branch_id)
+            qs = qs.exclude(
+                branch_prices__branch_id=branch_id
+            )
+
         elif company_id:
-            results = results.exclude(prices__purchaser__id=company_id)
+            qs = qs.exclude(
+                prices__purchaser_id=company_id
+            )
 
-    # ⚡ Deduplicate correctly by product ID
-    # This uses DISTINCT ON to keep only one row per product, preserving highest rank
-        results = (
-            results
-            .order_by('id', '-rank')  # Order by ID + rank
-            .distinct('id')           # Keep only one row per product
-             # Final ordering by rank descending
-    )
-
-
-
-        return results
+        return qs
 
 
 
