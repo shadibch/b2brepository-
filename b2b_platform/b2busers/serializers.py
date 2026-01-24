@@ -35,7 +35,7 @@ class CompanyUserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirmation', None)
 
         # Get or create the company
-        company_name = validated_data.pop('company_name')
+        company_name = validated_data.pop('company_name').strip()
         register_number = validated_data.pop('register_number')
         if Company.objects.filter(register_number=register_number).exists():
             raise serializers.ValidationError({
