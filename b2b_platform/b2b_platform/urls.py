@@ -42,6 +42,7 @@ import os
 urlpatterns = [
     path('administrator/', admin.site.urls),
     path('api/request/resetpassword/' , requestResetPassword ),
+    path('api/company-management/', CompanyManagementView.as_view(), name='company-management'),
     path('api/reset_password/' , reset_password),
     path('api/', include('company.urls')),
     path('login/', auth_views.LoginView.as_view(), name='login'),

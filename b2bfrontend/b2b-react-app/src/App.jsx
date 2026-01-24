@@ -28,6 +28,7 @@ import { appTheme } from "./components/theme";
 import "./assets/fonts/fonts.css";
 import RequestResetPasswordPage from "./components/RequestResetPassword";
 import ResetPassword from "./components/ResetPassword.";
+import CompanyManagement from "./components/CompanyManagement";
 
 function App() {
   const token = localStorage.getItem("authToken");
@@ -74,6 +75,7 @@ function App() {
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/requestResetPassword" element={<RequestResetPasswordPage/>} /> 
           <Route path="/reset/:token" element={<ResetPassword/>} /> 
+          <Route path="/company-management" element={<CompanyManagement />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <IconButton

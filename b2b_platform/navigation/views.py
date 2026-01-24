@@ -20,11 +20,11 @@ class NavigationLinksAPIView(APIView):
               
                 {"name" : "Contracts", "url": "/contracts"} 
             ]
-            
-        print(str(staffLink))  
+             
         # Define links based on role
         role_links = {
             "company_admin": [
+                {"name": "Company Management", "url": "company-management"},
                 {"name": "Branches", "url": "branches"},
                 {"name": "Manage Users", "url": "users"},
                 {"name": "Orders", "url": "orders"},

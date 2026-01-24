@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Company, Branch, ProductContract
-from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany
+from .serializers import CompanySerializer, BranchSerializer, BranchSerializerCompany, CompanySerializerUser, CompanyNameUpdateSerializer
 from django.db.models import Q
 class FilterCompanyByNameAPIView(APIView):
     def get(self, request, *args, **kwargs):
@@ -157,20 +157,45 @@ class IsSuperUser(permissions.BasePermission):
 from rest_framework.generics import *
 class CompanyViewSet(ListAPIView):
     queryset = Company.objects.all()
-    serializer_class = CompanySerializer
+    serializer_class = CompanySerializerUser
     pagination_class = CompanyPagination
-    permission_classes = [IsSuperUser]
-    
+    permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]
     def get_queryset(self):
-        queryset = Company.objects.all().order_by('name')
-        search_query = self.request.query_params.get('search', None)
-        if search_query:
-            queryset = queryset.filter(
-                Q(name__icontains=search_query) |
-                Q(register_number__icontains=search_query)
-            )
-        
-        return queryset.order_by('name') 
+        return Company.objects.filter(user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        company = self.get_object()
+        serializer = self.get_serializer(company, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CompanyManagementView(APIView):
+    """
+    GET: return the current user's company name
+    POST: update the current user's company name
+    """
+    permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]
+
+    def get(self, request, *args, **kwargs):
+        company = getattr(request.user, "company", None)
+        if not company:
+            return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"id": company.id, "name": company.name}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        company = getattr(request.user, "company", None)
+        if not company:
+            return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CompanyNameUpdateSerializer(company, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ContractItemsView(APIView):
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]

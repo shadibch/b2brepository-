@@ -1,11 +1,23 @@
 from rest_framework import serializers
 from .models import Company, Branch
 
+class CompanySerializerUser(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name']
+        
+
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['id', 'name', 'credit', 'period', 'register_number', 'address']
         read_only_fields = ['name', 'register_number', 'address']
+
+
+class CompanyNameUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name']
         
 class BranchSerializer(serializers.ModelSerializer):
     class Meta:
