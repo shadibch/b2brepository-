@@ -204,33 +204,35 @@ const ProductItem = () => {
             <Divider sx={{ my: 2 }} />
 
             {/* Price */}
-            <Box sx={{ mb: 2 }}>
-              {product.price > 0 ? (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Typography
-                    variant="h4"
-                    component="span"
-                    sx={{ color: 'error.main', fontWeight: 'bold' }}
-                  >
-                    {formatNumber(product.price, product.currency)}
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    component="span"
-                    sx={{
-                      color: 'text.secondary',
-                      textDecoration: 'line-through',
-                    }}
-                  >
+            {isAuthenticated() && (
+              <Box sx={{ mb: 2 }}>
+                {product.price > 0 ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography
+                      variant="h4"
+                      component="span"
+                      sx={{ color: 'error.main', fontWeight: 'bold' }}
+                    >
+                      {formatNumber(product.price, product.currency)}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      component="span"
+                      sx={{
+                        color: 'text.secondary',
+                        textDecoration: 'line-through',
+                      }}
+                    >
+                      {formatNumber(product.base_price, product.currency)}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
                     {formatNumber(product.base_price, product.currency)}
                   </Typography>
-                </Box>
-              ) : (
-                <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
-                  {formatNumber(product.base_price, product.currency)}
-                </Typography>
-              )}
-            </Box>
+                )}
+              </Box>
+            )}
 
             {/* Availability */}
             <Chip

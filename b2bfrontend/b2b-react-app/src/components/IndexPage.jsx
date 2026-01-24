@@ -13,6 +13,7 @@ import {
   Paper,
 } from '@mui/material';
 import axiosInstance from "./axiosInstance";
+import { isAuthenticated } from "./axiosInstance";
 import GroupSlide from "./GroupSlide";
 import { t, switchLanguage, isRTL, getCurrentLanguage, formatNumber } from '../utils/translator';
 import { useNavigate, useLocation } from "react-router-dom";
@@ -206,25 +207,27 @@ const navigate = useNavigate();
             {truncateText(product.name)}
           </Typography>
 
-          <Box sx={{ mb: 1 }}>
-            {product.price > 0 && product.price !== product.base_price ? (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="h6" sx={{ color: "error.main", fontWeight: "bold" }}>
-                  {formatNumber(product.price, product.currency)}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ textDecoration: "line-through", color: "text.secondary" }}
-                >
+          {isAuthenticated() && (
+            <Box sx={{ mb: 1 }}>
+              {product.price > 0 && product.price !== product.base_price ? (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="h6" sx={{ color: "error.main", fontWeight: "bold" }}>
+                    {formatNumber(product.price, product.currency)}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ textDecoration: "line-through", color: "text.secondary" }}
+                  >
+                    {formatNumber(product.base_price, product.currency)}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   {formatNumber(product.base_price, product.currency)}
                 </Typography>
-              </Box>
-            ) : (
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                {formatNumber(product.base_price, product.currency)}
-              </Typography>
-            )}
-          </Box>
+              )}
+            </Box>
+          )}
 
           <Chip
             label={t(product.availibility === "M" ? "Market" : "Stock")}

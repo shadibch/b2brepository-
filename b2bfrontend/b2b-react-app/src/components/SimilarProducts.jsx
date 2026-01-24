@@ -3,6 +3,7 @@ import { Box, CardMedia, Grid, Typography,Card } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import TechnicalDetailsTable from "./TechnicalDetailsTable";
 import { formatNumber, t } from "../utils/translator";
+import { isAuthenticated } from "./axiosInstance";
 
 const SimilarProducts = ({ similarProducts = [] }) => {
   const navigate = useNavigate();
@@ -66,12 +67,14 @@ const SimilarProducts = ({ similarProducts = [] }) => {
      </Typography>
      <TechnicalDetailsTable product={product} />
    
-     <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
-       {formatNumber(
-         product.price > 0 ? product.price : product.base_price,
-         product.currency
-       )}
-     </Typography>
+    {isAuthenticated() && (
+      <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
+        {formatNumber(
+          product.price > 0 ? product.price : product.base_price,
+          product.currency
+        )}
+      </Typography>
+    )}
    </Box>
       ))}
       
