@@ -41,7 +41,7 @@ class CompanyUserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
             "register_number": "Register number already exists."
         })
-        if Company.objects.filter(company_name=company_name).exists():
+        if Company.objects.filter(name=company_name).exists():
             raise serializers.ValidationError({
             "company_name": "Company name already exists."
         })
