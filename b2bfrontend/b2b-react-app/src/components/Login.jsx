@@ -35,7 +35,7 @@ const Login = () => {
              localStorage.setItem("main_url", response.data.main_url);
             }else {
                 const forwardDispatch =new CustomEvent('dispatch', { detail:
-                    response.data.main_ur });
+                    response.data.main_url });
                window.dispatchEvent(forwardDispatch); 
             }
             const searchEvent = new CustomEvent('expiry_order', { detail:
@@ -46,8 +46,12 @@ const Login = () => {
             navigate(response.data.main_url);
 
         } catch (err) {
-
-            setError(`${t('invalid_username_password')} `);
+            const apiErr = err.response?.data?.error;
+            if (apiErr === "ACCOUNT_NOT_ACTIVE") {
+                setError(t("ACCOUNT_NOT_ACTIVE"));
+            } else {
+                setError(`${t('invalid_username_password')} `);
+            }
         }
     };
 

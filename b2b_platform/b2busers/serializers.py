@@ -107,7 +107,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name'),
             password=validated_data.get('password'),
             role = 'staff' ,
-            is_active=True            # Securely set password
+            status=CustomUser.STATUS_ACTIVE
         )
 
         # Assign branches to the user
@@ -138,7 +138,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'company',  'role', 'is_active']
+        fields = ['id', 'email', 'first_name', 'last_name', 'company', 'role', 'status', 'reason']
         
 class StaffUserSerializer(serializers.ModelSerializer):
     
@@ -164,7 +164,12 @@ class UserSerializerActivation(serializers.ModelSerializer):
     company_period = serializers.SerializerMethodField()
     class Meta:
         model = CustomUser
-        fields = ['id', 'email', 'first_name', 'last_name', 'company_name', 'company_register_number',  'role', 'is_active','company_credit','company_period','is_active']
+        fields = [
+            'id', 'email', 'first_name', 'last_name',
+            'company_name', 'company_register_number',
+            'role', 'status', 'reason',
+            'company_credit', 'company_period'
+        ]
     def get_company_name(self,obj):
         return obj.company.name if obj.company else None
     def get_company_register_number(self,obj):

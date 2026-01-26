@@ -34,7 +34,7 @@ const API_BASE = "/api/admin";
 const ManagedUsersPage = () => {
   const theme = useTheme();
   const [users, setUsers] = useState([]);
-  const [filterActive, setFilterActive] = useState("false");
+  const [filterStatus, setFilterStatus] = useState("Pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,17 +50,18 @@ const ManagedUsersPage = () => {
     company_register_number: "",
     company_credit: "",
     company_period: "",
-    is_active: false,
+    status: "Pending",
+    reason: "",
   });
 
   useEffect(() => {
     fetchUsers(currentPage);
-  }, [filterActive, currentPage, isRTL()]);
+  }, [filterStatus, currentPage, isRTL()]);
 
   const fetchUsers = async (page) => {
     setLoading(true);
     let url = `${API_BASE}/search/?page=${page}`;
-    if (filterActive !== "all") url += `&active=${filterActive}`;
+    if (filterStatus !== "all") url += `&status=${filterStatus}`;
     try {
       const response = await axiosInstance.get(url);
       setUsers(response.data.results || []);
@@ -76,7 +77,7 @@ const ManagedUsersPage = () => {
   const handleSearch = async () => {
     setLoading(true);
     let url = `${API_BASE}/search/?page=${currentPage}&q=${searchQuery}`;
-    if (filterActive !== "all") url += `&active=${filterActive}`;
+    if (filterStatus !== "all") url += `&status=${filterStatus}`;
     try {
       const response = await axiosInstance.get(url);
       setUsers(response.data.results || []);
@@ -110,7 +111,7 @@ const ManagedUsersPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const updateUser = async (activeUpdate = null, message = t("user_updated")) => {
+  const updateUser = async (statusUpdate, message) => {
     if (!selectedUser) return;
 
     if (!formData.company_credit || formData.company_credit <= 0) {
@@ -120,15 +121,22 @@ const ManagedUsersPage = () => {
       return showSnackbar(t("Period is mandatory and should be more than 0"), "error");
     }
 
+    if ((statusUpdate === "Blocked" || statusUpdate === "FixIssues") && !formData.reason?.trim()) {
+      return showSnackbar(t("Reason is required"), "error");
+    }
+
     try {
       const data = {
         credit: formData.company_credit,
         period: formData.company_period,
       };
-      if (activeUpdate !== null) data.active = activeUpdate;
+      if (statusUpdate) {
+        data.status = statusUpdate;
+        data.reason = formData.reason || "";
+      }
 
       await axiosInstance.post(`${API_BASE}/update_user/${selectedUser.id}`, data);
-      showSnackbar(message, "success");
+      showSnackbar(message || t("user_updated"), "success");
       fetchUsers(currentPage);
     } catch (err) {
       console.error(err);
@@ -210,25 +218,39 @@ const ManagedUsersPage = () => {
               ))}
 
               <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={t("Reason")}
+                  name="reason"
+                  value={formData.reason || ""}
+                  onChange={handleFormChange}
+                  placeholder={t("Enter reason")}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
                 <Box display="flex" gap={2}>
                   <Button
                     variant="contained"
                     color="success"
-                    onClick={() => updateUser(true, t("user_activated_message"))}
-                    disabled={formData.is_active}
+                    onClick={() => updateUser("Active", t("user_activated_message"))}
+                    disabled={formData.status === "Active"}
                   >
                     {t("Activate")}
                   </Button>
                   <Button
                     variant="contained"
                     color="error"
-                    onClick={() => updateUser(false, t("user_deactivated_message"))}
-                    disabled={!formData.is_active}
+                    onClick={() => updateUser("Blocked", t("user_blocked_message"))}
                   >
-                    {t("Deactivate")}
+                    {t("Block")}
                   </Button>
-                  <Button variant="contained" color="primary" onClick={() => updateUser()}>
-                    {t("Update")}
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={() => updateUser("FixIssues", t("user_fix_issues_message"))}
+                  >
+                    {t("Fix Issues")}
                   </Button>
                 </Box>
               </Grid>
@@ -250,12 +272,14 @@ const ManagedUsersPage = () => {
   <FormControl sx={{ minWidth: 150, flex: 1 }}>
     <InputLabel>{t("Filter")}</InputLabel>
     <Select
-      value={filterActive}
+      value={filterStatus}
       label={t("Filter")}
-      onChange={(e) => setFilterActive(e.target.value)}
+      onChange={(e) => setFilterStatus(e.target.value)}
     >
-      <MenuItem value="true">{t("Active")}</MenuItem>
-      <MenuItem value="false">{t("Inactive")}</MenuItem>
+      <MenuItem value="Pending">{t("Pending")}</MenuItem>
+      <MenuItem value="Active">{t("Active")}</MenuItem>
+      <MenuItem value="FixIssues">{t("FixIssues")}</MenuItem>
+      <MenuItem value="Blocked">{t("Blocked")}</MenuItem>
       <MenuItem value="all">{t("All")}</MenuItem>
     </Select>
   </FormControl>
@@ -303,7 +327,8 @@ const ManagedUsersPage = () => {
                   "company_register_number",
                   "company_credit",
                   "company_period",
-                  "is_active",
+                  "status",
+                  "reason",
                 ].map((field) => (
                   <TableCell key={field} sx={{ fontWeight: "bold", color: theme.palette.common.white }}>
                     {t(field)}
@@ -337,16 +362,17 @@ const ManagedUsersPage = () => {
                     <TableCell>{user.company_period}</TableCell>
                     <TableCell>
                       <Chip
-                        label={t(user.is_active ? "Active" : "Inactive")}
-                        color={user.is_active ? "success" : "default"}
+                        label={t(user.status)}
+                        color={user.status === "Active" ? "success" : user.status === "Pending" ? "default" : user.status === "FixIssues" ? "warning" : "error"}
                         size="small"
                       />
                     </TableCell>
+                    <TableCell>{user.reason || "-"}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     {t("No results found")}
                   </TableCell>
                 </TableRow>

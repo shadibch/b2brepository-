@@ -83,20 +83,20 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 ]
-LOGGING = {
-    "version": 1,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "loggers": {
-        "django.db.backends": {
-            "handlers": ["console"],
-            "level": "DEBUG",   # 👈 THIS is the key
-        },
-    },
-}
+#LOGGING = {
+#    "version": 1,
+#    "handlers": {
+#        "console": {
+#            "class": "logging.StreamHandler",
+#        },
+#    },
+#    "loggers": {
+#        "django.db.backends": {
+#            "handlers": ["console"],
+#            "level": "DEBUG",   # 👈 THIS is the key
+#        },
+#    },
+#}
 
 
 LANGUAGES = [

@@ -49,14 +49,34 @@ class LoginAPIView(TokenObtainPairView):
         email = request.data.get("email").lower()
         password = request.data.get("password")
 
+        # If user exists but is not allowed to log in, return a clear error
+        try:
+            existing_user = CustomUser.objects.get(email=email)
+            if existing_user.status in {CustomUser.STATUS_PENDING, CustomUser.STATUS_BLOCKED}:
+                return Response(
+                    {"error": "ACCOUNT_NOT_ACTIVE", "status": existing_user.status, "reason": existing_user.reason},
+                    status=403,
+                )
+        except CustomUser.DoesNotExist:
+            existing_user = None
+
         user = authenticate(email=email, password=password)
          
         if user:
             refresh = RefreshToken.for_user(user)
+
+            # Force FixIssues users to company-management screen
+            if user.status == CustomUser.STATUS_FIX_ISSUES:
+                main_url = "/company-management"
+            else:
+                main_url = "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
+
             response = {
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
-                "main_url" : "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
+                "main_url": main_url,
+                "status": getattr(user, "status", None),
+                "reason": getattr(user, "reason", ""),
             }
             if not user.is_superuser:
                 result = user.orders.filter(

@@ -69,7 +69,7 @@ class ProductSubgroupTranslation(models.Model):
 from pgvector.django import VectorField
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    media_url = models.CharField(max_length=300)
+    media_url = models.CharField(max_length=300, blank=True, null=True)
     part_id = models.CharField(max_length=50, unique=True)
     stock_quantity = models.IntegerField(default=0)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)

@@ -18,7 +18,8 @@ class AdminUpdateUser(APIView):
 
         credit = request.data.get("credit")
         period = request.data.get("period")
-        active = request.data.get("active")
+        status_value = request.data.get("status")
+        reason = (request.data.get("reason") or "").strip()
 
         if credit is None or period is None:
             return Response(
@@ -32,12 +33,28 @@ class AdminUpdateUser(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Normalize `active` input to boolean if provided
-        if active is not None:
-            if str(active).lower() in ['true', '1']:
-                user.is_active = True
-            elif str(active).lower() in ['false', '0']:
-                user.is_active = False
+        if status_value is not None:
+            allowed = {
+                CustomUser.STATUS_PENDING,
+                CustomUser.STATUS_ACTIVE,
+                CustomUser.STATUS_FIX_ISSUES,
+                CustomUser.STATUS_BLOCKED,
+            }
+            if status_value not in allowed:
+                return Response(
+                    {"error": "Invalid status"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Reason is mandatory for Blocked and FixIssues
+            if status_value in {CustomUser.STATUS_BLOCKED, CustomUser.STATUS_FIX_ISSUES} and not reason:
+                return Response(
+                    {"error": "Reason is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.status = status_value
+            user.reason = reason if status_value in {CustomUser.STATUS_BLOCKED, CustomUser.STATUS_FIX_ISSUES} else ""
 
         user.company.credit = credit
         user.company.period = period
@@ -72,15 +89,20 @@ class SearchUsers(ListAPIView):
     def get_queryset(self):
         request = self.request
         query = request.query_params.get('q')
-        active = request.query_params.get('active')
+        status_param = request.query_params.get('status')
+        active = request.query_params.get('active')  # backward-compat
 
         queryset = CustomUser.objects.exclude(id=request.user.id)
 
-        if active is not None:
+        if status_param:
+            if status_param != "all":
+                queryset = queryset.filter(status=status_param)
+        elif active is not None:
+            # Legacy mapping: active=true -> Active, active=false -> Pending
             if active.lower() in ['true', '1']:
-                queryset = queryset.filter(is_active=True)
+                queryset = queryset.filter(status=CustomUser.STATUS_ACTIVE)
             elif active.lower() in ['false', '0']:
-                queryset = queryset.filter(is_active=False)
+                queryset = queryset.filter(status=CustomUser.STATUS_PENDING)
 
         if query:
             queryset = queryset.filter(
