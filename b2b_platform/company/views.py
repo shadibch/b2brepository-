@@ -161,7 +161,7 @@ class CompanyViewSet(ListAPIView):
     pagination_class = CompanyPagination
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]
     def get_queryset(self):
-        return Company.objects.filter(user=self.request.user)
+        return Company.objects.all()
     
     def update(self, request, *args, **kwargs):
         company = self.get_object()
