@@ -34,6 +34,7 @@ export default function Contracts() {
       try {
         const response = await axiosInstance.get("/api/contract/");
         const contract = response.data;
+        console.log(contract);
         const items = contract.items.map((item) => ({
           ...item,
           quantity: 0,
@@ -157,7 +158,7 @@ export default function Contracts() {
               <CardContent sx={{ flex: 1, minWidth: 220 }}>
                   <Typography
                     variant="h6"
-                    onClick={() => navigate(`/productitem/${item.part_id}`)}
+                    onClick={() => navigate(`/productitem/${item.product.part_id}`)}
                     sx={{
                       cursor: "pointer",
                       "&:hover": { textDecoration: "underline" },
