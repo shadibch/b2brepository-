@@ -46,6 +46,7 @@ const AdminSidebar = ({ setActivePage }) => {
   };
 
   const pathToKey = {
+    "/admin": "dashboard",
     "/admin/user-management": "0",
     "/admin/order-management": "1",
     "/admin/category-management": "2",
@@ -147,6 +148,29 @@ const AdminSidebar = ({ setActivePage }) => {
             },
           }}
         >
+          {/* === DASHBOARD === */}
+          <ListItemButton
+            component={Link}
+            to="/admin"
+            onClick={() => setActivePage("/admin")}
+            sx={{
+              mb: 1,
+              bgcolor: activeKey === "dashboard" ? theme.palette.sidebar.active : "transparent",
+              borderRadius: 2,
+              "&:hover": {
+                bgcolor: theme.palette.sidebar.hover,
+              },
+            }}
+          >
+            <ListItemText 
+              primary={
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                  {t("Dashboard")}
+                </Typography>
+              } 
+            />
+          </ListItemButton>
+
           {/* === USERS === */}
           <Accordion disableGutters defaultExpanded={activeKey === "0"} sx={accordionSx}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>

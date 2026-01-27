@@ -15,6 +15,7 @@ import { prefixer } from "stylis";
 
 // === Local imports ===
 import AdminSidebar from "./AdminSidebar";
+import AdminDashboard from "./admin/AdminDashboard";
 import UserManagement from "./admin/UserManagement";
 import OrderManagement from "./admin/OrderManagement";
 import CategoryManagement from "./admin/CategoryManagement";
@@ -69,6 +70,7 @@ const AdministratorPage = () => {
             }}
           >
             <Routes>
+              <Route path="" element={<AdminDashboard />} />
               <Route path="user-management" element={<UserManagement />} />
               <Route path="order-management" element={<OrderManagement />} />
               <Route path="paid-orders" element={<PaidOrders />} />

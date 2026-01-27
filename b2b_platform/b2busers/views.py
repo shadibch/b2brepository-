@@ -69,7 +69,7 @@ class LoginAPIView(TokenObtainPairView):
             if user.status == CustomUser.STATUS_FIX_ISSUES:
                 main_url = "/company-management"
             else:
-                main_url = "/admin/order-management" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
+                main_url = "/admin" if user.is_superuser else "/cartdetails" if self.is_contract(user)  else "/"
 
             response = {
                 "access": str(refresh.access_token),
