@@ -14,6 +14,7 @@ import CartDetails from "./components/CartDetails";
 import Order from "./components/Order";
 import OrdersPage from "./components/Orders";
 import AdministratorPage from "./components/AdministratorPage"; // Import this
+import UserDashboard from "./components/UserDashboard"; // Import this
 import "./i18n";
 import { HeaderProvider } from "./components/HeaderContext";
 import Branches from "./components/Branches";
@@ -61,6 +62,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route
             path="/"
+            element={<UserDashboard />}
+          />
+          <Route
+            path="/products"
             element={<IndexPage products={products} setProducts={setProducts} />}
           />
           <Route path="/account_settings" element={<AccountSettings />} />

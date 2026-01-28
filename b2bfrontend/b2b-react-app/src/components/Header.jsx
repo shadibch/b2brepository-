@@ -25,6 +25,7 @@ import {
   Search as SearchIcon,
   ShoppingCart as ShoppingCartIcon,
   Home as HomeIcon,
+  Dashboard as DashboardIcon,
   Phone as PhoneIcon,
   Language as LanguageIcon,
   Person as PersonIcon,
@@ -223,6 +224,13 @@ const Header = ({ setProducts }) => {
             <IconButton color="inherit" component={RouterLink} to="/">
               <HomeIcon />
             </IconButton>
+            
+            {/* Dashboard - only for authenticated users */}
+            {token && (
+              <IconButton color="inherit" component={RouterLink} to="/dashboard" title={t("Dashboard")}>
+                <DashboardIcon />
+              </IconButton>
+            )}
 
             {/* Cart */}
             <IconButton color="inherit" component={RouterLink} to="/cartdetails">
