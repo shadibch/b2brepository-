@@ -62,11 +62,23 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route
             path="/"
-            element={<UserDashboard />}
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/products"
             element={<IndexPage products={products} setProducts={setProducts} />}
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
           />
           <Route path="/account_settings" element={<AccountSettings />} />
           <Route path="/productitem/:partId" element={<ProductItem />} />

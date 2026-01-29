@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
+import { isAuthenticated } from "./components/axiosInstance";
 
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("jwt_token"); // Check stored token
-  return token ? children : <Navigate to="/login" />;
+  return isAuthenticated() ? children : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;

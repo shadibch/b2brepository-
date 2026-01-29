@@ -9,6 +9,8 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Button,
+  Alert,
 } from "@mui/material";
 import {
   ShoppingBasket,
@@ -25,13 +27,15 @@ import {
   Event,
   Notifications,
   Favorite,
+  Login,
 } from "@mui/icons-material";
-import axiosInstance from "./axiosInstance";
+import { axiosInstance, isAuthenticated } from "./axiosInstance";
 import { t, isRTL } from "../utils/translator";
 
 const UserDashboard = () => {
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width:900px)");
@@ -73,18 +77,38 @@ const UserDashboard = () => {
   const fetchNavigationLinks = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await axiosInstance.get("/api/navigation/");
       setLinks(response.data.links || []);
     } catch (error) {
       console.error("Error fetching navigation links:", error);
+      setError(error.response?.status === 401 ? "Authentication required" : "Failed to load navigation");
+      
+      // If it's a 401 error, redirect to login
+      if (error.response?.status === 401) {
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Check authentication before fetching data
+    if (!isAuthenticated()) {
+      setError("Please log in to access the dashboard");
+      setLoading(false);
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     fetchNavigationLinks();
-  }, []);
+  }, [navigate]);
 
   const handleCardClick = (route) => {
     navigate(route);
@@ -107,7 +131,7 @@ const UserDashboard = () => {
     title: t("Products"),
     icon: <ShoppingBasket sx={{ fontSize: 48 }} />,
     color: "#2e7d32",
-    route: "/products",
+    route: "/",
     image: "/api/placeholder/200/150?text=Products",
     group: "MAIN",
   };
@@ -122,9 +146,44 @@ const UserDashboard = () => {
           justifyContent: "center",
           alignItems: "center",
           height: "50vh",
+          flexDirection: "column",
+          gap: 2,
         }}
       >
         <Typography variant="h6">{t("Loading...")}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("Fetching your personalized dashboard")}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
+          flexDirection: "column",
+          gap: 2,
+          p: 3,
+        }}
+      >
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {t(error)}
+        </Alert>
+        <Typography variant="body2" color="text.secondary">
+          {t("Redirecting to login page...")}
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Login />}
+          onClick={() => navigate("/login")}
+        >
+          {t("Go to Login")}
+        </Button>
       </Box>
     );
   }

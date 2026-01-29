@@ -36,6 +36,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import axiosInstance from "./axiosInstance";
 import { useHeaderContext } from "./HeaderContext";
 import { t, switchLanguage, isRTL, getCurrentLanguage } from '../utils/translator';
+import { isAuthenticated } from "./axiosInstance";
 import createEmotionCache from './createEmotionCache';
 const Header = ({ setProducts }) => {
   const [user, setUser] = useState(null);
@@ -226,7 +227,7 @@ const Header = ({ setProducts }) => {
             </IconButton>
             
             {/* Dashboard - only for authenticated users */}
-            {token && (
+            {isAuthenticated() && (
               <IconButton color="inherit" component={RouterLink} to="/dashboard" title={t("Dashboard")}>
                 <DashboardIcon />
               </IconButton>

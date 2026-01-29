@@ -2,7 +2,7 @@ import axios from "axios";
 import { t, switchLanguage, isRTL, getCurrentLanguage } from "../utils/translator";
 import { API_BASE_URL } from "../utils/settings";
 
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
 });
 
