@@ -478,9 +478,9 @@ export default function CategoryManager() {
               }
               onClose={() => setContextMenuAnchor(null)}
             >
-              {selected?.level < 2 && (
+            
                 <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
-              )}
+            
               
               {selected?.id && selected.id  && (
                 <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
