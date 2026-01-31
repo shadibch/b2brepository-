@@ -1467,6 +1467,9 @@ class ProductAdminViewSet(ModelViewSet):
                 # Get the first available name for the base name
                 name = next(trans['name'] for trans in translations if trans.get('name'))
                 part_id = request.data.get('part_id')
+                unit = request.data.get('unit', 'M')
+                for_each_en = request.data.get('for_each_en', '')
+                for_each_ar = request.data.get('for_each_ar', '')
                 print("Start Created 3")
                 # Create product
                 product = Product.objects.create(
@@ -1475,7 +1478,10 @@ class ProductAdminViewSet(ModelViewSet):
                     base_price=price,
                     stock_quantity = stock_quantity,
                     closest_category=closest_category,
-                    availibility = availibility
+                    availibility = availibility,
+                    unit=unit,
+                    for_each_en=for_each_en,
+                    for_each_ar=for_each_ar
                 )
                 print("Start Created 4")
                 category = closest_category
@@ -1537,11 +1543,14 @@ class ProductAdminViewSet(ModelViewSet):
                 # Parse JSON data
                 translations = json.loads(request.data.get('translations', '[]'))
                 category_id = request.data.get('closest_category')
-                print(category_id)
                 closest_category = Category.objects.get(id=category_id)
                 stock_quantity = request.data.get('stock_quantity')
                 subgroups = json.loads(request.data.get('subgroups', '[]'))
                 price = request.data.get('base_price')
+                unit = request.data.get('unit', 'M')
+                for_each_en = request.data.get('for_each_en', '')
+                for_each_ar = request.data.get('for_each_ar', '')
+                # Validate translations
                 availibility = request.data.get('availibility')
                 # Validate translations
                 if not any(trans.get('name') for trans in translations):
@@ -1557,6 +1566,9 @@ class ProductAdminViewSet(ModelViewSet):
                 product.closest_category=closest_category
                 product.stock_quantity = stock_quantity
                 product.availibility = availibility
+                product.unit = unit
+                product.for_each_en = for_each_en
+                product.for_each_ar = for_each_ar
                 product.save()
                 
                 category = closest_category

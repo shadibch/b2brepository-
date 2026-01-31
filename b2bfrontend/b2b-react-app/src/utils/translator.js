@@ -50,3 +50,4 @@ export const formatDate = (date, locale = getCurrentLanguage()) => {
     day: "numeric",
   }).format(new Date(date));
 };
+

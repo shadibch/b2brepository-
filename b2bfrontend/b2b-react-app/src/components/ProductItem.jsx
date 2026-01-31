@@ -225,11 +225,35 @@ const ProductItem = () => {
                     >
                       {formatNumber(product.base_price, product.currency)}
                     </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 'bold', ml: 1 }}
+                    >
+                       {t(product.unit)}
+                      {product.for_each && (
+                        <Box component="span" sx={{ ml: 0.5 }}>
+                          ( {product.for_each})
+                        </Box>
+                      )}
+                    </Typography>
                   </Box>
                 ) : (
-                  <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
-                    {formatNumber(product.base_price, product.currency)}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="h4" component="span" sx={{ fontWeight: 'bold' }}>
+                      {formatNumber(product.base_price, product.currency)}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: 'text.secondary', ml: 1 }}
+                    >
+                      / {t(product.unit)}
+                      {product.for_each && (
+                        <Box component="span" sx={{ ml: 0.5 }}>
+                          ({product.for_each})
+                        </Box>
+                      )}
+                    </Typography>
+                  </Box>
                 )}
               </Box>
             )}

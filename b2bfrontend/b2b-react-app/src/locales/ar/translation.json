@@ -349,5 +349,11 @@
     "Send reset link":"إرسال رابط إعادة التعيين",
     "Sending..." : "إرسال...",
     "Reset Password": "إعادة تعيين كلمة المرور",
-    "New Password" : "كلمة المرور الجديدة"
+    "New Password" : "كلمة المرور الجديدة",
+    "unit": "الوحدة",
+    "meter": "المتر",
+    "kilogram": "الكيلوغرام",
+    "each": "كل",
+    "forEach": "لكل",
+    "For Each": "لكل"
 }

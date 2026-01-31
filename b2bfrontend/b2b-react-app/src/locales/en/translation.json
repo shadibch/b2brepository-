@@ -135,6 +135,12 @@
  "Add Company Item" : "Add item to the company",
  "Item has added to the shopping cart" : "Item has added to the shopping cart",
  "order_expiry_message": "Order {{orderId}} will expire on {{expiryDate}}",
+"unit": "Unit",
+  "meter": "Meter",
+  "kilogram": "Kilogram",
+  "each": "Each",
+  "forEach": "For Each",
+  "For Each": "For Each",
  "common": {
   "ok": "Ok",
   "cancel": "Cancel"
@@ -146,3 +152,4 @@
    "similar_products": "Similar Products",
  "PURCHASE_DATETIME_EXCEED":"You have exceeded your old waiting period. Please pay to complete a new purchase."
 }
+

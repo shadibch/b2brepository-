@@ -548,10 +548,13 @@ export default function ProductManagement() {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const [tempImages, setTempImages] = useState([]);
+const [tempImages, setTempImages] = useState([]);
   const [tempPreviewUrls, setTempPreviewUrls] = useState([]);
   const [stockQuantity, setStockQuantity] = useState(0);
   const [partId, setPartId] = useState("");
+  const [unit, setUnit] = useState("M");
+  const [forEachAr, setForEachAr] = useState("");
+  const [forEachEn, setForEachEn] = useState("");
 
   const fileInputRef = useRef(null);
   const addImageInputRef = useRef(null);
@@ -747,7 +750,7 @@ setContextProduct(contextProductSelected);
   };
 
   /* --- Form handling --- */
-  const clearForm = () => {
+const clearForm = () => {
     setSelected(null);
 
     setSelectedGroups([]);
@@ -760,6 +763,9 @@ setContextProduct(contextProductSelected);
     setSelectedImageIndex(0);
     setStockQuantity(0);
     setAvailability("M");
+    setUnit("M");
+    setForEachAr("");
+    setForEachEn("");
     setLoading(false); // Reset loading state
   };
 
@@ -798,6 +804,12 @@ setContextProduct(contextProductSelected);
       fd.append("subgroups", JSON.stringify(selectedSubgroups));
       fd.append("name", firstFilledName);
       fd.append("stock_quantity", stockQuantity);
+      fd.append("unit", unit);
+      
+      if (unit === "Each") {
+        fd.append("for_each_en", forEachEn);
+        fd.append("for_each_ar", forEachAr);
+      }
 
       if (!selected?.id) {
         tempImages.forEach((img) => fd.append("images", img));
@@ -884,6 +896,9 @@ setContextProduct(contextProductSelected);
       setPrice(dp.base_price || "");
       setAvailability(dp.availibility);
       setStockQuantity(dp.stock_quantity || 0);
+      setUnit(dp.unit || "M");
+      setForEachAr(dp.for_each_ar || "");
+      setForEachEn(dp.for_each_en || "");
       setSelectedGroups(dp.groups || []);
       setSelectedSubgroups(dp.subgroups || []);
 
@@ -1108,6 +1123,34 @@ setContextProduct(contextProductSelected);
                         onChange={(e) => setPrice(e.target.value)}
                         sx={{ my: 1 }}
                       />
+
+                      <FormControl fullWidth sx={{ my: 1 }}>
+                        <InputLabel>{t("Unit")}</InputLabel>
+                        <Select value={unit} label={t("Unit")} onChange={(e) => setUnit(e.target.value)}>
+                          <MenuItem value="M">{t("Meter")}</MenuItem>
+                          <MenuItem value="Kg">{t("Kilogram")}</MenuItem>
+                          <MenuItem value="Each">{t("Each")}</MenuItem>
+                        </Select>
+                      </FormControl>
+
+                      {unit === "Each" && (
+                        <>
+                          <TextField
+                            label={t("For Each") + " (EN)"}
+                            fullWidth
+                            value={forEachEn}
+                            onChange={(e) => setForEachEn(e.target.value)}
+                            sx={{ my: 1 }}
+                          />
+                          <TextField
+                            label={t("For Each") + " (AR)"}
+                            fullWidth
+                            value={forEachAr}
+                            onChange={(e) => setForEachAr(e.target.value)}
+                            sx={{ my: 1 }}
+                          />
+                        </>
+                      )}
 
                       <FormControl fullWidth sx={{ my: 1 }}>
                         <InputLabel>{t("Availability")}</InputLabel>

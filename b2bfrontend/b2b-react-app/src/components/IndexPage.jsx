@@ -102,11 +102,8 @@ const navigate = useNavigate();
   
   }, [location.state, setProducts]);
   
-    if(localStorage.getItem("authToken") &&
-     localStorage.getItem("main_url")&& localStorage.getItem("main_url")!="/" ) {
-
-      navigate(localStorage.getItem("main_url"));
-    }
+    // Remove the automatic redirect logic to allow users to freely navigate
+    // The redirect should only happen on initial login, not when explicitly navigating to products
   return (
     <>
       {categoryId > 0 && (
@@ -209,22 +206,36 @@ const navigate = useNavigate();
 
           {isAuthenticated() && (
             <Box sx={{ mb: 1 }}>
-              {product.price > 0 && product.price !== product.base_price ? (
+              {product.price > 0  ? (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography variant="h6" sx={{ color: "error.main", fontWeight: "bold" }}>
                     {formatNumber(product.price, product.currency)}
                   </Typography>
+                  {product.base_price !== product.price && (
                   <Typography
                     variant="body2"
                     sx={{ textDecoration: "line-through", color: "text.secondary" }}
                   >
                     {formatNumber(product.base_price, product.currency)}
                   </Typography>
-                </Box>
+                  )}
+                  
+                  
+                  </Box>
+              
               ) : (
-                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                  {formatNumber(product.base_price, product.currency)}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    {formatNumber(product.base_price, product.currency)}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", ml: 1 }}
+                  >
+                   
+                   
+                  </Typography>
+                </Box>
               )}
             </Box>
           )}

@@ -24,6 +24,10 @@ import {
   Chip,
   Card,
   CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import { t, isRTL } from "../../utils/translator";
@@ -41,6 +45,7 @@ const ManagedUsersPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
   const [loading, setLoading] = useState(false);
+  const [reasonDialog, setReasonDialog] = useState({ open: false, action: "", reason: "" });
 
   const [formData, setFormData] = useState({
     email: "",
@@ -121,7 +126,29 @@ const ManagedUsersPage = () => {
       return showSnackbar(t("Period is mandatory and should be more than 0"), "error");
     }
 
-    if ((statusUpdate === "Blocked" || statusUpdate === "FixIssues") && !formData.reason?.trim()) {
+    if (statusUpdate === "Active") {
+      try {
+        const data = {
+          credit: formData.company_credit,
+          period: formData.company_period,
+          status: "Active",
+          reason: null,
+        };
+
+        await axiosInstance.post(`${API_BASE}/update_user/${selectedUser.id}`, data);
+        showSnackbar(message || t("user_updated"), "success");
+        fetchUsers(currentPage);
+      } catch (err) {
+        console.error(err);
+        showSnackbar(t("error_user_update"), "error");
+      }
+    } else if (statusUpdate === "Blocked" || statusUpdate === "FixIssues") {
+      setReasonDialog({ open: true, action: statusUpdate, reason: "" });
+    }
+  };
+
+  const handleReasonSubmit = async () => {
+    if (!reasonDialog.reason?.trim()) {
       return showSnackbar(t("Reason is required"), "error");
     }
 
@@ -129,14 +156,18 @@ const ManagedUsersPage = () => {
       const data = {
         credit: formData.company_credit,
         period: formData.company_period,
+        status: reasonDialog.action,
+        reason: reasonDialog.reason,
       };
-      if (statusUpdate) {
-        data.status = statusUpdate;
-        data.reason = formData.reason || "";
-      }
 
       await axiosInstance.post(`${API_BASE}/update_user/${selectedUser.id}`, data);
-      showSnackbar(message || t("user_updated"), "success");
+      
+      const message = reasonDialog.action === "Blocked" 
+        ? t("user_blocked_message") 
+        : t("user_fix_issues_message");
+      
+      showSnackbar(message, "success");
+      setReasonDialog({ open: false, action: "", reason: "" });
       fetchUsers(currentPage);
     } catch (err) {
       console.error(err);
@@ -217,16 +248,7 @@ const ManagedUsersPage = () => {
                 </Grid>
               ))}
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label={t("Reason")}
-                  name="reason"
-                  value={formData.reason || ""}
-                  onChange={handleFormChange}
-                  placeholder={t("Enter reason")}
-                />
-              </Grid>
+
 
               <Grid item xs={12}>
                 <Box display="flex" gap={2}>
@@ -391,6 +413,35 @@ const ManagedUsersPage = () => {
           color="primary"
         />
       </Box>
+
+      {/* Reason Dialog */}
+      <Dialog open={reasonDialog.open} onClose={() => setReasonDialog({ open: false, action: "", reason: "" })}>
+        <DialogTitle>
+          {reasonDialog.action === "Blocked" ? t("Block User") : t("Fix Issues")}
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t("Reason")}
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            value={reasonDialog.reason}
+            onChange={(e) => setReasonDialog({ ...reasonDialog, reason: e.target.value })}
+            placeholder={t("Enter reason")}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReasonDialog({ open: false, action: "", reason: "" })}>
+            {t("Cancel")}
+          </Button>
+          <Button onClick={handleReasonSubmit} variant="contained" color="primary">
+            {t("Submit")}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar */}
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleCloseSnackbar}>

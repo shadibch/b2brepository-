@@ -73,6 +73,9 @@ class Product(models.Model):
     part_id = models.CharField(max_length=50, unique=True)
     stock_quantity = models.IntegerField(default=0)
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=10, choices=[("M", "Meter"), ("Kg", "Kilogram"), ("Each", "Each")], default="M")
+    for_each_en = models.CharField(max_length=255, blank=True, null=True)
+    for_each_ar = models.CharField(max_length=255, blank=True, null=True)
     embedding = VectorField(dimensions=384, null=True)  # based on model used
     discount = models.DecimalField(
     max_digits=5, 

@@ -131,7 +131,7 @@ const UserDashboard = () => {
     title: t("Products"),
     icon: <ShoppingBasket sx={{ fontSize: 48 }} />,
     color: "#2e7d32",
-    route: "/",
+    route: "/products",
     image: "/api/placeholder/200/150?text=Products",
     group: "MAIN",
   };

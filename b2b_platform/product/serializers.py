@@ -161,13 +161,15 @@ class ProductItemSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()  # ✅ Dynamically retrieve price
       # ✅ Get list of media
     name = serializers.SerializerMethodField() 
+    unit = serializers.SerializerMethodField()
+    for_each = serializers.SerializerMethodField()
     
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
     subgroups = ProductSubGroupSerializer(many=True)
     class Meta:
         model = Product
-        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price","closest_category","discount","availibility","media_url"]  # ✅ Ensure 'price' is included
+        fields = ["id", "name", "part_id", "stock_quantity", "base_price", "description", "subgroups", "categories", "attributs", "currency", "price","closest_category","discount","availibility","media_url","unit","for_each"]  # ✅ Ensure 'price' is included
     def get_name(self,obj):
         request = self.context.get("request")  # Access request from serializer context
         language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
@@ -183,6 +185,16 @@ class ProductItemSerializer(serializers.ModelSerializer):
         language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
         translation = obj.translations.filter(language=language).first()
         return translation.attributs if translation and translation.attributs else obj.attributs  # Return translated name or fallback
+    def get_unit(self, obj):
+        return obj.unit if hasattr(obj, 'unit') else 'M'
+    def get_for_each(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return ""
+        language = request.LANGUAGE_CODE if request else "en"
+        if obj.unit == "Each" and hasattr(obj, 'for_each_en') and hasattr(obj, 'for_each_ar'):
+            return getattr(obj, 'for_each_en' if language == 'en' else 'for_each_ar', "")
+        return ""
     def get_price(self, obj):
         user = self.context["request"].user
         request = self.context["request"]
@@ -214,6 +226,8 @@ class ProductSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     attributs = serializers.SerializerMethodField()
+    unit = serializers.SerializerMethodField()
+    for_each = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -221,7 +235,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "id", "name", "part_id", "stock_quantity", "base_price",
             "description", "subgroups", "categories", "attributs",
             "currency", "price", "closest_category", "discount",
-            "availibility", "media_url"
+            "availibility", "media_url", "unit", "for_each"
         ]
 
     def get_price(self, obj):
@@ -245,6 +259,16 @@ class ProductSerializer(serializers.ModelSerializer):
     def get_attributs(self, obj):
         tr = self._get_translation(obj)
         return tr.attributs if tr and tr.attributs else obj.attributs
+    def get_unit(self, obj):
+        return obj.unit if hasattr(obj, 'unit') else 'M'
+    def get_for_each(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return ""
+        language = request.LANGUAGE_CODE if request else "en"
+        if obj.unit == "Each" and hasattr(obj, 'for_each_en') and hasattr(obj, 'for_each_ar'):
+            return getattr(obj, 'for_each_en' if language == 'en' else 'for_each_ar', "")
+        return ""
        
 
    
@@ -589,11 +613,12 @@ class ProductDetailedAdminSerializer(serializers.ModelSerializer):
     category_hierarchy = serializers.SerializerMethodField()
     groups = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     subgroups = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
     
     class Meta:
         model = Product
         fields = ['id', 'name', 'part_id', 'base_price', 'translations',
-                   'stock_quantity', 'closest_category',
+                   'stock_quantity', 'closest_category', 'unit', 'for_each_en', 'for_each_ar',
                  'category_hierarchy', 'groups', 'subgroups','description','availibility','media_url']
 
     def get_translations(self, obj):
