@@ -11,8 +11,8 @@ import {
   Typography,
 } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import axios from 'axios';
 import axiosInstance from '../axiosInstance';
+import { t } from '../../utils/translator';
 
 const { Title } = Typography;
 
@@ -25,7 +25,7 @@ const CompanyManagement = () => {
 
   const fetchCompanies = async () => {
     try {
-      const response = await axios.get('/api/companies/');
+      const response = await axiosInstance.get('/api/companies/');
       setCompanies(response.data);
     } catch (error) {
       message.error('Failed to fetch companies');
@@ -69,34 +69,34 @@ const CompanyManagement = () => {
   };
 
   const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Register Number',
-      dataIndex: 'register_number',
-      key: 'register_number',
-    },
-    {
-      title: 'Credit',
-      dataIndex: 'credit',
-      key: 'credit',
-    },
-    {
-      title: 'Period',
-      dataIndex: 'period',
-      key: 'period',
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
+     {
+       title: t('Name'),
+       dataIndex: 'name',
+       key: 'name',
+     },
+     {
+       title: t('Register Number'),
+       dataIndex: 'register_number',
+       key: 'register_number',
+     },
+     {
+       title: t('Credit'),
+       dataIndex: 'credit',
+       key: 'credit',
+     },
+     {
+       title: t('Period'),
+       dataIndex: 'period',
+       key: 'period',
+     },
+     {
+       title: t('Address'),
+       dataIndex: 'address',
+       key: 'address',
+     },
+     {
+       title: t('Actions'),
+       key: 'actions',
       render: (_, record) => (
         <Space>
           <Button
@@ -122,53 +122,53 @@ const CompanyManagement = () => {
         loading={loading}
       />
 
-      <Modal
-        title="Edit Company"
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={() => setIsModalVisible(false)}
-        confirmLoading={loading}
-      >
+       <Modal
+         title={t("Edit Company")}
+         open={isModalVisible}
+         onOk={handleModalOk}
+         onCancel={() => setIsModalVisible(false)}
+         confirmLoading={loading}
+       >
         <Form
           form={form}
           layout="vertical"
         >
-          <Form.Item
-            name="name"
-            label="Name"
-          >
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item
-            name="register_number"
-            label="Register Number"
-          >
-            <Input disabled />
-          </Form.Item>
-          
-          <Form.Item
-            name="credit"
-            label="Credit"
-            rules={[{ required: true, message: 'Please input credit!' }]}
-          >
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-          
-          <Form.Item
-            name="period"
-            label="Period"
-            rules={[{ required: true, message: 'Please input period!' }]}
-          >
-            <InputNumber style={{ width: '100%' }} />
-          </Form.Item>
-          
-          <Form.Item
-            name="address"
-            label="Address"
-          >
-            <Input disabled />
-          </Form.Item>
+           <Form.Item
+             name="name"
+             label={t("Name")}
+           >
+             <Input disabled />
+           </Form.Item>
+           
+           <Form.Item
+             name="register_number"
+             label={t("Register Number")}
+           >
+             <Input disabled />
+           </Form.Item>
+           
+           <Form.Item
+             name="credit"
+             label={t("Credit")}
+             rules={[{ required: true, message: t('Please input credit!') }]}
+           >
+             <InputNumber style={{ width: '100%' }} />
+           </Form.Item>
+           
+           <Form.Item
+             name="period"
+             label={t("Period")}
+             rules={[{ required: true, message: t('Please input period!') }]}
+           >
+             <InputNumber style={{ width: '100%' }} />
+           </Form.Item>
+           
+           <Form.Item
+             name="address"
+             label={t("Address")}
+           >
+             <Input disabled />
+           </Form.Item>
         </Form>
       </Modal>
     </div>

@@ -157,7 +157,7 @@ class IsSuperUser(permissions.BasePermission):
 from rest_framework.generics import *
 class CompanyViewSet(ListAPIView):
     queryset = Company.objects.all()
-    serializer_class = CompanySerializerUser
+    serializer_class = CompanySerializer
     pagination_class = CompanyPagination
     permission_classes = [IsAuthenticated, IsSuperUserOrCompanyAdmin]
     def get_queryset(self):
