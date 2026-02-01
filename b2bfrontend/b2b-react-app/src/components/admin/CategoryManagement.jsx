@@ -218,6 +218,10 @@ export default function CategoryManager() {
   // context menu for tree
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuNode, setMenuNode] = useState(null);
+  
+  // move functionality
+  const [moveFromCategory, setMoveFromCategory] = useState(null);
+  const [moveMode, setMoveMode] = useState(null); // 'from' or 'to'
 
   const align = isRTL() ? 'right' : 'left';
 
@@ -328,13 +332,13 @@ export default function CategoryManager() {
   };
 
   const handleCreateCategory = () => {
-    const parentId = menuNode?.id === 'root' ? null : (selected?.id && Number(selected.id)) || null;
+    const parentId = menuNode?.id === 'root' ? null : Number(menuNode.id) || null;
     setFormState({ en: { name: '' }, ar: { name: '' } });
     setSelected({ translations: { en: { name: '' }, ar: { name: '' } }, groups: [], parent: parentId });
     setUpdate(false);
     setFile(null);
     setSelectedGroups([]);
-    setContextMenuAnchor(null);
+    setMenuAnchor(null);
     setPreviewUrl(null);
   
   };
@@ -430,6 +434,58 @@ export default function CategoryManager() {
 
   const handleGroupToggle = (gid) => setSelectedGroups(prev => prev.includes(gid) ? prev.filter(x => x !== gid) : [...prev, gid]);
 
+  const handleMoveFrom = (node) => {
+    if (node.id === 'root') {
+      setMessage({ type: 'error', text: t('Cannot move root category') });
+      return;
+    }
+    setMoveFromCategory(node);
+    setMoveMode('from');
+    setMessage({ type: 'info', text: t('Now select the destination parent category and right-click to "Move to"') });
+    setMenuAnchor(null);
+  };
+
+  const handleMoveTo = async (node) => {
+    if (!moveFromCategory) {
+      setMessage({ type: 'error', text: t('Please select a category to move from first') });
+      return;
+    }
+    
+    if (moveFromCategory.id === node.id) {
+      setMessage({ type: 'error', text: t('Cannot move category to itself') });
+      return;
+    }
+    
+    // Check if destination is a descendant of source
+    const isDescendant = (parent, child) => {
+      if (parent.id === child.id) return true;
+      if (!parent.children) return false;
+      return parent.children.some(childNode => isDescendant(childNode, child));
+    };
+    
+    if (isDescendant(moveFromCategory, node)) {
+      setMessage({ type: 'error', text: t('Cannot move category to its own descendant') });
+      return;
+    }
+    
+    try {
+      const fromId = Number(moveFromCategory.id);
+      const toId = node.id === 'root' ? 0 : Number(node.id);
+      
+      await axiosInstance.post(`/api/admin/move/${fromId}/${toId}/`);
+      
+      setMessage({ type: 'success', text: t('Category moved successfully') });
+      setMoveFromCategory(null);
+      setMoveMode(null);
+      setMenuAnchor(null);
+      await fetchCategories();
+      
+    } catch (error) {
+      console.error(error);
+      setMessage({ type: 'error', text: error.response?.data?.error || t('Error moving category') });
+    }
+  };
+
   return (
     <Box sx={{ p: 3, direction: isRTL() ? 'rtl' : 'ltr', bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f5f6fa' }}>
       <Typography variant="h5" sx={{ mb: 2 }}>{t('categories')}</Typography>
@@ -455,14 +511,6 @@ export default function CategoryManager() {
                 slots={{ expandIcon: ExpandMore, collapseIcon: ChevronRight }}
                 onItemClick={handleTreeSelect}
                 onItemContextMenu={handleTreeContext}
-                onContextMenu={(event, itemId) => {
-                  event.preventDefault();
- 
-                  setContextMenuAnchor({
-                    mouseX: event.clientX + 2,
-                    mouseY: event.clientY - 6,
-                  });
-                }}
                 sx={{ maxHeight: '70vh', overflow: 'auto' }}
               />
             )}
@@ -478,14 +526,39 @@ export default function CategoryManager() {
               }
               onClose={() => setContextMenuAnchor(null)}
             >
-            
+             
                 <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
-            
+             
               
               {selected?.id && selected.id  && (
                 <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
               )}
             </Menu>
+
+            {/* Tree context menu */}
+            {menuAnchor && (
+              <Menu
+                open={!!menuAnchor}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                  menuAnchor ? { top: menuAnchor.y, left: menuAnchor.x } : undefined
+                }
+                onClose={() => setMenuAnchor(null)}
+              >
+                <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
+                
+                {menuNode && menuNode.id !== 'root' && (
+                  <MenuItem onClick={() => handleMoveFrom(menuNode)}>
+                    {t('Move from')}
+                  </MenuItem>
+                )}
+                {moveFromCategory && (
+                  <MenuItem onClick={() => handleMoveTo(menuNode)}>
+                    {t('Move to')}
+                  </MenuItem>
+                )}
+              </Menu>
+            )}
           </Card>
         </Box>
 

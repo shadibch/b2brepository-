@@ -685,9 +685,51 @@ def deleteGroup(request, groupid):
         {"detail": "Group deleted successfully."},
         status=status.HTTP_204_NO_CONTENT
     )
-    
 
 
+@api_view(['POST'])
+@permission_classes([IsSuperUser])
+def move_category(request, categoryId, categoryIdParent):
+    """
+    Move a category to a new parent
+    categoryId: the category to move
+    categoryIdParent: the new parent category (0 for root)
+    """
+    try:
+        category = get_object_or_404(Category, id=categoryId)
+        
+        # Prevent moving a category to be its own descendant
+        if categoryIdParent != 0:
+            new_parent = get_object_or_404(Category, id=categoryIdParent)
+            
+            # Check if new_parent is a descendant of category
+            current = new_parent
+            while current.parent:
+                if current.parent.id == categoryId:
+                    return Response(
+                        {"error": "Cannot move a category to be its own descendant"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                current = current.parent
+            
+            category.parent = new_parent
+        else:
+            # Move to root
+            category.parent = None
+        
+        category.save()
+        
+        # Return updated category data
+        serializer = CategoryAdminSerializer(category)
+        return Response(serializer.data)
+        
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+  
 class ProductGroupViewSet(viewsets.ModelViewSet):
     queryset = ProductGroup.objects.prefetch_related(
         'translations',

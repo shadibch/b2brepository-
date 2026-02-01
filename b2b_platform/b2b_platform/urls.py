@@ -99,6 +99,7 @@ urlpatterns = [
     path('api/admin/', include(router.urls) ),
     path('api/admin/group/<int:groupid>/' , deleteGroup),
     path('api/admin/categories_admin/',CategorySaveView.as_view()),
+    path('api/admin/move/<int:categoryId>/<int:categoryIdParent>/', move_category, name='move-category'),
     path('api/admin/product-detail/<int:product_id>/', ProductDetailedAdminView.as_view(), name='product-detail-admin'),
     path('api/admin/paid-orders/', PaidOrdersView.as_view(), name='paid-orders'),
     path('api/admin/execute-paid/<int:order_id>/', ExecutePaidOrderView.as_view(), name='execute-paid'),
