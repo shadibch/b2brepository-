@@ -32,6 +32,7 @@ import ReportManagement from "./admin/ReportManagement";
 import "../assets/fonts/fonts.css";
 import { appTheme } from "./theme";
 import { isRTL } from "../utils/translator";
+import ProductItem from "./admin/ProductItem";
 
 const AdministratorPage = () => {
   const [mode, setMode] = useState("light");
@@ -75,6 +76,7 @@ const AdministratorPage = () => {
               <Route path="order-management" element={<OrderManagement />} />
               <Route path="paid-orders" element={<PaidOrders />} />
               <Route path="item-management" element={<ProductManagement />} />
+              <Route path="product-item/:productId?" element={<ProductItem />} />
               <Route
                 path="category-management"
                 element={<CategoryManagement />}

@@ -453,7 +453,40 @@ class WideSearch(ListAPIView):
 
 
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django.db.models import Count
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 
+class LeafCategoryHierarchyAPIView(APIView):
+
+    def get(self, request):
+        leaf_categories = Category.objects.filter(children__isnull=True)
+
+        data = []
+
+        for category in leaf_categories:
+            hierarchy = []
+            current = category
+
+            # Build hierarchy up to root
+            while current is not None:
+                hierarchy.insert(0,   self.getTranslatedName(request,current))
+                current = current.parent
+
+            data.append({
+                "id": category.id,
+                "hierarchy": hierarchy
+            })
+
+        return Response(data)
+    def getTranslatedName(self,request,catagory):
+        language = request.LANGUAGE_CODE if request else "en"  # Fallback to default language
+        translation = catagory.translations.filter(language=language).first()
+        return translation.name if translation else catagory.name 
 
 class CategoryHierarchyAPIView(ListAPIView):
    

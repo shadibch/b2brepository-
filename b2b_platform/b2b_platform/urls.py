@@ -70,6 +70,7 @@ urlpatterns = [
     path("api/filter_products/<int:category_id>/", FilterProductsBySubgroups.as_view(), name="filter-products"),  
     path("api/product/<str:part_id>/", GetProductByPartID.as_view(), name="get-product"),    # ✅ API route    # ✅ API endpoint
     path("api/category_hierarchy/<int:category_id>/", CategoryHierarchyAPIView.as_view(), name="category-hierarchy"),
+    path("api/categories_hierarchy/",LeafCategoryHierarchyAPIView.as_view(),name="categories_herarchy"),
     path("api/users/update/<int:user_id>/",UpdateUserAPIView.as_view()),
     path('api/search_text', WideSearch.as_view(), name='search_text'),
     path('api/add-item/<int:branchid>/', addItem, name='add-item'),

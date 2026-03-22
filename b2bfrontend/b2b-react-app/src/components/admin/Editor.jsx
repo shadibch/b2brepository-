@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { t } from "../../utils/translator";
 
-const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder }) => {
+const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder,disabled = false }) => {
   const editorRef = useRef(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -43,7 +43,13 @@ const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder }) => {
 
   return (
     <div className="rich-text-container">
-      <div className="rich-text-toolbar">
+      <div
+  className="rich-text-toolbar"
+  style={{
+    pointerEvents: disabled ? "none" : "auto",
+    opacity: disabled ? 0.5 : 1,
+  }}
+>
         <div className="toolbar-group">
           <select
             onChange={(e) => handleCommand("fontName", e.target.value)}
@@ -77,22 +83,22 @@ const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder }) => {
         </div>
 
         <div className="toolbar-group">
-          <button type="button" onClick={() => handleCommand("bold")} className="toolbar-button" title={t("Bold")}>
+          <button type="button" onClick={() => handleCommand("bold")}  disabled={disabled} className="toolbar-button" title={t("Bold")}>
             <strong>B</strong>
           </button>
-          <button type="button" onClick={() => handleCommand("italic")} className="toolbar-button" title={t("Italic")}>
+          <button type="button" onClick={() => handleCommand("italic")}  disabled={disabled} className="toolbar-button" title={t("Italic")}>
             <em>I</em>
           </button>
-          <button type="button" onClick={() => handleCommand("underline")} className="toolbar-button" title={t("Underline")}>
+          <button type="button" onClick={() => handleCommand("underline")}  disabled={disabled} className="toolbar-button" title={t("Underline")}>
             <u>U</u>
           </button>
         </div>
 
         <div className="toolbar-group">
-          <button type="button" onClick={() => handleCommand("insertUnorderedList")} className="toolbar-button" title={t("Bullet List")}>
+          <button type="button"  disabled={disabled} onClick={() => handleCommand("insertUnorderedList")} className="toolbar-button" title={t("Bullet List")}>
             • List
           </button>
-          <button type="button" onClick={() => handleCommand("insertOrderedList")} className="toolbar-button" title={t("Numbered List")}>
+          <button type="button"  disabled={disabled} onClick={() => handleCommand("insertOrderedList")} className="toolbar-button" title={t("Numbered List")}>
             1. List
           </button>
         </div>
@@ -100,13 +106,14 @@ const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder }) => {
         <div className="toolbar-group color-picker-container">
           <button
             type="button"
+            disabled={disabled}
             className="toolbar-button"
             onClick={() => setShowColorPicker(!showColorPicker)}
             title={t("Text Color")}
           >
             Color
           </button>
-          {showColorPicker && (
+          {showColorPicker && !disabled && (
             <div className="color-picker">
               {colors.map((color) => (
                 <button
@@ -127,14 +134,14 @@ const RichTextEditor = ({ value, onChange, dir = "ltr", placeholder }) => {
       </div>
 
       <div
-        className="rich-text-editor"
-        contentEditable
-        ref={editorRef}
-        onInput={handleContentChange}
-        dir={dir}
-        data-placeholder={placeholder}
-        style={{ minHeight: "150px" }}
-      />
+  className="rich-text-editor"
+  contentEditable={!disabled}
+  ref={editorRef}
+  onInput={disabled ? undefined : handleContentChange}
+  dir={dir}
+  data-placeholder={placeholder}
+  style={{ minHeight: "150px", pointerEvents: disabled ? "none" : "auto", opacity: disabled ? 0.6 : 1 }}
+/>
     </div>
   );
 };
