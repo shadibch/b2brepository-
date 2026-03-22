@@ -225,7 +225,7 @@ const [tempImages, setTempImages] = useState([]);
     setLoading(true);
     try {
       
-      navigate(`/admin/product-item/?productId=${product.id}/`);
+      navigate(`/admin/product-item/${product.id}/`);
      
     } catch (err) {
       setMessage({ type: "error", text: t("Error fetching product details") });
