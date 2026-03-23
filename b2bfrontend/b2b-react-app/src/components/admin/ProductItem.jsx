@@ -126,7 +126,7 @@ const [tempImages, setTempImages] = useState([]);
       setIsEditMode(true);
     }else {
     handleProductSelect(productId);
-    loadPrices();
+
     }
     const loadCategories = async () => {
       try {
@@ -504,18 +504,7 @@ setIsEditMode(true);
       </Box>
     );
   };
-  const loadPrices = async () => {
-    try {
-      if(!productId) {
-        return false;
-      }
-      const res = await axiosInstance.get(`/api/admin/products/${productId}/prices/`);
-      setPrices(res.data);
-    } catch (err) {
-      setMessage({ type: "error", text: t("Error loading prices") });
-    }
-  };
-  
+ 
   const ProductContractPrices = ({ product, onPriceAdded, onPriceDeleted }) => {
     const [selectedCompany, setSelectedCompany] = useState(null);
   
@@ -557,7 +546,9 @@ setIsEditMode(true);
   
     const theme = useTheme();
     useEffect(() => {
+
       if (product?.id) loadPrices();
+
     }, [product]);
     const handleEdit = (p) => {
       if(isEditMode) {
@@ -576,12 +567,17 @@ setIsEditMode(true);
       }
     };
     const loadPrices = async () => {
+      if(loading) {
+        return false;
+      }
       try {
+       
         const res = await axiosInstance.get(`/api/admin/products/${product.id}/prices/`);
         setPrices(res.data);
       } catch (err) {
         setMessage({ type: "error", text: t("Error loading prices") });
       }
+      
     };
   
     const loadCompanyOptions = async (inputValue) => {
@@ -679,6 +675,7 @@ setIsEditMode(true);
             <label>
               <input
                 type="checkbox"
+                disabled={!isEditMode}
                 checked={isPercentage}
                 onChange={(e) => setIsPercentage(e.target.checked)}
               />{" "}
@@ -696,12 +693,12 @@ setIsEditMode(true);
             }}
           />
   
-          <Box sx={{ display: "flex", gap: 1 }}>
+         {isEditMode && <Box sx={{ display: "flex", gap: 1 }}>
             <Button variant="contained" onClick={handleAddOrUpdate}>
               {editingPrice ? t("Update Price") : t("Add Price")}
             </Button>
             {editingPrice && <Button onClick={() => { setEditingPrice(null); setSelectedCompany(null); setDiscountValue(""); }}> {t("Cancel")}</Button>}
-          </Box>
+          </Box>}
         </Stack>
   
         <TableContainer component={Paper} variant="outlined">
@@ -802,6 +799,12 @@ setIsEditMode(true);
     }
     setLoading(false);
   };
+  <Backdrop
+  sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+  open={loading}
+>
+  <CircularProgress color="inherit" />
+</Backdrop>
   return (
     <Box
     sx={{
@@ -815,13 +818,45 @@ setIsEditMode(true);
       direction: isRTL() ? "rtl" : "ltr",
     }}
   >
-
+    {loading && <FullScreenLoader />}
   <Grid item xs={12} md={7}>
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Typography variant="h6" sx={{ mb: 1 }}>{t("Product Details")}</Typography>
-      <Button variant="contained" color="primary" onClick={handleEditProduct} startIcon={<EditIcon />} disabled={isEditMode}>
-                  {t("Edit")}
-                </Button>
+      {message && (
+              <Alert severity={message.type === "error" ? "error" : "success"} onClose={() => setMessage(null)} sx={{ mb: 2 }}>
+                {message.text}
+              </Alert>
+            )}
+ <Box
+  sx={{
+    mt: 2,
+    display: "flex",
+    gap: 2,
+    flexWrap: "wrap",
+    alignItems: "center"
+  }}
+>
+  {isEditMode && (
+    <Button
+      variant="contained"
+      onClick={() => handleSave()}
+      disabled={!translations.en && !translations.ar}
+    >
+      {selected ? t("Update") : t("Create")}
+    </Button>
+  )}
+
+  <Button
+    variant="contained"
+    color="primary"
+    onClick={handleEditProduct}
+    startIcon={<EditIcon />}
+    disabled={isEditMode}
+  >
+    {t("Edit")}
+  </Button>
+</Box>
+     
       <Tabs value={tabIndex} onChange={(e, v) => setTabIndex(v)} sx={{ mb: 2 }}>
         <Tab label={t("Details")} />
        
@@ -977,13 +1012,7 @@ setIsEditMode(true);
         </Box>
       )}
 
-       <Box sx={{ mt: 2 }}>
-         {isEditMode && (
-           <Button variant="contained" onClick={()=>handleSave()} disabled={!translations.en && !translations.ar}>
-             {selected ? t("Update") : t("Create")}
-           </Button>
-         )}
-       </Box>
+      
     </Paper>
   </Grid></Box>
   

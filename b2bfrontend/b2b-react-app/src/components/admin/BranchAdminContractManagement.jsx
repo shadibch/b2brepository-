@@ -21,6 +21,7 @@ import {
     Input as AntInput,
   } from 'antd';
   import axiosInstance from '../axiosInstance';
+import FullScreenLoader from "./FullscreenLoadingOverlay";
 
   const { Title } = Typography;
 
@@ -33,13 +34,17 @@ const BranchContractManagement = ({ company,product }) => {
     const [loading, setLoading] = useState(false);
     const fetchBranches = async () => {
       try {
-        
+        if(loading) {
+          return false;
+        }
+        setLoading(true);
         const response = await axiosInstance.get(`/api/company/${company.value}/product/${product.id}/branches/`);
        console.log(JSON.stringify(response.data))
         setBranches(response.data);
       } catch (error) {
         message.error('Failed to fetch branches');
       }
+      setLoading(false);
     };
 
     const handleRemoveProduct = async (record) => {
@@ -126,69 +131,15 @@ const BranchContractManagement = ({ company,product }) => {
       {
         title: t('Price'),
         dataIndex: 'price',
-        key: 'price',
-        render: (text, record) => {
-          const editable = isEditing(record);
-          return editable ? (
-            <InputNumber
-              min={0}
-              value={record.price}
-              formatter={(value) =>
-                ` ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-              }
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-             
-              onBlur={(e) => handleAddProduct(record,e)}
-            
-              autoFocus
-            />
-          ) : (
-            <div
-              onClick={() => {
-                setEditingKey(record.id);
-                setPriceMap(prev => ({
-                  ...prev,
-                  [record.key]: record.price,
-                }));
-              }}
-              style={{ cursor: 'pointer' }}
-            >
-              {record.price}
-            </div>
-          );
-        },
-      },
-      {
-        title: t('Actions'),
-        key: 'actions',
-        render: (_, record) => {
-          return record.product_exist ? (
-            <Space>
-              <Button
-                type="primary"
-                onClick={() => {
-                  handleRemoveProduct(record);
-                }}
-              >
-                {t('Remove Product')}
-              </Button>
-            </Space>
-          ) :  <Space>
-          <Button
-            type="primary"
-            onClick={() => {
-              handleAddProduct(record);
-            }}
-          >
-            {t('Add Product')}
-          </Button>
-        </Space>;
-        },
-      },
+        key: 'price'
+    
+      }
     ];
 
     return (
+    
         <div>
+            {loading && <FullScreenLoader />}
           <Title level={3}>{t('manage_branches')}</Title>
           <Table columns={columns} dataSource={branches} rowKey="id" />
          

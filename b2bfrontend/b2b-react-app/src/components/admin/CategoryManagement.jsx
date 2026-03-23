@@ -25,8 +25,12 @@ import {
   Avatar,
   Stack,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { ExpandMore, ChevronRight, MoreVert } from "@mui/icons-material";
+import { ExpandMore, ChevronRight, MoreVert, Edit as EditIcon } from "@mui/icons-material";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import {
   t,
@@ -94,7 +98,7 @@ const ThemedTablePagination = ({
 };
 
 // Simple FileInput component using MUI
-const FileInput = ({ onChange, fileName, onRemove }) => {
+const FileInput = ({ onChange, fileName, onRemove, disabled }) => {
   const fileRef = useRef(null);
   return (
     <Box display="flex" alignItems="center" gap={1}>
@@ -104,11 +108,12 @@ const FileInput = ({ onChange, fileName, onRemove }) => {
         accept="image/*"
         style={{ display: "none" }}
         onChange={onChange}
+        disabled={disabled}
       />
-      <Button variant="outlined" onClick={() => fileRef.current.click()}>
+      <Button variant="outlined" onClick={() => !disabled && fileRef.current.click()} disabled={disabled}>
         {fileName || t("Choose File")}
       </Button>
-      {fileName && (
+      {fileName && !disabled && (
         <Button color="error" onClick={onRemove}>
           {t('Remove')}
         </Button>
@@ -118,7 +123,7 @@ const FileInput = ({ onChange, fileName, onRemove }) => {
 };
 
 const GroupsTable = ({ groups, selectedGroups, onToggleGroup, page, rowsPerPage, onChangePage,
-   onChangeRowsPerPage ,totalCount = 0}) => {
+   onChangeRowsPerPage ,totalCount = 0, isEditMode = false}) => {
   const [expandedGroups, setExpandedGroups] = useState({});
   const toggleExpand = (groupId) => setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
   const align = isRTL() ? 'right' : 'left';
@@ -146,6 +151,7 @@ const GroupsTable = ({ groups, selectedGroups, onToggleGroup, page, rowsPerPage,
                       type="checkbox"
                       checked={selectedGroups.includes(group.id)}
                       onChange={() => onToggleGroup(group.id)}
+                      disabled={!isEditMode}
                     />
                   </TableCell>
                   <TableCell    align={align}>{group.name}</TableCell>
@@ -222,6 +228,11 @@ export default function CategoryManager() {
   const align = isRTL() ? 'right' : 'left';
   const [moveFromCategory, setMoveFromCategory] = useState(null);
   const [moveMode, setMoveMode] = useState(null); // 'from' or 'to'
+  
+  // Edit mode states
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   useEffect(() => {
     fetchCategories();
     fetchGroups();
@@ -291,6 +302,7 @@ export default function CategoryManager() {
     try {
       const res = await axiosInstance.get(`/api/admin/category/${originalId}`);
       setSelected(res.data);
+      setIsEditMode(false); // Set to view mode by default
       setUpdate(true);
       // set form state based on translations
       const initialState = { en: { name: '' }, ar: { name: '' } };
@@ -335,8 +347,9 @@ export default function CategoryManager() {
     setUpdate(false);
     setFile(null);
     setSelectedGroups([]);
-    setContextMenuAnchor(null);
+    setMenuAnchor(null);
     setPreviewUrl(null);
+    setIsEditMode(true);
   
   };
 
@@ -448,6 +461,7 @@ export default function CategoryManager() {
       setSelected(null);
       setFile(null);
       setPreviewUrl(null);
+      setIsEditMode(false);
       await fetchCategories();
     } catch (err) {
       console.error(err);
@@ -462,6 +476,7 @@ export default function CategoryManager() {
       await axiosInstance.delete(`/api/delete_categories/${id}/`);
       setMessage({ type: 'success', text: t('Category deleted successfully') });
       setSelected(null);
+      setIsEditMode(false);
       setUpdate(true);
       await fetchCategories();
     } catch (err) {
@@ -471,6 +486,36 @@ export default function CategoryManager() {
   };
 
   const handleGroupToggle = (gid) => setSelectedGroups(prev => prev.includes(gid) ? prev.filter(x => x !== gid) : [...prev, gid]);
+
+  const handleEdit = () => {
+    setIsEditMode(true);
+  };
+
+  const handleNewCategory = () => {
+    if (selected && isEditMode) {
+      setPendingAction(() => () => {
+        handleCreateCategory();
+        setIsEditMode(false);
+      });
+      setShowWarningDialog(true);
+    } else {
+      handleCreateCategory();
+      setIsEditMode(false);
+    }
+  };
+
+  const confirmWarningAction = () => {
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+    setShowWarningDialog(false);
+  };
+
+  const cancelWarningAction = () => {
+    setPendingAction(null);
+    setShowWarningDialog(false);
+  };
 
   return (
     <Box sx={{ p: 3, direction: isRTL() ? 'rtl' : 'ltr', bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#f5f6fa' }}>
@@ -485,7 +530,20 @@ export default function CategoryManager() {
       <Box display="flex" gap={3}>
         <Box sx={{ width: '30%' }}>
           <Card variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>{t('categories')}</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">{t('categories')}</Typography>
+              {selected && !isEditMode && (
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={handleEdit}
+                  startIcon={<EditIcon />}
+                  size="small"
+                >
+                  {t('Edit')}
+                </Button>
+              )}
+            </Box>
 
             {loadingCategories ? (
               <Box display="flex" justifyContent="center" sx={{ py: 3 }}>
@@ -520,25 +578,53 @@ export default function CategoryManager() {
               }
               onClose={() => setContextMenuAnchor(null)}
             >
-            
-                <MenuItem onClick={()=>handleCreateCategory()}>{t('Create new category')}</MenuItem>
-            
-              
-              {selected?.id && selected.id  && (
-                <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
+              {isEditMode && (
+                <>
+                  <MenuItem onClick={handleNewCategory}>{t('Create new category')}</MenuItem>
+                  {selected?.id && selected?.id !== 'root' && (
+                    <MenuItem onClick={() => handleMoveFrom(selected)}>
+                      {t('Move from')}
+                    </MenuItem>
+                  )}
+                  {moveFromCategory && (
+                    <MenuItem onClick={() => handleMoveTo(selected)}>
+                      {t('Move to')}
+                    </MenuItem>
+                  )}
+                  {selected?.id && (
+                    <MenuItem onClick={()=>handleDeleteCategory()} sx={{ color: 'error.main' }}>{t('Delete selected category')}</MenuItem>
+                  )}
+                </>
               )}
-
-{selected?.id && selected?.id !== 'root' && (
-                  <MenuItem onClick={() => handleMoveFrom(selected)}>
-                    {t('Move from')}
-                  </MenuItem>
-                )}
- {moveFromCategory && (
-                  <MenuItem onClick={() => handleMoveTo(selected)}>
-                    {t('Move to')}
-                  </MenuItem>
-                )}
             </Menu>
+
+            {/* Tree context menu */}
+            {menuAnchor && (
+              <Menu
+                open={!!menuAnchor}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                  menuAnchor ? { top: menuAnchor.y, left: menuAnchor.x } : undefined
+                }
+                onClose={() => setMenuAnchor(null)}
+              >
+                {isEditMode && (
+                  <>
+                    <MenuItem onClick={handleNewCategory}>{t('Create new category')}</MenuItem>
+                    {menuNode && menuNode.id !== 'root' && (
+                      <MenuItem onClick={() => handleMoveFrom(menuNode)}>
+                        {t('Move from')}
+                      </MenuItem>
+                    )}
+                    {moveFromCategory && (
+                      <MenuItem onClick={() => handleMoveTo(menuNode)}>
+                        {t('Move to')}
+                      </MenuItem>
+                    )}
+                  </>
+                )}
+              </Menu>
+            )}
           </Card>
         </Box>
 
@@ -554,20 +640,22 @@ export default function CategoryManager() {
                 <TextField
                   label={t('Category Name (EN)')}
                   value={formState.en.name}
-                  onChange={(e) => setFormState(prev => ({ ...prev, en: { name: e.target.value } }))}
+                  onChange={(e) => isEditMode && setFormState(prev => ({ ...prev, en: { name: e.target.value } }))}
+                  disabled={!isEditMode}
                   fullWidth
                 />
                 <TextField
                   label={t('Category Name (AR)')}
                   value={formState.ar.name}
-                  onChange={(e) => setFormState(prev => ({ ...prev, ar: { name: e.target.value } }))}
+                  onChange={(e) => isEditMode && setFormState(prev => ({ ...prev, ar: { name: e.target.value } }))}
+                  disabled={!isEditMode}
                   fullWidth
                 />
 
                 <Box>
                   <Typography variant="subtitle1" sx={{ mb: 1 }}>{t('Category Image')}</Typography>
                   <FileInput onChange={handleFileChange} fileName={file?.name || (previewUrl ? 
-                    t('Click to upload image') : '')} onRemove={handleRemoveFile} />
+                    t('Click to upload image') : '')} onRemove={handleRemoveFile} disabled={!isEditMode} />
                   {previewUrl && (
                     <Box sx={{ position: 'relative', display: 'inline-block', mt: 1 }}>
                       <Avatar variant="rounded" src={previewUrl} alt={t('Preview')} sx={{ width: 120, height: 80 }} />
@@ -586,12 +674,15 @@ export default function CategoryManager() {
                     rowsPerPage={rowsPerPage}
                     onChangePage={(p) => setCurrentPage(p)}
                     onChangeRowsPerPage={(r) => setRowsPerPage(r)}
+                    isEditMode={isEditMode}
                   />
                 </Box>
 
                 <Box display="flex" gap={2}>
-                  <Button variant="contained" onClick={handleSave}>{selected?.id ? t('Update') : t('Create')}</Button>
-                  {selected?.id && <Button color="error" onClick={handleDelete}>{t('Delete')}</Button>}
+                  {isEditMode && (
+                    <Button variant="contained" onClick={handleSave}>{selected?.id ? t('Update') : t('Create')}</Button>
+                  )}
+                  {selected?.id && isEditMode && <Button color="error" onClick={handleDelete}>{t('Delete')}</Button>}
                 </Box>
               </Box>
             </Card>
@@ -602,6 +693,18 @@ export default function CategoryManager() {
           )}
         </Box>
       </Box>
+
+      {/* Warning Dialog for Discarding Changes */}
+      <Dialog open={showWarningDialog} onClose={cancelWarningAction}>
+        <DialogTitle>{t('Unsaved Changes')}</DialogTitle>
+        <DialogContent>
+          {t('The changes will be discard, Do you want to continue ?')}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelWarningAction}>{t('No')}</Button>
+          <Button onClick={confirmWarningAction} variant="contained">{t('Yes')}</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
