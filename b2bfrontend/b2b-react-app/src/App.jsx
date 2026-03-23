@@ -1,4 +1,4 @@
-
+ 
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import RegisterForm from "./components/RegisterForm";
 import Header from "./components/Header";
@@ -30,6 +30,7 @@ import "./assets/fonts/fonts.css";
 import RequestResetPasswordPage from "./components/RequestResetPassword";
 import ResetPassword from "./components/ResetPassword.";
 import CompanyManagement from "./components/CompanyManagement";
+import InitialRouteHandler from "./InitialRouteHandler";
 
 function App() {
   const token = localStorage.getItem("authToken");
@@ -53,48 +54,50 @@ function App() {
         {/* ✅ Show Header on non-admin routes */}
         {!isAdminRoute && <Header setProducts={setProducts} />}
 
-        <Routes>
-          <Route
-            path="/register"
-            element={token ? <RegisterForm /> : <Navigate to="/login" />}
-          />
-          <Route path="/register_company_admin" element={<RegisterCompanyAdmin />} />
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={<IndexPage products={products} setProducts={setProducts} />}
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/account_settings" element={<AccountSettings />} />
-          <Route path="/productitem/:partId" element={<ProductItem />} />
-          <Route path="/categorypage/:categoryId" element={<CategoryPage />} />
-          <Route path="/cartdetails" element={<CartDetails />} />
-          <Route path="/order" element={<Order />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/admin/*" element={<AdministratorPage />} />
-          <Route path="/branches" element={<Branches />} />
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/contracts" element={<Contracts />} />
-          <Route path="/requestResetPassword" element={<RequestResetPasswordPage/>} /> 
-          <Route path="/reset/:token" element={<ResetPassword/>} /> 
-          <Route path="/company-management" element={<CompanyManagement />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <InitialRouteHandler>
+          <Routes>
+            <Route
+              path="/register"
+              element={token ? <RegisterForm /> : <Navigate to="/login" />}
+            />
+            <Route path="/register_company_admin" element={<RegisterCompanyAdmin />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={<IndexPage products={products} setProducts={setProducts} />}
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/account_settings" element={<AccountSettings />} />
+            <Route path="/productitem/:partId" element={<ProductItem />} />
+            <Route path="/categorypage/:categoryId" element={<CategoryPage />} />
+            <Route path="/cartdetails" element={<CartDetails />} />
+            <Route path="/order" element={<Order />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/admin/*" element={<AdministratorPage />} />
+            <Route path="/branches" element={<Branches />} />
+            <Route path="/users" element={<UserManagement />} />
+            <Route path="/contracts" element={<Contracts />} />
+            <Route path="/requestResetPassword" element={<RequestResetPasswordPage/>} /> 
+            <Route path="/reset/:token" element={<ResetPassword/>} /> 
+            <Route path="/company-management" element={<CompanyManagement />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </InitialRouteHandler>
         <IconButton
       onClick={() => setMode(mode === "light" ? "dark" : "light")}
       sx={{
