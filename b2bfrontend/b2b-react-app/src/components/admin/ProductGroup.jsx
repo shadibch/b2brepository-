@@ -29,10 +29,11 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import { t, isRTL } from "../../utils/translator";
 
 // ---------------------- Translation Fields ----------------------
-const TranslationFields = ({ translations, setTranslations }) => (
+const TranslationFields = ({ translations, setTranslations, isEditMode = true }) => (
   <Grid container spacing={2}>
     {["en", "ar"].map((lang) => (
       <Grid item xs={6} key={lang}>
@@ -41,6 +42,7 @@ const TranslationFields = ({ translations, setTranslations }) => (
           label={`${t("Name")} (${lang.toUpperCase()})`}
           value={translations.find((tr) => tr.language === lang)?.name || ""}
           onChange={(e) => {
+            if (!isEditMode) return;
             const newTranslations = [...translations];
             const index = newTranslations.findIndex((tr) => tr.language === lang);
             if (index >= 0) {
@@ -50,6 +52,7 @@ const TranslationFields = ({ translations, setTranslations }) => (
             }
             setTranslations(newTranslations);
           }}
+          disabled={!isEditMode}
         />
       </Grid>
     ))}
@@ -57,8 +60,9 @@ const TranslationFields = ({ translations, setTranslations }) => (
 );
 
 // ---------------------- SubGroup Form ----------------------
-const SubGroupForm = ({ subgroups, setSubgroups }) => {
+const SubGroupForm = ({ subgroups, setSubgroups, isEditMode = true }) => {
   const updateSubgroup = (index, field, value) => {
+    if (!isEditMode) return;
     const updated = [...subgroups];
     if (field === "translations") {
       updated[index].translations = value;
@@ -69,6 +73,7 @@ const SubGroupForm = ({ subgroups, setSubgroups }) => {
   };
 
   const addSubgroup = () => {
+    if (!isEditMode) return;
     setSubgroups((prev) => [
       ...prev,
       {
@@ -82,6 +87,7 @@ const SubGroupForm = ({ subgroups, setSubgroups }) => {
   };
 
   const removeSubgroup = (index) => {
+    if (!isEditMode) return;
     const updated = [...subgroups];
     updated.splice(index, 1);
     setSubgroups(updated);
@@ -96,6 +102,7 @@ const SubGroupForm = ({ subgroups, setSubgroups }) => {
             label={t("Base Name")}
             value={sg.name || ""}
             onChange={(e) => updateSubgroup(index, "name", e.target.value)}
+            disabled={!isEditMode}
             sx={{ mb: 2 }}
           />
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
@@ -106,33 +113,38 @@ const SubGroupForm = ({ subgroups, setSubgroups }) => {
             setTranslations={(newTranslations) =>
               updateSubgroup(index, "translations", newTranslations)
             }
+            isEditMode={isEditMode}
           />
-          <Button
-            variant="outlined"
-            color="error"
-            size="small"
-            startIcon={<DeleteIcon />}
-            onClick={() => removeSubgroup(index)}
-            sx={{ mt: 2 }}
-          >
-            {t("Remove Subgroup")}
-          </Button>
+          {isEditMode && (
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={() => removeSubgroup(index)}
+              sx={{ mt: 2 }}
+            >
+              {t("Remove Subgroup")}
+            </Button>
+          )}
         </Paper>
       ))}
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={addSubgroup}
-        sx={{ mt: 1 }}
-      >
-        {t("Add Subgroup")}
-      </Button>
+      {isEditMode && (
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={addSubgroup}
+          sx={{ mt: 1 }}
+        >
+          {t("Add Subgroup")}
+        </Button>
+      )}
     </Box>
   );
 };
 
 // ---------------------- Group Form ----------------------
-const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
+const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup, isEditMode = true, onEdit }) => {
   const [name, setName] = useState("");
   const [translations, setTranslations] = useState([
     { language: "en", name: "" },
@@ -175,6 +187,8 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
   }, [selectedGroup]);
 
   const handleSubmit = async () => {
+    if (!isEditMode) return;
+    
     const payload = { name, translations, subgroups };
    
     try {
@@ -206,37 +220,55 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
       <CardContent>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6">{t("Group Form")}</Typography>
-          <Button variant="outlined" onClick={() => { clearForm(); onSaved(); }}>
-            {t("New Group")}
-          </Button>
+          <Box>
+            {!isEditMode && selectedGroup && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<EditIcon />}
+                onClick={onEdit}
+                sx={{ mr: 1 }}
+              >
+                {t("Edit")}
+              </Button>
+            )}
+            {isEditMode && (
+              <Button variant="outlined" onClick={() => { clearForm(); onSaved(); }}>
+                {t("New Group")}
+              </Button>
+            )}
+          </Box>
         </Box>
 
         <TextField
           fullWidth
           label={t("Group Base Name")}
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => isEditMode && setName(e.target.value)}
+          disabled={!isEditMode}
           sx={{ mb: 3 }}
         />
         <Typography variant="subtitle1" sx={{ mb: 1 }}>
           {t("Group Translations")}
         </Typography>
-        <TranslationFields translations={translations} setTranslations={setTranslations} />
+        <TranslationFields translations={translations} setTranslations={setTranslations} isEditMode={isEditMode} />
 
         <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
           {t("Subgroups")}
         </Typography>
-        <SubGroupForm subgroups={subgroups} setSubgroups={setSubgroups} />
+        <SubGroupForm subgroups={subgroups} setSubgroups={setSubgroups} isEditMode={isEditMode} />
 
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          sx={{ mt: 3 }}
-          onClick={handleSubmit}
-        >
-          {selectedGroup ? t("Update") : t("Create")} {t("Group")}
-        </Button>
+        {isEditMode && (
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3 }}
+            onClick={handleSubmit}
+          >
+            {selectedGroup ? t("Update") : t("Create")} {t("Group")}
+          </Button>
+        )}
 
         <Snackbar open={!!alert} autoHideDuration={3000} onClose={() => setAlert(null)}>
           {alert && <Alert severity={alert.type}>{alert.text}</Alert>}
@@ -247,7 +279,7 @@ const GroupForm = ({ onSaved, selectedGroup, setSelectedGroup }) => {
 };
 
 // ---------------------- Group Table ----------------------
-const GroupTable = ({ groups, onEdit, onDelete }) => {
+const GroupTable = ({ groups, onEdit, onDelete, isEditMode = true }) => {
   const [expanded, setExpanded] = useState(false);
   const [page, setPage] = useState(1);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -258,9 +290,16 @@ const GroupTable = ({ groups, onEdit, onDelete }) => {
   const displayed = groups.slice((page - 1) * perPage, page * perPage);
 
   const handleDeleteClick = (group, e) => {
+    if (!isEditMode) return;
     e.stopPropagation();
     setGroupToDelete(group);
     setShowDeleteDialog(true);
+  };
+
+  const handleEditClick = (group, e) => {
+    if (!isEditMode) return;
+    e.stopPropagation();
+    onEdit(group);
   };
 
   const handleConfirmDelete = async () => {
@@ -304,27 +343,30 @@ const GroupTable = ({ groups, onEdit, onDelete }) => {
     <Typography
       sx={{
         flexGrow: 1,
-        cursor: "pointer",
+        cursor: isEditMode ? "pointer" : "default",
       }}
       onClick={(e) => {
+        if (!isEditMode) return;
         e.stopPropagation();
         onEdit(group);
       }}
     >
       {group.name}
     </Typography>
-    <IconButton
-      size="small"
-      onClick={(e) => handleDeleteClick(group, e)}
-      sx={{
-        color: "primary.contrastText",
-        "&:hover": {
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-        },
-      }}
-    >
-      <DeleteIcon fontSize="small" />
-    </IconButton>
+    {isEditMode && (
+      <IconButton
+        size="small"
+        onClick={(e) => handleDeleteClick(group, e)}
+        sx={{
+          color: "primary.contrastText",
+          "&:hover": {
+            backgroundColor: "rgba(255, 255, 255, 0.1)",
+          },
+        }}
+      >
+        <DeleteIcon fontSize="small" />
+      </IconButton>
+    )}
   </Box>
 </AccordionSummary>
 
@@ -420,6 +462,7 @@ export default function ProductGroupManager() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [alert, setAlert] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const fetchGroups = async () => {
     try {
@@ -452,6 +495,22 @@ export default function ProductGroupManager() {
     }
   };
 
+  const handleEdit = () => {
+    setIsEditMode(true);
+  };
+
+  const handleSelectGroup = (group) => {
+    setSelectedGroup(group);
+    // When selecting a group, switch to edit mode
+    setIsEditMode(true);
+  };
+
+  const handleNewGroup = () => {
+    // Clear selected group and enable edit mode for new group
+    setSelectedGroup(null);
+    setIsEditMode(true);
+  };
+
   useEffect(() => {
     fetchGroups();
   }, []);
@@ -468,16 +527,39 @@ export default function ProductGroupManager() {
         gap: 3,
       }}
     >
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+          {t("Product Groups")}
+        </Typography>
+        {!isEditMode && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<EditIcon />}
+            onClick={handleEdit}
+          >
+            {t("Edit")}
+          </Button>
+        )}
+      </Box>
+
       <Grid item xs={12}>
         <GroupForm
           onSaved={fetchGroups}
           selectedGroup={selectedGroup}
           setSelectedGroup={setSelectedGroup}
+          isEditMode={isEditMode}
+          onEdit={handleEdit}
         />
       </Grid>
 
       <Grid item xs={12}>
-        <GroupTable groups={groups} onEdit={setSelectedGroup} onDelete={handleDeleteGroup} />
+        <GroupTable 
+          groups={groups} 
+          onEdit={handleSelectGroup} 
+          onDelete={handleDeleteGroup}
+          isEditMode={isEditMode}
+        />
       </Grid>
 
       <Snackbar open={!!alert} autoHideDuration={3000} onClose={() => setAlert(null)}>
