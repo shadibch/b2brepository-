@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from company.models import Branch
-from .models import CustomUser
+from .models import CustomUser, Complaint, ComplaintComment
 
 
 from company.models import Company
@@ -178,4 +178,43 @@ class UserSerializerActivation(serializers.ModelSerializer):
         return obj.company.credit if obj.company else None
     def get_company_period(self,obj):
         return obj.company.period if obj.company else None
+
+
+class ComplaintSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Complaint
+        fields = [
+            'id', 'complaint_id', 'user', 'user_name', 'title', 'description',
+            'status', 'admin_comment', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['complaint_id', 'user', 'status', 'created_at', 'updated_at']
+    
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}" if obj.user else None
+
+
+class ComplaintCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaint
+        fields = ['title', 'description']
+
+
+class ComplaintUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Complaint
+        fields = ['status', 'admin_comment']
+
+
+class ComplaintCommentSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ComplaintComment
+        fields = ['id', 'complaint', 'user', 'user_name', 'comment', 'created_at']
+        read_only_fields = ['user', 'complaint', 'created_at']
+    
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}" if obj.user else None
 

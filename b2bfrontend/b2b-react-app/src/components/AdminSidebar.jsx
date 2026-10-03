@@ -55,9 +55,10 @@ const AdminSidebar = ({ setActivePage }) => {
     "/admin/paid-orders": "1",
     "/admin/processing-orders": "1",
     "/admin/undelivered-orders": "1",
-    "/admin/order_report": "5",
+"/admin/order_report": "5",
     "/admin/company-admin": "6",
     "/admin/report-management": "5",
+    "/admin/complaint-management": "5",
   };
 
   const activeKey = pathToKey[window.location.pathname] || "";
@@ -259,6 +260,9 @@ const AdminSidebar = ({ setActivePage }) => {
                 </ListItemButton>
                 <ListItemButton component={Link} to="/admin/report-management" onClick={() => setActivePage("/admin/report-management")}>
                   <ListItemText primary={t("Requests Report")} />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/admin/complaint-management" onClick={() => setActivePage("/admin/complaint-management")}>
+                  <ListItemText primary={t("Complaints")} />
                 </ListItemButton>
               </List>
             </AccordionDetails>

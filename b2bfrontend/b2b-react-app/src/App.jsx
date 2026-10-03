@@ -31,6 +31,7 @@ import RequestResetPasswordPage from "./components/RequestResetPassword";
 import ResetPassword from "./components/ResetPassword.";
 import CompanyManagement from "./components/CompanyManagement";
 import InitialRouteHandler from "./InitialRouteHandler";
+import ComplaintForm from "./components/ComplaintForm";
 
 function App() {
   const token = localStorage.getItem("authToken");
@@ -94,7 +95,15 @@ function App() {
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/requestResetPassword" element={<RequestResetPasswordPage/>} /> 
             <Route path="/reset/:token" element={<ResetPassword/>} /> 
-            <Route path="/company-management" element={<CompanyManagement />} />
+<Route path="/company-management" element={<CompanyManagement />} />
+            <Route 
+              path="/complaints" 
+              element={
+                <ProtectedRoute>
+                  <ComplaintForm />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </InitialRouteHandler>

@@ -20,6 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from b2busers.views import *
+from b2busers.views import ComplaintListCreateView, ComplaintDetailView, ComplaintCommentView
 from company.views import FilterCompanyByNameAPIView,UserBranchListAPIView
 from company.views import *
 from navigation.views import NavigationLinksAPIView
@@ -101,6 +102,11 @@ urlpatterns = [
     path('api/admin/group/<int:groupid>/' , deleteGroup),
     path('api/admin/categories_admin/',CategorySaveView.as_view()),
     path('api/admin/move/<int:categoryId>/<int:categoryIdParent>/', move_category, name='move-category'),
+    
+    # Complaint URLs
+    path('api/complaints/', ComplaintListCreateView.as_view(), name='complaint-list-create'),
+    path('api/complaints/<int:pk>/', ComplaintDetailView.as_view(), name='complaint-detail'),
+    path('api/complaints/<int:complaint_id>/comments/', ComplaintCommentView.as_view(), name='complaint-comments'),
     path('api/admin/product-detail/<int:product_id>/', ProductDetailedAdminView.as_view(), name='product-detail-admin'),
     path('api/admin/paid-orders/', PaidOrdersView.as_view(), name='paid-orders'),
     path('api/admin/execute-paid/<int:order_id>/', ExecutePaidOrderView.as_view(), name='execute-paid'),

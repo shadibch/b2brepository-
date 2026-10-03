@@ -20,6 +20,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .permissions import IsSuperUserOrCompanyAdmin
 from rest_framework.permissions import IsAuthenticated
 from .serializers import StaffUserDetailSerializer
+from .models import Complaint, ComplaintComment
+from .serializers import ComplaintSerializer, ComplaintCreateSerializer, ComplaintUpdateSerializer, ComplaintCommentSerializer
 from .permissions import IsCompanyAdmin
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -343,7 +345,137 @@ class RefreshTokenView(APIView):
             })
         except Exception as e:
             return Response({"error": "Invalid or expired refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
- 
+  
+
+# ========== Complaint Views ==========
+
+class ComplaintListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Check if user is admin/superuser - return all complaints
+        if request.user.role in ['super_user', 'company_admin']:
+            complaints = Complaint.objects.all()
+        else:
+            # Regular user - only their own complaints
+            complaints = Complaint.objects.filter(user=request.user)
+        
+        # Search functionality
+        search_query = request.query_params.get('search', None)
+        if search_query:
+            complaints = complaints.filter(
+                Q(complaint_id__icontains=search_query) |
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query)
+            )
+        
+        # Filter by status
+        status_filter = request.query_params.get('status', None)
+        if status_filter:
+            complaints = complaints.filter(status=status_filter)
+        
+        serializer = ComplaintSerializer(complaints, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        serializer = ComplaintCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            complaint = serializer.save(user=request.user)
+            return Response(
+                ComplaintSerializer(complaint).data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ComplaintDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self, pk, user):
+        try:
+            complaint = Complaint.objects.get(pk=pk)
+            # Allow if admin or owner
+            if user.role in ['super_user', 'company_admin'] or complaint.user == user:
+                return complaint
+            return None
+        except Complaint.DoesNotExist:
+            return None
+    
+    def get(self, request, pk):
+        complaint = self.get_object(pk, request.user)
+        if not complaint:
+            return Response(
+                {"error": "Complaint not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = ComplaintSerializer(complaint)
+        return Response(serializer.data)
+    
+    def put(self, request, pk):
+        complaint = self.get_object(pk, request.user)
+        if not complaint:
+            return Response(
+                {"error": "Complaint not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Only admin can update status/comment
+        if request.user.role not in ['super_user', 'company_admin']:
+            return Response(
+                {"error": "Only admin can update complaint"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        serializer = ComplaintUpdateSerializer(complaint, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(ComplaintSerializer(complaint).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ComplaintCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, complaint_id):
+        complaint = self.get_object(complaint_id, request.user)
+        if not complaint:
+            return Response(
+                {"error": "Complaint not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        comments = complaint.comments.all()
+        serializer = ComplaintCommentSerializer(comments, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, complaint_id):
+        complaint = self.get_object(complaint_id, request.user)
+        if not complaint:
+            return Response(
+                {"error": "Complaint not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        data = request.data.copy()
+        data['complaint'] = complaint.id
+        data['user'] = request.user.id
+        
+        serializer = ComplaintCommentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get_object(self, complaint_id, user):
+        try:
+            complaint = Complaint.objects.get(pk=complaint_id)
+            if user.role in ['super_user', 'company_admin'] or complaint.user == user:
+                return complaint
+            return None
+        except Complaint.DoesNotExist:
+            return None
+
+
 # views.py
 
 

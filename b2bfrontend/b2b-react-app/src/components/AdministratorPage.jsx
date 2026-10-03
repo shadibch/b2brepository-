@@ -28,6 +28,7 @@ import OrderReport from "./admin/OrderReport";
 import CompanyAdminPage from "./admin/CompanyAdminPage";
 import BranchManagement from "./admin/BranchManagement";
 import ReportManagement from "./admin/ReportManagement";
+import ComplaintManagement from "./admin/ComplaintManagement";
 
 import "../assets/fonts/fonts.css";
 import { appTheme } from "./theme";
@@ -97,6 +98,7 @@ const AdministratorPage = () => {
               <Route path="company-admin" element={<CompanyAdminPage />} />
               <Route path="branch-admin" element={<BranchManagement />} />
               <Route path="report-management" element={<ReportManagement />} />
+              <Route path="complaint-management" element={<ComplaintManagement />} />
               <Route
                 path="*"
                 element={
